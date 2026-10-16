@@ -15,6 +15,8 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const token = data.session?.access_token;
   const response = await fetch(path, {
     ...options,
+    cache: 'no-store',
+    signal: options?.signal || AbortSignal.timeout(30_000),
     headers: {
       ...(options?.headers || {}),
       ...(token ? { Authorization: 'Bearer ' + token } : {}),
@@ -53,7 +55,19 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
         String(body.fields[0]!.path[1] || 'settings'),
       );
     }
-    throw new Error(body.error || 'The request could not be completed.');
+    const messages: Record<string, string> = {
+      service_unavailable:
+        'The workspace could not connect. Please try again; if it continues, ask your team to check the API settings.',
+      invalid_search: 'Keep your search to 100 characters and remove any line breaks.',
+      record_anonymized: 'This record has been anonymized and can no longer be changed.',
+      converted_inquiry_is_locked:
+        'This inquiry is already a client. Manage their relationship under Clients.',
+      csrf_check_failed: 'The page could not verify this action. Refresh the page and try again.',
+      owner_access_required: 'This action requires the workspace owner.',
+    };
+    throw new Error(
+      messages[body.error || ''] || body.error || 'The request could not be completed.',
+    );
   }
   return body as T;
 }

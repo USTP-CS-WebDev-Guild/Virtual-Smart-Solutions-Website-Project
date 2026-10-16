@@ -65,3 +65,15 @@ Typical errors: 401 unsigned/inactive staff, 403 forbidden role/origin, 409 stal
 ## Live connection contract
 
 The browser uses its publishable key and signed-in JWT to SELECT/subscribe to **only `change_signals`**. Anonymous sees public; active staff adds staff; owner adds owner. Each event invalidates views; fresh records come through the authorized API above. The signal stream carries no customer information. Green Live requires server readiness and a successful state reconciliation, not just a joined socket.
+
+## Workspace search (1.5.0)
+
+Authenticated list endpoints accept optional `q` (trimmed, up to 100 characters; control characters rejected). Search checks all matching stored records before applying the cursor page.
+
+| Endpoint | Search columns | Optional status |
+| --- | --- | --- |
+| `GET /api/admin/inquiries?q=...` | Name, email, company, service | new, in_progress, waiting, converted, closed |
+| `GET /api/admin/clients?q=...` | Contact name, email, company | active, paused, closed |
+| `GET /api/admin/privacy-requests?q=...` | Name, email | open, completed |
+
+Privacy remains owner-only. Cursor, status, and search are combined with AND. Input becomes a quoted, regex-escaped literal substring filter; client input never chooses columns or supplies an arbitrary PostgREST expression. The classroom adapter uses bound PostgreSQL parameters. Search errors return 422 without executing a partial action. Search reads are `no-store`; avoid writing request query strings to logs because they can contain personal data. No new SQL migration is required.

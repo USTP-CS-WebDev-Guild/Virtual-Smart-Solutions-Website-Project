@@ -1,4 +1,4 @@
-# Virtual Smart Solutions — complete website, release 1.4.2
+# Virtual Smart Solutions — complete website, release 1.5.0
 
 Astro + TypeScript frontend, Netlify Functions backend, and Supabase PostgreSQL/Auth/Realtime. The same application also runs locally with persistent embedded PostgreSQL, random local accounts, pushed updates and captured email. Students need no cloud keys, Docker, or separate database installation to begin.
 
@@ -11,7 +11,9 @@ npm run dev
 
 Open **http://127.0.0.1:4321/**. The terminal prints your generated local logins; use **Owner sign-in** in the footer. `npm run accounts` shows them again. Leave the dev terminal running; stop with **Ctrl+C**.
 
-**Updating your current folder? Read [UPDATE-1.4.2.md](UPDATE-1.4.2.md) first.** This release fixes verification timeouts reported on Windows: bounded workers, asynchronous dependency inspection and an isolated cold-start test. It retains the 1.4.1 design and live system. An update from 1.4.1 needs no database migration. Your published content and records are preserved; never run the fresh installer over an existing database.
+**Updating your current 1.4.2 project? Read [UPDATE-1.5.0.md](UPDATE-1.5.0.md).** This release rebuilds the owner workspace with an independent black-and-white design, Overview, mobile navigation, stored-record searches, safer privacy handling, preserved drafts, and grouped website editing. It uses your existing database, owner accounts, and hosting settings. No database migration is needed from 1.4.2.
+
+The public site opens normally for visitors. The owner signs in through its footer. Read [OWNER-GUIDE.md](OWNER-GUIDE.md) for the client-facing walkthrough. Operational tools are under **Settings & help**, rather than repeated on every business screen.
 
 ## Where each student works
 
@@ -30,6 +32,8 @@ Your **student tech lead** reviews releases. Your DevOps lead manages hosting an
 ## What is connected
 
 - Eight public/owner routes; mobile navigation and 16px phone form controls.
+- Owner Overview with actual inquiry counts and recent conversations, searchable inquiry/client/privacy records with cursor pagination, mobile drawer navigation, and readable black-and-white panels.
+- Notes and website drafts survive workspace navigation and incoming updates. Client conversion and privacy anonymization have explicit confirmations. Website copy is grouped by page and approved photos have readable selectors.
 - White navigation and a light split hero, black/charcoal sections, photographic service previews, white packages with a dark feature, and larger portraits. No green/mint/teal theme.
 - Compact mobile navigation with selected-page state, a separate consultation action and a backdrop. The menu stays still until the next document arrives. Public navigation links opt into Astro prefetching.
 - Pre-rendered service/filter controls, equal-height service regions and selective live content updates that preserve unchanged nodes.
@@ -76,11 +80,11 @@ git config --global user.email "Your GitHub email"
 
 ### 3. Clone the TEAM repository and run it
 
-Replace `TEAM-OWNER` and `TEAM-REPO` below with the team's actual repository. Do not fork work back into the instructor's account.
+Clone the students' team repository below and contribute with your own GitHub identity.
 
 ```powershell
-git clone https://github.com/TEAM-OWNER/TEAM-REPO.git
-cd TEAM-REPO
+git clone https://github.com/ustpcswebdevguildbatch1-afk/Virtual-Smart-Solutions-Website.git
+cd Virtual-Smart-Solutions-Website
 ```
 
 VS Code → File → Open Folder → select that clone. Confirm `package.json` is directly inside it.

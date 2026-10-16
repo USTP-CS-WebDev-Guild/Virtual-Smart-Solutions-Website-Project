@@ -2,6 +2,8 @@ import type { Inquiry } from './types';
 import { api } from './api';
 import { byId, formatDate, make, setAlert, setWorkspaceRole } from './ui';
 import { workspace, testEnvironment } from './state';
+import { confirmAction } from './confirm';
+import { paintSummary } from './overview';
 
 const statusLabels: Record<string, string> = {
   new: 'New',
@@ -14,9 +16,43 @@ let currentInquiries: Inquiry[] = [];
 let selectedId = '';
 let pages = 1;
 let lastFilter = '';
+let detailVersion = 0;
+const drafts = new Map<string, { note: string; status: string; noteKey: string }>();
+function captureDraft() {
+  if (!selectedId) return;
+  const input = document.querySelector<HTMLTextAreaElement>(
+    '#inquiry-detail textarea[name="note"]',
+  );
+  const select = document.querySelector<HTMLSelectElement>('.detail-status-select');
+  if (!input || !select) return;
+  const changedStatus =
+    !select.disabled && select.value !== select.dataset.serverStatus ? select.value : '';
+  if (input.value || changedStatus)
+    drafts.set(selectedId, {
+      note: input.value,
+      status: changedStatus,
+      noteKey: drafts.get(selectedId)?.noteKey || crypto.randomUUID(),
+    });
+  else drafts.delete(selectedId);
+}
+export function hasInquiryDraft() {
+  captureDraft();
+  return drafts.size > 0;
+}
+window.addEventListener('vss-session-closed', () => {
+  ++loadVersion;
+  ++detailVersion;
+  selectedId = '';
+  currentInquiries = [];
+  pages = 1;
+  lastFilter = '';
+  drafts.clear();
+});
+
 function makeInquiryRow(item: Inquiry) {
   const button = make('button', 'inquiry-row');
   button.type = 'button';
+  button.dataset.inquiryId = item.id;
   button.setAttribute('aria-pressed', String(item.id === selectedId));
   button.classList.toggle('is-selected', item.id === selectedId);
   const top = make('span', 'inquiry-row-top');
@@ -31,7 +67,8 @@ function makeInquiryRow(item: Inquiry) {
   const bottom = make('span', 'inquiry-row-bottom');
   bottom.append(make('span', '', item.company || item.email));
   bottom.append(make('time', '', formatDate(item.createdAt)));
-  button.append(top, subject, bottom);
+  const preview = make('span', 'inquiry-row-preview', item.message);
+  button.append(top, subject, preview, bottom);
   if (item.possibleDuplicate)
     button.append(make('span', 'duplicate-flag', 'Possible repeat inquiry'));
   button.addEventListener('click', () => {
@@ -42,12 +79,36 @@ function makeInquiryRow(item: Inquiry) {
 
 function renderInquiries() {
   const list = byId<HTMLElement>('inquiry-list');
+  const focusedId =
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement.dataset.inquiryId
+      : undefined;
   list.replaceChildren();
   if (!currentInquiries.length) {
-    list.append(make('div', 'loading-state', 'No inquiries in this view yet.'));
+    const empty = make('div', 'loading-state');
+    const filtered = Boolean(
+      byId<HTMLInputElement>('inquiry-search')?.value.trim() ||
+      byId<HTMLSelectElement>('status-filter').value,
+    );
+    empty.append(
+      make('span', 'empty-state-icon', '↗'),
+      make('h3', '', filtered ? 'No matching inquiries.' : 'Your inbox is ready.'),
+      make(
+        'p',
+        '',
+        filtered
+          ? 'Try a different name, email, or status.'
+          : 'New contact submissions appear here. Select one to start a conversation.',
+      ),
+    );
+    list.append(empty);
     return;
   }
   for (const item of currentInquiries) list.append(makeInquiryRow(item));
+  if (focusedId)
+    Array.from(list.querySelectorAll<HTMLElement>('[data-inquiry-id]'))
+      .find((row) => row.dataset.inquiryId === focusedId)
+      ?.focus({ preventScroll: true });
 }
 
 function appendDetailField(parent: HTMLElement, label: string, value: string) {
@@ -59,13 +120,15 @@ function appendDetailField(parent: HTMLElement, label: string, value: string) {
 }
 
 async function showDetail(id: string) {
+  captureDraft();
   const session = workspace.sessionVersion;
+  const request = ++detailVersion;
   selectedId = id;
   if (!currentInquiries.some((item) => item.id === id)) {
     const response = await api<{ inquiry: Inquiry }>(
       '/api/admin/inquiries/' + encodeURIComponent(id),
     );
-    if (!sessionCurrent(session)) return;
+    if (!sessionCurrent(session) || request !== detailVersion || selectedId !== id) return;
     currentInquiries = [response.inquiry, ...currentInquiries];
   }
   renderInquiries();
@@ -73,6 +136,18 @@ async function showDetail(id: string) {
   if (!item) return;
   const panel = byId<HTMLElement>('inquiry-detail');
   panel.replaceChildren();
+  document.body.dataset.inquiryOpen = 'true';
+  const back = make('button', 'text-button detail-back', '← All conversations');
+  back.type = 'button';
+  back.addEventListener('click', () => {
+    captureDraft();
+    delete document.body.dataset.inquiryOpen;
+    document
+      .querySelector<HTMLElement>('#inquiry-list [aria-pressed="true"]')
+      ?.focus({ preventScroll: true });
+  });
+  panel.append(back);
+  if (item.anonymizedAt) drafts.delete(id);
 
   const head = make('div', 'detail-head');
   const kicker = make('p', 'eyebrow', 'INQUIRY / ' + id.slice(0, 8).toUpperCase());
@@ -89,6 +164,28 @@ async function showDetail(id: string) {
     : null;
   head.append(kicker, title, date, liveStatus);
   if (duplicate) head.append(duplicate);
+  const primary = make('div', 'detail-primary-actions');
+  if (!item.anonymizedAt) {
+    const reply = make('a', 'button', 'Reply by email');
+    reply.href =
+      'mailto:' +
+      item.email +
+      '?subject=' +
+      encodeURIComponent('Your inquiry to Virtual Smart Solutions');
+    primary.append(reply);
+  }
+  const reference = make('button', 'cms-secondary-button', 'Copy reference');
+  reference.type = 'button';
+  reference.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(id);
+      setAlert('Inquiry reference copied.', 'success');
+    } catch {
+      setAlert('Inquiry reference: ' + id);
+    }
+  });
+  primary.append(reference);
+  head.append(primary);
 
   const fields = make('div', 'detail-fields');
   const email = make('a', '', item.email) as HTMLAnchorElement;
@@ -169,13 +266,17 @@ async function showDetail(id: string) {
         method: 'PATCH',
         body: JSON.stringify({ status: statusSelect.value }),
       });
+      if (session !== workspace.sessionVersion) return;
+      statusSelect.dataset.serverStatus = statusSelect.value;
+      captureDraft();
       setAlert('Inquiry status updated.', 'success');
       await loadInquiries();
       await showDetail(item.id);
     } catch (error) {
       setAlert(error instanceof Error ? error.message : 'Could not update status.', 'error');
     } finally {
-      save.disabled = false;
+      save.disabled =
+        statusSelect.disabled || statusSelect.value === statusSelect.dataset.serverStatus;
     }
   });
   const convert = make('button', 'button button-convert', 'Convert to client') as HTMLButtonElement;
@@ -184,12 +285,21 @@ async function showDetail(id: string) {
   convert.dataset.convert = '';
   convert.addEventListener('click', async () => {
     convert.disabled = true;
+    const accepted = await confirmAction(
+      'Add ' + item.name + ' as a client?',
+      'A client record will be created and linked to this inquiry. The message and follow-up notes stay available.',
+      'Convert to client',
+    );
+    if (!accepted || session !== workspace.sessionVersion) {
+      convert.disabled = item.status === 'converted' || Boolean(item.anonymizedAt);
+      return;
+    }
     try {
       await api('/api/admin/inquiries/' + encodeURIComponent(item.id) + '/convert', {
         method: 'POST',
         body: JSON.stringify({}),
       });
-      setAlert('Inquiry converted. The action is safe to repeat.', 'success');
+      setAlert('Client added. You can find their record under Clients.', 'success');
       await loadInquiries();
       await showDetail(item.id);
     } catch (error) {
@@ -197,7 +307,33 @@ async function showDetail(id: string) {
       convert.disabled = false;
     }
   });
+  const draft = drafts.get(id);
+  if (draft?.status && !statusSelect.disabled) statusSelect.value = draft.status;
+  save.disabled = statusSelect.disabled || statusSelect.value === item.status;
+  statusSelect.addEventListener('change', () => {
+    save.disabled =
+      statusSelect.disabled || statusSelect.value === statusSelect.dataset.serverStatus;
+    captureDraft();
+  });
   actions.append(statusLabel, save, convert);
+  if (item.status === 'converted') {
+    convert.textContent = 'Added to clients';
+    const success = make('div', 'converted-message');
+    success.append(
+      make(
+        'p',
+        '',
+        'This inquiry is linked to a client. The original conversation and notes stay here.',
+      ),
+    );
+    const link = make('button', 'text-button', 'View clients →');
+    link.type = 'button';
+    link.addEventListener('click', () =>
+      document.querySelector<HTMLButtonElement>('[data-view=clients]')?.click(),
+    );
+    success.append(link);
+    actions.append(success);
+  }
 
   const eventBox = make('div', 'event-box');
   eventBox.append(make('p', 'eyebrow', 'HISTORY'));
@@ -221,7 +357,9 @@ async function showDetail(id: string) {
   const submit = make('button', 'button button-dark', 'Save note');
   submit.type = 'submit';
   submit.disabled = Boolean(item.anonymizedAt);
-  let noteKey = crypto.randomUUID();
+  let noteKey = drafts.get(id)?.noteKey || crypto.randomUUID();
+  input.value = drafts.get(id)?.note || '';
+  input.addEventListener('input', captureDraft);
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -231,8 +369,11 @@ async function showDetail(id: string) {
         method: 'POST',
         body: JSON.stringify({ idempotencyKey: noteKey, body: input.value }),
       });
+      if (session !== workspace.sessionVersion) return;
       input.value = '';
+      drafts.delete(id);
       noteKey = crypto.randomUUID();
+      captureDraft();
       await refreshNotes(item.id);
       setAlert('Follow-up note saved.', 'success');
     } catch (error) {
@@ -243,7 +384,10 @@ async function showDetail(id: string) {
   });
   form.append(label, submit);
   notes.append(noteList, form);
-  panel.append(head, fields, message, notification, actions, notes, eventBox);
+  const delivery = make('details', 'notification-state-details');
+  const deliveryTitle = make('summary', 'text-button', 'Email notification details');
+  delivery.append(deliveryTitle, notification);
+  panel.append(head, fields, message, actions, notes, eventBox, delivery);
   void refreshNotes(id).catch(() => {});
   await refreshHistory(id, eventBox);
 }
@@ -313,7 +457,7 @@ function sessionCurrent(version: number) {
   return version === workspace.sessionVersion && !byId<HTMLElement>('admin-app').hidden;
 }
 
-async function loadSummary(version: number) {
+export async function loadSummary(version: number) {
   const result = await api<{
     actorRole: 'owner' | 'staff';
     inquiries: Record<string, number>;
@@ -321,6 +465,7 @@ async function loadSummary(version: number) {
   }>('/api/admin/summary');
   if (!sessionCurrent(version)) return false;
   setWorkspaceRole(result.actorRole);
+  paintSummary(result);
   byId<HTMLElement>('metric-new').textContent = String(result.inquiries.new || 0);
   byId<HTMLElement>('metric-progress').textContent = String(result.inquiries.in_progress || 0);
   byId<HTMLElement>('metric-waiting').textContent = String(result.inquiries.waiting || 0);
@@ -330,7 +475,7 @@ async function loadSummary(version: number) {
     ? String(result.notifications.dead) + ' needs attention'
     : result.notifications.pending
       ? testEnvironment
-        ? 'Captured by the test email queue'
+        ? 'Waiting to be processed in capture mode'
         : 'Waiting to send'
       : testEnvironment
         ? 'Test email capture is active'
@@ -345,9 +490,15 @@ export async function loadInquiries(background = false, more = false) {
   const version = workspace.sessionVersion;
   const requestVersion = ++loadVersion;
   const filter = byId<HTMLSelectElement>('status-filter').value;
-  if (filter !== lastFilter) {
+  const search = byId<HTMLInputElement>('inquiry-search')?.value.trim() || '';
+  const criteria = filter + '\n' + search;
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-status-choice]'))
+    button.setAttribute('aria-pressed', String(button.dataset.statusChoice === filter));
+  const clear = document.getElementById('inquiry-clear-filters');
+  if (clear) clear.hidden = !filter && !search;
+  if (criteria !== lastFilter) {
     pages = 1;
-    lastFilter = filter;
+    lastFilter = criteria;
   }
   const records = new Map<string, Inquiry>();
   const target = more ? pages + 1 : pages;
@@ -356,6 +507,7 @@ export async function loadInquiries(background = false, more = false) {
   for (let i = 0; i < target; i++) {
     const query = new URLSearchParams();
     if (filter) query.set('status', filter);
+    if (search) query.set('q', search);
     if (cursor) query.set('cursor', cursor);
     const page: { inquiries: Inquiry[]; nextCursor: string | null } = await api(
       '/api/admin/inquiries?' + query,
@@ -370,7 +522,10 @@ export async function loadInquiries(background = false, more = false) {
   if (!(await loadSummary(version)) || !sessionCurrent(version) || requestVersion !== loadVersion)
     return;
   const changed = JSON.stringify(currentInquiries) !== JSON.stringify(result.inquiries);
+  captureDraft();
   currentInquiries = result.inquiries;
+  const count = document.getElementById('inquiry-result-count');
+  if (count) count.textContent = String(currentInquiries.length) + (cursor ? '+' : '');
   pages = readPages;
   if (changed || !background) renderInquiries();
   byId<HTMLElement>('inbox-updated-at').textContent =
@@ -426,6 +581,7 @@ export async function loadInquiries(background = false, more = false) {
     !currentInquiries.some((item) => item.id === selectedId)
   ) {
     selectedId = '';
+    delete document.body.dataset.inquiryOpen;
     byId<HTMLElement>('inquiry-detail').replaceChildren(
       make('div', 'empty-detail', 'Select an inquiry to review it.'),
     );

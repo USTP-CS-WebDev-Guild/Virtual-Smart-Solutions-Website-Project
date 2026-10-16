@@ -1,0 +1,205 @@
+<section class="admin-view is-hidden" id="content-view" hidden aria-label="Website editor">
+  <p id="content-update-notice" class="content-update-notice" role="status" hidden>
+    A newer version was published. Your unsaved edits are preserved. Use Reload latest to review
+    it; saving an old revision will show a conflict.
+  </p>
+  <div class="content-editor-intro">
+    <div>
+      <p class="eyebrow">YOUR WEBSITE</p>
+      <h2>Make your next update.</h2>
+      <p>
+        Edit your pages, services, and packages. Publish when you’re ready; open website tabs
+        receive the update automatically.
+      </p>
+    </div>
+    <div class="content-editor-controls">
+      <a class="cms-secondary-button" href="/" target="_blank" rel="noopener">
+        View website ↗
+      </a>
+      <span class="content-revision" id="content-revision">
+        Not loaded
+      </span>
+      <button class="cms-secondary-button" id="reload-site-content" type="button">
+        Reload latest
+      </button>
+      <button class="cms-secondary-button" id="toggle-content-history" type="button">
+        Revision history
+      </button>
+    </div>
+  </div>
+  <div class="content-history is-hidden" id="content-history"></div>
+  <div class="cms-editor-toolbar">
+    <nav class="cms-section-nav" aria-label="Website editor sections">
+      <button
+        type="button"
+        data-editor-tab="settings"
+        aria-controls="editor-settings"
+        aria-pressed="true"
+      >
+        Page copy
+      </button>
+      <button
+        type="button"
+        data-editor-tab="services"
+        aria-controls="editor-services"
+        aria-pressed="false"
+      >
+        Services
+      </button>
+      <button
+        type="button"
+        data-editor-tab="plans"
+        aria-controls="editor-plans"
+        aria-pressed="false"
+      >
+        Packages
+      </button>
+      <button
+        type="button"
+        data-editor-tab="portfolio"
+        aria-controls="editor-portfolio"
+        aria-pressed="false"
+      >
+        Our work
+      </button>
+      <button
+        type="button"
+        data-editor-tab="team"
+        aria-controls="editor-team"
+        aria-pressed="false"
+      >
+        Team
+      </button>
+      <button
+        type="button"
+        data-editor-tab="faqs"
+        aria-controls="editor-faqs"
+        aria-pressed="false"
+      >
+        Questions
+      </button>
+    </nav>
+    <div class="cms-save-row">
+      <p id="content-draft-status" role="status">
+        Changes stay in this editor until you publish.
+      </p>
+      <button class="button" id="save-site-content" type="button" disabled>
+        Save and publish <span aria-hidden="true">↗</span>
+      </button>
+    </div>
+  </div>
+  <section
+    class="cms-panel"
+    id="editor-settings"
+    data-editor-section="settings"
+    aria-label="Page copy"
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">BUSINESS DETAILS</p>
+        <h3>Identity and contact</h3>
+      </div>
+    </div>
+    <div class="cms-settings-grid" id="cms-settings-fields"></div>
+  </section>
+  <section
+    class="cms-panel"
+    id="editor-services"
+    data-editor-section="services"
+    aria-label="Services"
+    hidden
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">PUBLIC CATALOG</p>
+        <h3>Services</h3>
+        <p>These feed the service cards and the inquiry form.</p>
+      </div>
+      <button class="button button-dark cms-add-button" id="add-service" type="button">
+        Add service
+      </button>
+    </div>
+    <div class="cms-item-list" id="cms-services"></div>
+  </section>
+  <section
+    class="cms-panel"
+    id="editor-faqs"
+    data-editor-section="faqs"
+    aria-label="Questions"
+    hidden
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">CUSTOMER QUESTIONS</p>
+        <h3>Frequently asked questions</h3>
+        <p>Only published questions appear on the public website.</p>
+      </div>
+      <button class="button button-dark cms-add-button" id="add-faq" type="button">
+        Add question
+      </button>
+    </div>
+    <div class="cms-item-list" id="cms-faqs"></div>
+  </section>
+  <section
+    class="cms-panel"
+    id="editor-plans"
+    data-editor-section="plans"
+    aria-label="Packages"
+    hidden
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">WEBSITE CONTENT</p>
+        <h3>Service packages</h3>
+        <p>
+          Update package names, prices, scope, and visibility. One package can be highlighted.
+        </p>
+      </div>
+      <button class="button button-dark cms-add-button" id="add-plans" type="button">
+        Add package
+      </button>
+    </div>
+    <div class="cms-item-list" id="cms-plans"></div>
+  </section>
+  <section
+    class="cms-panel"
+    id="editor-portfolio"
+    data-editor-section="portfolio"
+    aria-label="Our work"
+    hidden
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">WEBSITE CONTENT</p>
+        <h3>Work and case studies</h3>
+        <p>
+          Mark illustrative work as an example. Client case studies require verified results and
+          permission before publishing.
+        </p>
+      </div>
+      <button class="button button-dark cms-add-button" id="add-portfolio" type="button">
+        Add portfolio
+      </button>
+    </div>
+    <div class="cms-item-list" id="cms-portfolio"></div>
+  </section>
+  <section
+    class="cms-panel"
+    id="editor-team"
+    data-editor-section="team"
+    aria-label="Team"
+    hidden
+  >
+    <div class="cms-panel-heading">
+      <div>
+        <p class="eyebrow">WEBSITE CONTENT</p>
+        <h3>People behind VSS</h3>
+        <p>Maintain approved names, roles, introductions, and portrait image paths.</p>
+      </div>
+      <button class="button button-dark cms-add-button" id="add-team" type="button">
+        Add team
+      </button>
+    </div>
+    <div class="cms-item-list" id="cms-team"></div>
+  </section>
+</section>

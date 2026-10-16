@@ -1,54 +1,61 @@
-# Owner workspace
+# Your VSS workspace
 
-## Sign in
+Open your website and choose **Owner sign-in** in the footer. Use the website account created for you by your team. Your Google, GitHub, Netlify, and local classroom passwords are separate accounts.
 
-Open the public website, scroll to the footer, and choose **Owner sign-in**. You can also open `/admin/`. Local: use the generated owner account printed by `npm run dev` or `npm run accounts`. Hosted: use your Supabase Auth user, with an active `owner` entry in `staff_users`. Local passwords do not work on a hosted deployment.
+The workspace works with a mouse, keyboard, or phone. On a phone, the menu button beside the page title opens navigation. **View website** opens the public website in another tab.
 
-Public visitors need no login. Staff login protects all private records on the server; scrolling a signed-out page cannot open the workspace.
+| Area | Use it for |
+| --- | --- |
+| Overview | See new, in-progress, waiting, and converted inquiry counts. Open a recent conversation or choose a next task. |
+| Inquiries | Read contact submissions, reply using your email application, write private notes, update status, and add clients. |
+| Clients | Search client records, update Active / Paused / Closed, and return to the original inquiry. |
+| Website editor | Edit page copy, services, packages, work examples, team profiles, and FAQs. Publish deliberately and review revision history. |
+| Privacy requests | Review separate requests to access, correct, export, or delete personal data. Verify identity and record your handling. |
+| Settings & help | Check connections, understand notification delivery, and read the workspace guide. |
 
-## Follow a request
+## Follow up on an inquiry
 
-| Public action               | Owner destination |
-| --------------------------- | ----------------- |
-| Contact inquiry             | Inquiries         |
-| Inquiry → Convert to client | Clients           |
-| Separate privacy form       | Privacy requests  |
+1. Choose **Inquiries**. Search by a name, email, business, or service, or choose a status filter. Search checks stored records, including records beyond the first page. **Load older inquiries** retrieves more matches.
+2. Choose a conversation. On a phone, **All conversations** returns to the list.
+3. **Reply by email** opens your own email application. It does not send an email for you. **Copy reference** copies the inquiry ID.
+4. Write a follow-up note to record what you agreed. Choose **Save note**. Notes are private to authorized staff.
+5. Choose **In progress** while working on the inquiry, **Waiting** when a response is needed, or **Closed** when there is no further work. Choose **Save status**.
+6. Once you agree to work together, choose **Convert to client** and confirm. The original conversation remains available, and the client appears under **Clients**. Repeating conversion cannot create a duplicate client.
 
-Open an inquiry to see its service, requested package and displayed price at submission, message, notes, history, and notification state. Add a note, set status, or explicitly convert it. Conversion is repeat-safe. A package inquiry does not create a subscription, charge, or automatic client.
+Unsaved inquiry notes and status choices are kept in memory while you move between conversations or receive live updates. Save before closing the browser. Signing out discards unpublished edits and unsaved notes after confirmation. Personal drafts are not written to browser storage.
 
-For privacy requests, verify the requester through the business's approved process before sharing/deleting data. Record the handling action. Do not use sensitive real data while testing.
+## Manage clients
 
-## Publish website content
+Search by contact, email, or company. Filter by relationship status. Choose a changed status and **Save status**; the button is enabled when there is a change. **View original inquiry** opens the conversation and its notes. Clients are created through inquiry conversion.
 
-Choose **Website editor**, then Page copy, Services, Packages, Our work, Team or Questions. Switching sections keeps the draft; **Save and publish** saves all sections together. Changes are drafts until you choose **Save and publish**. Keep the public page open in another tab: a successful publish pushes an update without a manual reload. A revision conflict asks you to reload rather than overwrite someone else's work. If you have an unsaved draft when another owner publishes, the editor preserves it and shows a notice.
+## Update your website
 
-| Editor area            | What you can change                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| Business and page copy | Names, approved email, headings, introductions, pricing terms                                      |
-| Services               | Names, descriptions, examples, local image paths, order and visibility                             |
-| Questions              | FAQ questions/answers and visibility                                                               |
-| Packages               | Name, displayed price/period, description, features, order, visibility and one highlighted package |
-| Portfolio              | Work title/category, scope or verified outcome, image, kind, permission approval and visibility    |
-| Team                   | Name, role, introduction, portrait path, order and visibility                                      |
+1. Choose **Website editor**. Choose Page copy, Services, Packages, Our work, Team, or Questions.
+2. Under **Page copy**, expand the page you want to edit. Fields are grouped by page rather than shown as one long form.
+3. Make your change. The toolbar shows **unpublished changes**. Choose an approved photo from the image selector; your website team can add new approved photo files to the project.
+4. Choose **Save and publish**. All edited sections publish together. Controls are disabled while the save is being processed.
+5. View the public website in another tab. Published changes reach open tabs through the live connection.
 
-**Add** creates an unpublished draft. Complete it and check its publish option when ready. Use the arrows to reorder, or uncheck publication to hide an item. Removing an item affects the catalog, not an existing inquiry's package snapshot. Only one published package can be highlighted. At least one service must remain published.
+Switching workspace screens preserves the current website draft. A newer external publication cannot silently replace it. A revision conflict asks you to reload and reconcile the newer content. **Reload latest** asks before discarding unpublished edits. **Revision history** lets you restore an earlier version as a new publication, with confirmation.
 
-Portfolio entries can be **Illustrative engagement** or **Verified client case study**. A published case study requires the owner's verification/permission checkbox. Approval is your record of a real review; the software cannot verify a client's claim or consent for you. Do not turn an example into a real case study without evidence.
+A portfolio example is not automatically a client success story. Publish a client case study only when its results and permission have been verified. Keep package scope and fees accurate.
 
-**Revision history** lists saved versions. Restoring creates a new published revision after confirmation. It does not erase the audit history.
+## Resolve a privacy request
 
-## Images and page layout
+Privacy requests come from the privacy page; they do not appear automatically when someone submits a contact inquiry.
 
-The image fields accept local paths such as `/images/service-admin.webp`. They do not accept arbitrary remote URLs or uploaded files.
+1. Read the request and verify the person's identity using your company's procedure.
+2. Select the action you actually performed and write a handling note.
+3. For a deletion request, review whether inquiry records, converted client records, or both are covered. A retention decision must follow the company's approved policy.
+4. Choose **Complete request**. Anonymization requires a separate confirmation because it cannot be undone from this workspace.
+5. Use **Completed requests** to review the handling record.
 
-To add a new image, ask your frontend contributor to put the approved file in `frontend/public/images/`, commit it and redeploy. Then use its `/images/filename.webp` path in the editor. Portfolio/team image fields show a preview. Existing files are listed in `docs/ASSET-SOURCES.json`. Confirm image rights and portrait permission before publishing.
+The application records your choice; it does not independently verify someone's identity or determine legal retention obligations.
 
-Page sections, logo geometry, hero photo and design styles are source changes in `frontend/`. The editor manages the catalog and marked copy; it is not a drag-and-drop page builder. Search-engine fallback copy and social preview metadata are built from source and need a rebuild to change.
+## Connection and email checks
 
-## Live state and email
+The header shows the live connection state. If offline, reconnect and refresh before relying on displayed records. **Settings & help** includes **Check contact form**. Staging also includes **Verify live delivery** and **Run test jobs**.
 
-The workspace shows the live connection state. Reconnection reconciles changes missed while offline; it does not replace a note you are typing. Use **Refresh** if a connection is unavailable, and ask the maintainer to check readiness if the issue continues.
+In capture mode, notifications are processed for testing and no outbound email is sent. The inquiry is still stored. Real email requires your team's approved provider configuration. An email delivery failure does not delete an inquiry.
 
-Test mode provides **Check contact form**, **Verify live delivery**, and **Run test jobs**. Captured notifications prove the queue was processed; no email was sent. Real mail requires a configured provider and verified sender. The inquiry remains in the inbox even if mail fails.
-
-Owner/staff accounts and access are managed by the maintainer in Supabase; there is no public registration. Signing out clears private workspace content.
+Staff can use inquiries and clients. Website editing, privacy handling, and owner diagnostics require an active owner account; the server enforces these permissions.

@@ -22,14 +22,14 @@ describe('public deployment verification', () => {
         return Response.json({ content: { services: [] } });
       if (url.pathname === '/api/public/runtime')
         return Response.json({
-          release: '1.4.2',
+          release: '1.5.0',
           supabaseUrl: 'https://test.supabase.co',
           publishableKey: 'sb_publishable_synthetic_fixture',
           testEnvironment: true,
         });
       if (url.pathname === '/about/')
         return new Response(null, { status: 301, headers: { location: '/about' } });
-      return new Response('<meta name="app-release" content="1.4.2">', {
+      return new Response('<meta name="app-release" content="1.5.0">', {
         headers: { 'Content-Security-Policy': "connect-src 'self' wss://*.supabase.co" },
       });
     };
@@ -43,6 +43,6 @@ describe('public deployment verification', () => {
           ? Response.json({ inquiries: [] })
           : fetcher(input, init),
       ),
-    ).rejects.toThrow('staff authentication');
+    ).rejects.toThrow('expected HTTP 401');
   });
 });

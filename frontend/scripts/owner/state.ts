@@ -1,7 +1,8 @@
-export type WorkspaceView = 'inquiries' | 'clients' | 'privacy' | 'content';
+export type WorkspaceView =
+  'overview' | 'inquiries' | 'clients' | 'privacy' | 'content' | 'settings';
 export const workspace = {
   actorRole: 'staff' as 'owner' | 'staff',
   sessionVersion: 0,
-  view: 'inquiries' as WorkspaceView,
+  view: 'overview' as WorkspaceView,
 };
 export const testEnvironment = document.body.dataset.testEnvironment === 'true';

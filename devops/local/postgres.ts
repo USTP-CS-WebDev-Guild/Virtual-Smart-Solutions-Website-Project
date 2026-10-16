@@ -110,6 +110,7 @@ export function localPostgres(database: PGlite, getUser: (token: string) => Prom
         id: string;
       } | null = null;
       const where: Array<[string, unknown[]]> = [];
+      const searches: Array<Array<{ column: string; pattern: string }>> = [];
       const query = {
         select(value: string) {
           columns = value === '*' ? '*' : value.split(',').map(identifier).join(',');
@@ -128,8 +129,28 @@ export function localPostgres(database: PGlite, getUser: (token: string) => Prom
             /^created_at\.lt\.(\d+),and\(created_at\.eq\.\1,id\.lt\.([0-9a-f-]{36})\)$/i.exec(
               value,
             );
-          if (!match) throw new Error('unsupported_local_filter');
-          cursor = { time: Number(match[1]), id: match[2]! };
+          if (match) cursor = { time: Number(match[1]), id: match[2]! };
+          else {
+            const parts = Array.from(
+              value.matchAll(/([a-z_]+)\.imatch\.("(?:[^"\\]|\\.)*")(?:,|$)/g),
+            );
+            if (!parts.length || parts.map((part) => part[0]).join('') !== value)
+              throw new Error('unsupported_local_filter');
+            const permitted: Record<string, string[]> = {
+              inquiries: ['name', 'email', 'company', 'service'],
+              clients: ['contact_name', 'email', 'company'],
+              privacy_requests: ['name', 'email'],
+            };
+            searches.push(
+              parts.map((part) => {
+                if (!permitted[table]?.includes(part[1]!))
+                  throw new Error('unsupported_local_filter');
+                const pattern = JSON.parse(part[2]!) as string;
+                if (pattern.length > 204) throw new Error('unsupported_local_filter');
+                return { column: part[1]!, pattern };
+              }),
+            );
+          }
           return query;
         },
         order(
@@ -167,6 +188,14 @@ export function localPostgres(database: PGlite, getUser: (token: string) => Prom
           const filters = where.map(([key, values]) =>
             values.length ? `${key} in (${values.map(bind).join(',')})` : 'false',
           );
+          for (const search of searches)
+            filters.push(
+              '(' +
+                search
+                  .map((item) => `${identifier(item.column)} ~* ${bind(item.pattern)}`)
+                  .join(' or ') +
+                ')',
+            );
           if (cursor)
             filters.push(
               `(created_at<${bind(cursor.time)} or (created_at=${bind(cursor.time)} and id<${bind(cursor.id)}::uuid))`,

@@ -1,3 +1,4 @@
+import { workspaceView, settingsGroup } from './workspace-helpers';
 import { test, expect, type BrowserContext, type WebSocketRoute } from 'playwright/test';
 import { startTestServer } from './server';
 
@@ -120,9 +121,10 @@ async function signIn(page: any, email = 'owner@example.test') {
   await page.goto(provider.base + '/admin/');
   await page.locator('#staff-email').fill(email);
   await page.locator('#staff-password').fill('Synthetic-password-1234');
-  await page.getByRole('button', { name: 'Open owner workspace' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.locator('#admin-app')).toBeVisible();
   await expect(page.locator('.system-status')).toContainText('Live updates connected');
+  await workspaceView(page, 'inquiries');
 }
 
 test('a phone submission appears in an already-open owner inbox through a WebSocket event', async ({
@@ -142,8 +144,10 @@ test('a phone submission appears in an already-open owner inbox through a WebSoc
   owner.on('pageerror', (e) => errors.push(e.message));
   contact.on('pageerror', (e) => errors.push(e.message));
   await signIn(owner);
+  await workspaceView(owner, 'settings');
   await owner.locator('#verify-live-updates').click();
   await expect(owner.locator('#admin-alert')).toContainText('Live delivery verified');
+  await workspaceView(owner, 'inquiries');
   await contact.goto(provider.base + '/contact/');
   await contact.locator('[name="name"]').fill('Phone Live Inquiry');
   await contact.locator('[name="email"]').fill('phone-live@example.test');
@@ -167,11 +171,12 @@ test('a phone submission appears in an already-open owner inbox through a WebSoc
   await owner.getByRole('button', { name: 'Save note', exact: true }).click();
   await expect(owner.locator('#inquiry-note-list')).toContainText('Agreed a weekly handoff');
   await owner.getByRole('button', { name: 'Convert to client', exact: true }).click();
-  await owner.locator('[data-view="clients"]').click();
+  await owner.locator('#confirm-accept').click();
+  await workspaceView(owner, 'clients');
   await expect(owner.locator('#client-list')).toContainText('Phone Live Inquiry');
   await owner.reload();
   await expect(owner.locator('#admin-app')).toBeVisible();
-  await owner.locator('[data-view="clients"]').click();
+  await workspaceView(owner, 'clients');
   await expect(owner.locator('#client-list')).toContainText('Phone Live Inquiry');
   expect(await contact.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
     true,
@@ -213,6 +218,7 @@ test('another staff member can add a note without replacing the owner draft; log
     'This draft must survive another staff update.',
   );
   await owner.locator('#sign-out').click();
+  await owner.locator('#confirm-accept').click();
   await expect(owner.locator('#admin-app')).toBeHidden();
   await expect(owner.locator('#inquiry-list')).toBeEmpty();
   await first.close();
@@ -227,7 +233,8 @@ test('published copy reaches an already-open public page without a reload', asyn
   await signIn(owner);
   await home.goto(provider.base + '/');
   await expect(home.locator('html')).toHaveAttribute('data-content-connection', 'live');
-  await owner.locator('#content-nav').click();
+  await workspaceView(owner, 'content');
+  await settingsGroup(owner, 'home');
   await owner
     .getByLabel('Home page heading', { exact: true })
     .fill('Live published virtual assistant support');
@@ -253,7 +260,7 @@ test('production browser receives published packages over Supabase and retains s
   await visitor
     .locator('[name="message"]')
     .fill('Please retain this draft while the package updates.');
-  await owner.locator('#content-nav').click();
+  await workspaceView(owner, 'content');
   await owner.locator('[data-editor-tab="plans"]').click();
   await owner
     .locator('#cms-plans [data-catalog-id="professional"]')
@@ -309,7 +316,7 @@ test('a privacy request arrives live and verified deletion removes linked contac
   const owner = await context.newPage();
   const privacy = await context.newPage();
   await signIn(owner);
-  await owner.locator('[data-view="privacy"]').click();
+  await workspaceView(owner, 'privacy');
   await privacy.goto(provider.base + '/privacy/');
   const form = privacy.locator('[data-form="privacy-request"]');
   await form.locator('[name="name"]').fill('Phone deletion requester');
@@ -330,13 +337,14 @@ test('a privacy request arrives live and verified deletion removes linked contac
   await card
     .getByLabel('Completion notes')
     .fill('Synthetic requester identity verified against the test fixture.');
-  await card.getByRole('button', { name: 'Record handling' }).click();
+  await card.getByRole('button', { name: 'Complete request' }).click();
+  await owner.locator('#confirm-accept').click();
   await expect(card).toHaveCount(0);
-  await owner.locator('[data-view="inquiries"]').click();
+  await workspaceView(owner, 'inquiries');
   await owner.getByRole('button', { name: /Deleted inquiry/ }).click();
   await expect(owner.locator('#inquiry-note-list')).not.toContainText('calendar access checklist');
   await expect(owner.locator('[name="note"]')).toBeDisabled();
-  await owner.locator('[data-view="clients"]').click();
+  await workspaceView(owner, 'clients');
   await expect(owner.locator('#client-list')).toContainText('Deleted client');
   await expect(owner.locator('#client-list')).not.toContainText('phone-live@example.test');
   await context.close();
@@ -366,7 +374,7 @@ for (const width of [320, 390, 768, 1440]) {
     }
     await signIn(page);
     for (const view of ['inquiries', 'clients', 'privacy', 'content']) {
-      await page.locator('[data-view="' + view + '"]').click();
+      await workspaceView(page, view);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );

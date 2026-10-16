@@ -33,3 +33,21 @@ Public navigation uses real links with no full-page snapshots. Initial visible c
 The first public API response is compared with the HTML catalog. Unchanged responses do not replace cards, images or controls. A changed publication updates only its affected sections; keyed rows retain unaffected DOM nodes. Do not restore an unconditional `replaceChildren()` on every response.
 
 Mobile menu markup is in `components/Header.astro`; its layout is in `styles/navigation.css` and behavior in `lib/navigation.ts`. Service regions share a grid cell in `styles/experience.css`. Inactive regions use `visibility: hidden`, `inert` and `aria-hidden` to reserve equal space while keeping only the selected region interactive. This does not weaken the global `[hidden]` authentication guard.
+
+## Owner workspace (1.5.0)
+
+The owner application has an independent stylesheet so public design changes cannot accidentally recolor its controls.
+
+| Need | File or folder |
+| --- | --- |
+| Sign-in and workspace shell | `pages/admin/index.astro` |
+| Consistent owner colors and responsive layout | `styles/workspace.css` |
+| Reusable owner SVG icons and editor markup | `components/workspace/` |
+| Navigation, role-aware screens, mobile drawer | `scripts/owner/navigation.ts` |
+| Sign-in and feature wiring | `scripts/owner/index.ts` |
+| Overview and actual summary counts | `scripts/owner/overview.ts` |
+| Inquiry list, notes, status, conversion | `scripts/owner/inquiries.ts` |
+| Client / privacy / website workflows | Matching file in `scripts/owner/` |
+| Reusable confirmation, search, image choices | `confirm.ts`, `search.ts`, `image-picker.ts` |
+
+Start with a small issue in one feature. Read [OWNER-GUIDE.md](../OWNER-GUIDE.md), then trace an interaction through the API. Never replace server authorization with hidden UI buttons.

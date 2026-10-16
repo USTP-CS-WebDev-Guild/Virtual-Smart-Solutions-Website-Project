@@ -2,6 +2,7 @@ import { json, parseBody, resultError } from '../http/responses';
 import { privacyCompletionSchema } from '../validation/forms';
 import type { StaffRouteContext } from '../http/context';
 import { PAGE_SIZE, pageCursor, beforeCursor, nextCursor } from '../lib/pagination';
+import { searchTerm, searchFilter } from '../lib/search';
 
 function mapPrivacyRequest(row: Record<string, any>) {
   return {
@@ -23,6 +24,8 @@ function mapPrivacyRequest(row: Record<string, any>) {
 export async function privacyRoutes(route: StaffRouteContext): Promise<Response | null> {
   const { request, path, method, requestId, db, actor, url } = route;
   if (method === 'GET' && path === '/api/admin/privacy-requests') {
+    const search = searchTerm(url);
+    if (search instanceof Response) return search;
     const cursor = pageCursor(url);
     if (cursor instanceof Response) return cursor;
     const status = url.searchParams.get('status');
@@ -35,6 +38,7 @@ export async function privacyRoutes(route: StaffRouteContext): Promise<Response 
       .order('id', { ascending: false })
       .limit(PAGE_SIZE + 1);
     if (status) query = query.eq('status', status);
+    if (search) query = query.or(searchFilter(search, ['name', 'email']));
     if (cursor) query = query.or(beforeCursor(cursor));
     const { data, error } = await query;
     if (error) throw new Error('privacy_requests_read_failed');

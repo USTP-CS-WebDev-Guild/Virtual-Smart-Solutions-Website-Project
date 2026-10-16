@@ -1,3 +1,16 @@
+# 1.5.0 — Owner workspace redesign
+
+- Replaced inherited public/legacy admin styles with a dedicated charcoal-and-white workspace stylesheet.
+- Added Overview, real inquiry counts, latest conversations, task shortcuts, bookmarkable screens, and accessible mobile navigation.
+- Added authenticated stored-record search to inquiries, clients, and owner-only privacy requests. Search is bounded, literal, parameterized in the classroom adapter, and compatible with cursor/status filters.
+- Added client relationship filters, clearer empty states, direct email actions, inquiry reference copying, and confirmation before conversion.
+- Preserved inquiry notes and status drafts between conversations and live updates; protected content drafts against delayed loads, role loss, and sign-out responses.
+- Grouped website copy by page, added approved-image selectors, disabled editing during publication, and surfaced unpublished changes.
+- Moved diagnostics and notification setup to Settings & help; kept the shared API role/CSRF gates and existing SQL transactions.
+- Added explicit confirmation before privacy anonymization, useful API error wording, and private-data clearing across all content sections.
+- Updated browser acceptance scenarios and added PostgreSQL search / DOM interaction regressions.
+- No dependency upgrades, schema changes, database reset, or hosting/account migration required from 1.4.2.
+
 # Changes
 
 ## 1.4.0 — 2026-10-16

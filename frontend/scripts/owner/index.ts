@@ -2,7 +2,7 @@
 import { supabase } from './session';
 import { api } from './api';
 import { byId, make, setAlert, showWorkspaceLogin, setWorkspaceRole } from './ui';
-import { loadInquiries, openInquiry } from './inquiries';
+import { loadInquiries, openInquiry, loadSummary, hasInquiryDraft } from './inquiries';
 import { loadClients } from './clients';
 import { loadPrivacyRequests } from './privacy';
 import {
@@ -24,36 +24,24 @@ import {
   handleLiveContentChange,
 } from './content-editor';
 
-function showView(view: WorkspaceView, refresh = true) {
-  if (workspace.view === 'content' && view !== 'content' && hasContentDraft()) {
-    if (!window.confirm('Discard your unsaved website edits and leave the editor?')) return;
-    discardContentDraft();
-  }
-  workspace.view = view;
-  document.querySelectorAll<HTMLElement>('.admin-view').forEach((section) => {
-    section.classList.toggle('is-hidden', section.id !== view + '-view');
-  });
-  byId<HTMLElement>('page-heading').textContent =
-    view === 'inquiries'
-      ? 'Inquiry inbox'
-      : view === 'clients'
-        ? 'Clients'
-        : view === 'privacy'
-          ? 'Privacy requests'
-          : 'Website editor';
-  document.querySelectorAll<HTMLButtonElement>('.admin-nav-item').forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.view === view);
-  });
+import { applyWorkspaceView, allowedView, initializeWorkspaceNavigation } from './navigation';
+import { loadOverview } from './overview';
+import { initializeSearch } from './search';
+import { confirmAction } from './confirm';
+
+function showView(view: WorkspaceView, refresh = true, push = true) {
+  const target = applyWorkspaceView(allowedView(view), push);
   setAlert('');
-  if (view === 'clients') {
-    loadClients().catch((error) => setAlert(error.message, 'error'));
-  } else if (view === 'privacy') {
-    loadPrivacyRequests().catch((error) => setAlert(error.message, 'error'));
-  } else if (view === 'content') {
-    loadSiteContent().catch((error) => setAlert(error.message, 'error'));
-  } else if (refresh) {
-    loadInquiries().catch((error) => setAlert(error.message, 'error'));
-  }
+  const report = (error: Error) => setAlert(error.message, 'error');
+  if (target === 'overview') void loadOverview().catch(report);
+  else if (target === 'clients') void loadClients().catch(report);
+  else if (target === 'privacy') void loadPrivacyRequests().catch(report);
+  else if (target === 'content') {
+    if (!hasContentDraft()) void loadSiteContent().catch(report);
+  } else if (target === 'settings') {
+    void checkSubmissions();
+    void loadSummary(workspace.sessionVersion).catch(report);
+  } else if (refresh) void loadInquiries().catch(report);
 }
 
 let dashboardStarted = false;
@@ -63,29 +51,50 @@ function startDashboard() {
   if (!dashboardStarted) {
     dashboardStarted = true;
     initializeContentNavigation();
-    document.querySelectorAll<HTMLButtonElement>('.admin-nav-item').forEach((button) => {
-      button.addEventListener('click', () => {
-        const view = button.dataset.view;
-        showView(
-          view === 'privacy'
-            ? 'privacy'
-            : view === 'content'
-              ? 'content'
-              : view === 'clients'
-                ? 'clients'
-                : 'inquiries',
-        );
-      });
+    initializeWorkspaceNavigation(showView);
+    for (const name of ['inquiry', 'client', 'privacy'])
+      initializeSearch(
+        name,
+        () =>
+          name === 'inquiry'
+            ? loadInquiries()
+            : name === 'client'
+              ? loadClients()
+              : loadPrivacyRequests(),
+        (message) => setAlert(message, 'error'),
+      );
+    const filterInquiry = (value: string) => {
+      byId<HTMLSelectElement>('status-filter').value = value;
+      showView('inquiries');
+    };
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-inquiry-status],[data-status-choice]')
+      .forEach((button) =>
+        button.addEventListener('click', () => {
+          if (button.hasAttribute('data-inquiry-status'))
+            byId<HTMLInputElement>('inquiry-search').value = '';
+          filterInquiry(button.dataset.inquiryStatus ?? button.dataset.statusChoice ?? '');
+        }),
+      );
+    byId<HTMLButtonElement>('inquiry-clear-filters').addEventListener('click', () => {
+      byId<HTMLInputElement>('inquiry-search').value = '';
+      filterInquiry('');
+    });
+    byId<HTMLSelectElement>('client-status-filter').addEventListener('change', () => {
+      void loadClients().catch((error) => setAlert(error.message, 'error'));
     });
     for (const kind of ['plans', 'portfolio', 'team'] as const)
       byId<HTMLButtonElement>('add-' + kind).addEventListener('click', () => addCmsCatalog(kind));
     byId<HTMLButtonElement>('add-service').addEventListener('click', addCmsService);
     byId<HTMLButtonElement>('add-faq').addEventListener('click', addCmsFaq);
-    byId<HTMLButtonElement>('reload-site-content').addEventListener('click', () => {
+    byId<HTMLButtonElement>('reload-site-content').addEventListener('click', async () => {
       if (
-        window.confirm(
-          'Reloading replaces the current editor fields and discards unsaved changes. Continue?',
-        )
+        !hasContentDraft() ||
+        (await confirmAction(
+          'Reload the latest website content?',
+          'Your unpublished edits will be replaced by the latest saved content.',
+          'Reload latest',
+        ))
       ) {
         loadSiteContent().catch((error) => setAlert(error.message, 'error'));
       }
@@ -131,8 +140,12 @@ function startDashboard() {
     window.addEventListener('vss-open-inquiry', (event) => {
       const id = (event as CustomEvent<string>).detail;
       if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+      byId<HTMLInputElement>('inquiry-search').value = '';
+      byId<HTMLSelectElement>('status-filter').value = '';
       showView('inquiries', false);
-      openInquiry(id).catch((error) => setAlert(error.message, 'error'));
+      void loadInquiries()
+        .then(() => openInquiry(id))
+        .catch((error) => setAlert(error.message, 'error'));
     });
     document.getElementById('check-submissions')?.addEventListener('click', () => {
       void checkSubmissions();
@@ -143,6 +156,7 @@ function startDashboard() {
 
     const runTestJobsButton = document.getElementById('run-test-jobs') as HTMLButtonElement | null;
     runTestJobsButton?.addEventListener('click', async () => {
+      const session = workspace.sessionVersion;
       runTestJobsButton.disabled = true;
       runTestJobsButton.textContent = 'Running jobs…';
       try {
@@ -153,7 +167,8 @@ function startDashboard() {
             body: JSON.stringify({}),
           },
         );
-        await loadInquiries();
+        if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
+        await loadInquiries(true);
         setAlert(
           `Jobs completed. ${result.email.processed} notification(s) processed; ${result.email.captured} captured. Privacy retention was checked.`,
           'success',
@@ -166,16 +181,13 @@ function startDashboard() {
       }
     });
   }
-  showView('inquiries', false);
-  if (workspace.actorRole === 'owner') void checkSubmissions();
+  byId<HTMLElement>('workspace-date').textContent = new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date());
+  showView(allowedView(location.hash), true, false);
   startWorkspaceLive();
-
-  loadInquiries().catch((error) => {
-    byId<HTMLElement>('inquiry-list').replaceChildren(
-      make('div', 'loading-state is-error', error.message),
-    );
-    setAlert(error.message, 'error');
-  });
 }
 
 let stopLive: (() => void) | null = null;
@@ -185,7 +197,7 @@ window.addEventListener('vss-session-closed', () => {
   stopLive = null;
   lastStaffRevision = -1;
   discardContentDraft();
-  workspace.view = 'inquiries';
+  workspace.view = 'overview';
 });
 window.addEventListener('pagehide', () => {
   stopLive?.();
@@ -195,11 +207,15 @@ window.addEventListener('pageshow', (event) => {
   if (event.persisted) void checkStaffSession();
 });
 window.addEventListener('beforeunload', (event) => {
-  if (hasContentDraft()) event.preventDefault();
+  if (hasContentDraft() || hasInquiryDraft()) event.preventDefault();
 });
 
 async function refreshCurrentView() {
-  if (workspace.view === 'clients') await loadClients();
+  if (workspace.view === 'overview') await loadOverview();
+  else if (workspace.view === 'settings') {
+    await checkSubmissions();
+    await loadSummary(workspace.sessionVersion);
+  } else if (workspace.view === 'clients') await loadClients();
   else if (workspace.view === 'privacy') await loadPrivacyRequests();
   else if (workspace.view === 'content') await handleLiveContentChange();
   else await loadInquiries();
@@ -242,11 +258,16 @@ function startWorkspaceLive() {
         const jobs: Promise<unknown>[] = [];
         if (scopes.has('staff')) {
           jobs.push(loadInquiries(true));
+          if (workspace.view === 'overview') jobs.push(loadOverview());
           if (workspace.view === 'clients') jobs.push(loadClients());
         }
         if (scopes.has('owner') && workspace.actorRole === 'owner' && workspace.view === 'privacy')
           jobs.push(loadPrivacyRequests());
-        if (scopes.has('public') && workspace.actorRole === 'owner' && workspace.view === 'content')
+        if (
+          scopes.has('public') &&
+          workspace.actorRole === 'owner' &&
+          (workspace.view === 'content' || hasContentDraft())
+        )
           jobs.push(handleLiveContentChange());
         await Promise.all(jobs);
       },
@@ -319,16 +340,13 @@ async function checkSubmissions() {
     }>('/api/admin/submission-checks');
     if (version !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
     container.replaceChildren();
-    if (result.ok)
-      container.append(
-        make(
-          'p',
-          '',
-          'Contact form settings passed. Submit an inquiry to verify receipt in this inbox.',
-        ),
-      );
-    for (const check of result.checks.filter((item) => !item.ok)) {
-      container.append(make('p', 'is-error', check.name + ': ' + check.message));
+    for (const check of result.checks) {
+      const row = make('div', 'check-row' + (check.ok ? '' : ' is-error'));
+      row.append(make('span', 'check-indicator', check.ok ? '✓' : '!'));
+      const text = make('div');
+      text.append(make('strong', '', check.name), make('p', '', check.message));
+      row.append(text);
+      container.append(row);
     }
   } catch {
     if (version === workspace.sessionVersion && !byId<HTMLElement>('admin-app').hidden) {
@@ -356,7 +374,7 @@ async function checkStaffSession() {
     }
     const response = await api<{
       authenticated: boolean;
-      user: { role: 'owner' | 'staff' } | null;
+      user: { role: 'owner' | 'staff'; email?: string } | null;
     }>('/api/auth/session');
     // A sign-out in another tab must invalidate an in-flight staff check.
     if (checkVersion !== sessionCheckVersion) return;
@@ -368,6 +386,10 @@ async function checkStaffSession() {
       return;
     }
     setWorkspaceRole(response.user?.role || 'staff');
+    const email = response.user?.email || auth.session.user.email || '';
+    byId<HTMLElement>('workspace-account-email').textContent = email;
+    byId<HTMLElement>('settings-account-email').textContent = email;
+    document.getElementById('workspace-skip-link')?.setAttribute('href', '#admin-main');
     byId<HTMLElement>('admin-login').hidden = true;
     byId<HTMLElement>('admin-app').hidden = false;
     startDashboard();
@@ -377,6 +399,19 @@ async function checkStaffSession() {
     );
   }
 }
+
+byId<HTMLButtonElement>('toggle-password').addEventListener('click', () => {
+  const input = byId<HTMLInputElement>('staff-password');
+  const button = byId<HTMLButtonElement>('toggle-password');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  button.textContent = visible ? 'Hide' : 'Show';
+  button.setAttribute('aria-pressed', String(visible));
+});
+
+byId<HTMLInputElement>('staff-password').addEventListener('keyup', (event) => {
+  byId<HTMLElement>('caps-lock-warning').hidden = !event.getModifierState('CapsLock');
+});
 
 const loginForm = byId<HTMLFormElement>('staff-login-form');
 loginForm.addEventListener('submit', async (event) => {
@@ -413,6 +448,15 @@ const loginButton = loginForm.querySelector<HTMLButtonElement>('button[type="sub
 if (loginButton) loginButton.disabled = false;
 
 byId<HTMLButtonElement>('sign-out').addEventListener('click', async () => {
+  if (
+    (hasContentDraft() || hasInquiryDraft()) &&
+    !(await confirmAction(
+      'Sign out with unsaved changes?',
+      'Your unpublished website edits and unsaved notes will be discarded when you sign out.',
+      'Sign out',
+    ))
+  )
+    return;
   ++sessionCheckVersion;
   showWorkspaceLogin('Signing out…');
   await supabase?.auth.signOut();

@@ -1,15 +1,22 @@
 ---
-import "../../styles/global.css";
-import "../../styles/workspace.css";
-import "../../styles/brand.css";
-import { site } from "../../data/site";
-import Brand from "../../components/Brand.astro";
-import { version } from "../../../package.json";
-const classroom =
-  import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE === "true";
-const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === "true";
+import '../../styles/brand.css';
+import '../../styles/workspace.css';
+import { site } from '../../data/site';
+import Brand from '../../components/Brand.astro';
+import Icon from '../../components/workspace/Icon.astro';
+import WebsiteEditor from '../../components/workspace/WebsiteEditor.astro';
+import { version } from '../../../package.json';
+const classroom = import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE === 'true';
+const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === 'true';
+const navigation = [
+  { view: 'overview', label: 'Overview', owner: false },
+  { view: 'inquiries', label: 'Inquiries', owner: false },
+  { view: 'clients', label: 'Clients', owner: false },
+  { view: 'content', label: 'Website editor', owner: true },
+  { view: 'privacy', label: 'Privacy requests', owner: true },
+  { view: 'settings', label: 'Settings & help', owner: true },
+];
 ---
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -17,39 +24,47 @@ const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === "true";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="app-release" content={version} />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="theme-color" content="#fdf9ed" />
-    <title>Staff inbox — {site.name}</title>
+    <meta name="theme-color" content="#161719" />
+    <link rel="preload" href="/fonts/dm-sans.woff2" as="font" type="font/woff2" crossorigin />
+    <title>Workspace — {site.name}</title>
     <link rel="icon" type="image/svg+xml" href="/brand/mark.svg" />
   </head>
-  <body
-    class="admin-page"
-    data-test-environment={testEnvironment ? "true" : "false"}
-  >
-    <a class="skip-link" href="#admin-login">Skip to workspace</a>
-    <section
-      class="admin-login"
-      id="admin-login"
-      aria-labelledby="login-heading"
-    >
-      <section class="admin-login-card">
-        <Brand />
-        <p class="eyebrow">OWNER AND STAFF ACCESS</p>
-        <h1 id="login-heading">Sign in to the workspace.</h1>
+  <body class="admin-page" data-test-environment={testEnvironment ? 'true' : 'false'}>
+    <a class="skip-link" href="#admin-login" id="workspace-skip-link">
+      Skip to workspace
+    </a>
+    <section class="admin-login" id="admin-login" aria-labelledby="login-heading">
+      <div class="login-story">
+        <Brand inverse />
+        <div class="login-story-copy">
+          <p class="eyebrow">THE VSS WORKSPACE</p>
+          <h2>
+            Good work.
+            <br />A clear next step.
+          </h2>
+          <p>
+            Your inquiries, client relationships, and website updates. Together in one place.
+          </p>
+        </div>
+        <p class="login-story-footer">Virtual Smart Solutions · Owner & staff access</p>
+      </div>
+      <div class="admin-login-card">
+        <a class="admin-login-back" href="/">
+          ← Back to website
+        </a>
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1 id="login-heading">
+          Your workspace
+          <br />
+          starts here.
+        </h1>
         <p class="admin-login-owner">
-          {
-            classroom
-              ? "Use the local owner or staff account printed in your terminal. Run npm run accounts to see it again."
-              : "Use the email account created for you by the company owner."
-          }
+          {classroom
+            ? 'Use your local owner or staff account. Your terminal lists the sign-in details; npm run accounts shows them again.'
+            : 'Sign in with the work account set up for you by the company owner.'}
         </p>
         <form id="staff-login-form" method="post" action="/api/auth/session">
-          <noscript
-            ><p class="form-status is-error">
-              Enable JavaScript to sign in securely. Sign-in is disabled while
-              the application is unavailable.
-            </p></noscript
-          >
-          <label for="staff-email">Work email</label>
+          <label for="staff-email">Email address</label>
           <input
             id="staff-email"
             name="email"
@@ -59,502 +74,657 @@ const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === "true";
             required
           />
           <label for="staff-password">Password</label>
-          <input
-            id="staff-password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            minlength="8"
-            maxlength="200"
-            required
-          />
-          <button class="button" type="submit" disabled
-            >Open owner workspace <span aria-hidden="true">↗</span></button
-          >
+          <div class="password-control">
+            <input
+              id="staff-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              minlength="8"
+              maxlength="200"
+              required
+            />
+            <button
+              id="toggle-password"
+              class="password-toggle"
+              type="button"
+              aria-controls="staff-password"
+              aria-pressed="false"
+            >
+              Show
+            </button>
+          </div>
+          <p id="caps-lock-warning" class="field-help" hidden>
+            Caps Lock is on.
+          </p>
+          <button class="button" type="submit" disabled>
+            Sign in <Icon name="arrow" size={18} />
+          </button>
           <p
             class="admin-login-status"
             id="staff-login-status"
             role="status"
             aria-live="polite"
-          >
-          </p>
+          ></p>
+          <noscript>
+            <p class="is-error">
+              Enable JavaScript to sign in. Your password is never submitted without the sign-in
+              application.
+            </p>
+          </noscript>
         </form>
-        <noscript
-          ><p class="admin-login-note">
-            Enable JavaScript in your browser to sign in.
-          </p></noscript
-        >
         <p class="admin-login-note">
-          Staff access is managed by the owner. New accounts cannot be created
-          from this page.
+          Need access or help signing in? Contact your workspace owner.
         </p>
-        <a class="admin-login-back" href="/">← Back to the public site</a>
-      </section>
+      </div>
     </section>
     <div class="admin-shell" id="admin-app" hidden>
-      <aside class="admin-sidebar">
-        <Brand />
-        <div class="admin-workspace">
-          <span class="workspace-avatar">V</span><div>
-            <small>WORKSPACE</small><strong data-site-content="shortName"
-              >{site.shortName}</strong
-            >
-          </div><span aria-hidden="true">⌄</span>
+      <button
+        id="workspace-nav-backdrop"
+        class="workspace-nav-backdrop"
+        type="button"
+        aria-label="Close navigation"
+        hidden
+      ></button>
+      <aside class="admin-sidebar" id="workspace-navigation" aria-label="Workspace sidebar">
+        <div class="sidebar-brand-row">
+          <Brand inverse />
+          <button
+            id="workspace-menu-close"
+            class="icon-button"
+            type="button"
+            aria-label="Close navigation"
+          >
+            <Icon name="close" />
+          </button>
         </div>
-        <nav class="admin-nav" aria-label="Staff navigation">
-          <button
-            class="admin-nav-item is-active"
-            type="button"
-            data-view="inquiries"
-            ><span aria-hidden="true">▤</span> Inquiries <span
-              class="nav-count"
-              id="new-count">0</span
-            ></button
-          >
-          <button class="admin-nav-item" type="button" data-view="clients"
-            ><span aria-hidden="true">◷</span> Clients</button
-          >
-          <button
-            class="admin-nav-item is-hidden"
-            type="button"
-            data-view="privacy"
-            ><span aria-hidden="true">◈</span> Privacy requests</button
-          >
-          <button
-            class="admin-nav-item is-hidden"
-            id="content-nav"
-            type="button"
-            data-view="content"
-            ><span aria-hidden="true">✎</span> Website editor</button
-          >
+        <div class="workspace-label">
+          <span class="workspace-label-dot"></span>
+          <span>Business workspace</span>
+        </div>
+        <nav class="admin-nav" aria-label="Workspace navigation">
+          <p class="nav-group-label">WORKSPACE</p>
+          {navigation.map((item, index) => (
+            <>
+              {index === 3 && (
+                <p class="nav-group-label" data-owner-only hidden>
+                  MANAGE
+                </p>
+              )}
+              <button
+                class:list={[
+                  'admin-nav-item',
+                  { 'is-active': index === 0, 'is-hidden': item.owner },
+                ]}
+                id={item.view === 'content' ? 'content-nav' : undefined}
+                type="button"
+                data-view={item.view}
+                data-owner-only={item.owner ? '' : undefined}
+                hidden={item.owner}
+                aria-controls={item.view + '-view'}
+                aria-current={index === 0 ? 'page' : undefined}
+              >
+                <Icon name={item.view} />
+                <span>{item.label}</span>
+                {item.view === 'inquiries' && (
+                  <span class="nav-count" id="new-count" aria-label="New inquiries">
+                    0
+                  </span>
+                )}
+              </button>
+            </>
+          ))}
         </nav>
         <div class="admin-sidebar-bottom">
-          <div class="sidebar-help">
-            <span>✓</span><p>Every inquiry deserves a clear next step.</p>
+          <a href="/" class="sidebar-site-link" target="_blank" rel="noopener">
+            View website <Icon name="arrow" size={18} />
+          </a>
+          <div class="workspace-account">
+            <span class="user-pill" aria-hidden="true">
+              V
+            </span>
+            <div>
+              <strong id="workspace-account-role">Team member</strong>
+              <span id="workspace-account-email">Signed-in account</span>
+            </div>
           </div>
-          <a href="/" class="sidebar-site-link"
-            >View public site <span aria-hidden="true">↗</span></a
-          >
         </div>
       </aside>
-      <main class="admin-main" id="admin-main">
+      <main class="admin-main" id="admin-main" tabindex="-1">
         <header class="admin-topbar">
-          <div>
-            <p class="eyebrow">
-              <span data-site-content="shortName">{site.shortName}</span> / STAFF
-              SPACE
-            </p><h1 id="page-heading">Inquiry inbox</h1>
+          <div class="topbar-heading">
+            <button
+              id="workspace-menu-toggle"
+              class="icon-button"
+              type="button"
+              aria-label="Open workspace navigation"
+              aria-controls="workspace-navigation"
+              aria-expanded="false"
+            >
+              <Icon name="menu" />
+            </button>
+            <div>
+              <p class="eyebrow">
+                <span data-site-content="shortName">{site.shortName}</span>
+                <span class="breadcrumb-divider">/</span>WORKSPACE
+              </p>
+              <h1 id="page-heading" tabindex="-1">
+                Overview
+              </h1>
+            </div>
           </div>
           <div class="admin-top-actions">
-            <span class="system-status" role="status"
-              ><i aria-hidden="true"></i> Connecting live updates…</span
-            ><button
+            <span class="system-status" role="status">
+              <i aria-hidden="true"></i> Connecting…
+            </span>
+            <button
               class="icon-button"
               id="refresh-button"
               type="button"
-              aria-label="Refresh current view">↻</button
-            ><span class="user-pill">V</span><button
-              class="admin-signout"
-              id="sign-out"
-              type="button">Sign out</button
+              aria-label="Refresh current view"
             >
+              <Icon name="refresh" size={18} />
+            </button>
+            <button class="admin-signout" id="sign-out" type="button">
+              Sign out
+            </button>
           </div>
         </header>
-        <div
-          class="admin-alert"
-          id="admin-alert"
-          role="status"
-          aria-live="polite"
-        >
-        </div>
-        {
-          testEnvironment && (
+        <div class="admin-alert" id="admin-alert" role="status" aria-live="polite"></div>
+        <div class="workspace-content">
+          <section class="admin-view" id="overview-view" aria-label="Overview">
+            <div class="view-intro overview-intro">
+              <div>
+                <p class="eyebrow" id="workspace-date">
+                  YOUR DAY, ORGANIZED
+                </p>
+                <h2>
+                  Welcome back<span class="heading-dot">.</span>
+                </h2>
+                <p>A little clarity for the work ahead.</p>
+              </div>
+              <a class="cms-secondary-button" href="/" target="_blank" rel="noopener">
+                View your website <Icon name="arrow" size={17} />
+              </a>
+            </div>
+            <div class="admin-metrics">
+              <button type="button" data-inquiry-status="new">
+                <span>
+                  New inquiries <Icon name="inbox" size={18} />
+                </span>
+                <strong id="metric-new">—</strong>
+                <small>
+                  Ready for your first response <span aria-hidden="true">↗</span>
+                </small>
+              </button>
+              <button type="button" data-inquiry-status="in_progress">
+                <span>
+                  In progress <Icon name="clients" size={18} />
+                </span>
+                <strong id="metric-progress">—</strong>
+                <small>
+                  Conversations moving forward <span aria-hidden="true">↗</span>
+                </small>
+              </button>
+              <button type="button" data-inquiry-status="waiting">
+                <span>
+                  Waiting <Icon name="overview" size={18} />
+                </span>
+                <strong id="metric-waiting">—</strong>
+                <small>
+                  Ready for a follow-up <span aria-hidden="true">↗</span>
+                </small>
+              </button>
+              <article>
+                <span>
+                  Converted <Icon name="check" size={18} />
+                </span>
+                <strong id="metric-converted">—</strong>
+                <small>Inquiries added to your clients</small>
+              </article>
+            </div>
+            <div class="overview-grid">
+              <section class="workspace-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">LATEST CONVERSATIONS</p>
+                    <h3>Recent inquiries</h3>
+                  </div>
+                  <button class="text-button" type="button" data-go-view="inquiries">
+                    View all →
+                  </button>
+                </div>
+                <div id="overview-recent">
+                  <p class="loading-state">Loading your latest inquiries…</p>
+                </div>
+              </section>
+              <section class="workspace-panel quick-actions">
+                <p class="eyebrow">KEEP THINGS MOVING</p>
+                <h3>Where would you like to start?</h3>
+                <button type="button" data-inquiry-status="new">
+                  <Icon name="inbox" />
+                  <span>
+                    <strong>Review new inquiries</strong>
+                    <small>Read, reply, and set a next step.</small>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </button>
+                <button type="button" data-go-view="clients">
+                  <Icon name="clients" />
+                  <span>
+                    <strong>Manage client relationships</strong>
+                    <small>Keep every relationship up to date.</small>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </button>
+                <button type="button" data-go-view="content" data-owner-only hidden>
+                  <Icon name="content" />
+                  <span>
+                    <strong>Update your website</strong>
+                    <small>Edit your pages and publish changes.</small>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </button>
+                <div class="overview-note">
+                  <span class="overview-note-mark">✓</span>
+                  <p>
+                    Every inquiry has a next step. Open a conversation to leave a note, update
+                    its status, or add a client.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </section>
+          <section
+            class="admin-view is-hidden"
+            id="inquiries-view"
+            aria-label="Inquiries"
+            hidden
+          >
+            <div class="view-intro">
+              <div>
+                <h2>Your next conversation starts here.</h2>
+                <p>
+                  Review inquiries, record follow-ups, and turn good conversations into clients.
+                </p>
+              </div>
+            </div>
+            <div class="workspace-panel inbox-toolbar">
+              <form id="inquiry-search-form" class="workspace-search" role="search">
+                <label class="sr-only" for="inquiry-search">
+                  Search inquiries by name, email, business, or service
+                </label>
+                <span aria-hidden="true">⌕</span>
+                <input
+                  id="inquiry-search"
+                  type="search"
+                  maxlength="100"
+                  placeholder="Search inquiries…"
+                  autocomplete="off"
+                />
+                <button class="text-button" type="submit">
+                  Search
+                </button>
+              </form>
+              <label class="filter-label" for="status-filter">
+                Status
+                <select id="status-filter">
+                  <option value="">All inquiries</option>
+                  <option value="new">New</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="waiting">Waiting</option>
+                  <option value="converted">Converted</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </label>
+              <button id="inbox-refresh" class="cms-secondary-button" type="button">
+                Refresh
+              </button>
+            </div>
+            <div class="inquiry-filter-chips" aria-label="Quick inquiry filters">
+              {[
+                { value: '', label: 'All inquiries' },
+                { value: 'new', label: 'New' },
+                { value: 'in_progress', label: 'In progress' },
+                { value: 'waiting', label: 'Waiting' },
+                { value: 'converted', label: 'Converted' },
+                { value: 'closed', label: 'Closed' },
+              ].map((item) => (
+                <button
+                  type="button"
+                  data-status-choice={item.value}
+                  aria-pressed={item.value === '' ? 'true' : 'false'}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div class="inbox-layout">
+              <section class="inquiry-list-panel" aria-label="Inquiry list">
+                <div class="panel-heading">
+                  <div>
+                    <h3>
+                      Conversations <span class="result-count" id="inquiry-result-count"></span>
+                    </h3>
+                    <p class="inbox-updated-at" id="inbox-updated-at" role="status">
+                      Checking for inquiries…
+                    </p>
+                  </div>
+                  <button id="inquiry-clear-filters" class="text-button" type="button" hidden>
+                    Clear filters
+                  </button>
+                </div>
+                <div class="inquiry-list" id="inquiry-list">
+                  <div class="loading-state">Loading inquiries…</div>
+                </div>
+                <button
+                  id="inquiries-more"
+                  class="cms-secondary-button list-more"
+                  type="button"
+                  hidden
+                >
+                  Load older inquiries
+                </button>
+              </section>
+              <section
+                class="inquiry-detail-panel"
+                id="inquiry-detail"
+                aria-label="Selected inquiry"
+              >
+                <div class="empty-detail">
+                  <span class="empty-state-icon">
+                    <Icon name="inbox" size={28} />
+                  </span>
+                  <h3>A clear next step.</h3>
+                  <p>
+                    Choose an inquiry to read the message, add a follow-up note, or turn it into
+                    a client.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </section>
+          <section class="admin-view is-hidden" id="clients-view" aria-label="Clients" hidden>
+            <div class="view-intro">
+              <div>
+                <h2>Good relationships, kept in view.</h2>
+                <p>
+                  Clients are created when you convert an inquiry. Keep their status up to date
+                  here.
+                </p>
+              </div>
+              <button class="cms-secondary-button" type="button" data-go-view="inquiries">
+                Open inquiries →
+              </button>
+            </div>
+            <div class="workspace-panel list-toolbar">
+              <form id="client-search-form" class="workspace-search" role="search">
+                <label class="sr-only" for="client-search">
+                  Search clients by name, email, or business
+                </label>
+                <span aria-hidden="true">⌕</span>
+                <input
+                  id="client-search"
+                  type="search"
+                  maxlength="100"
+                  placeholder="Search clients…"
+                  autocomplete="off"
+                />
+                <button class="text-button" type="submit">
+                  Search
+                </button>
+              </form>
+              <label class="filter-label">
+                Status
+                <select id="client-status-filter">
+                  <option value="">All clients</option>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </label>
+              <button id="clients-refresh" class="cms-secondary-button" type="button">
+                Refresh
+              </button>
+            </div>
+            <p id="client-result-count" class="list-result-status" role="status"></p>
+            <div id="client-list" class="client-list">
+              <p class="loading-state">Loading clients…</p>
+            </div>
+            <button
+              id="clients-more"
+              class="cms-secondary-button list-more"
+              type="button"
+              hidden
+            >
+              Load older clients
+            </button>
+          </section>
+          <section
+            class="admin-view is-hidden"
+            id="privacy-view"
+            aria-label="Privacy requests"
+            hidden
+          >
+            <div class="view-intro">
+              <div>
+                <h2>Handle personal data with care.</h2>
+                <p>
+                  Review each request, verify the person’s identity, and record what you did.
+                </p>
+              </div>
+            </div>
+            <div class="workspace-panel list-toolbar">
+              <form id="privacy-search-form" class="workspace-search" role="search">
+                <label class="sr-only" for="privacy-search">
+                  Search privacy requests by name or email
+                </label>
+                <span aria-hidden="true">⌕</span>
+                <input
+                  id="privacy-search"
+                  type="search"
+                  maxlength="100"
+                  placeholder="Search privacy requests…"
+                  autocomplete="off"
+                />
+                <button class="text-button" type="submit">
+                  Search
+                </button>
+              </form>
+              <label class="filter-label">
+                Show
+                <select id="privacy-filter">
+                  <option value="open">Open requests</option>
+                  <option value="completed">Completed requests</option>
+                  <option value="">All requests</option>
+                </select>
+              </label>
+              <button class="cms-secondary-button" id="privacy-refresh" type="button">
+                Refresh
+              </button>
+            </div>
+            <div class="privacy-guide">
+              <Icon name="privacy" size={20} />
+              <p>
+                <strong>Verify first. Resolve second.</strong> A contact inquiry and a privacy
+                request are handled separately. Completing a deletion request can anonymize
+                stored records.
+              </p>
+            </div>
+            <div class="privacy-queue" id="privacy-queue">
+              <div class="loading-state">Loading requests…</div>
+            </div>
+            <button
+              id="privacy-more"
+              class="cms-secondary-button list-more"
+              type="button"
+              hidden
+            >
+              Load older requests
+            </button>
+          </section>
+          <WebsiteEditor />
+          <section
+            class="admin-view is-hidden"
+            id="settings-view"
+            aria-label="Settings and help"
+            hidden
+          >
+            <div class="view-intro">
+              <div>
+                <h2>A workspace you can rely on.</h2>
+                <p>
+                  Check your connections, understand email delivery, and find a clear way
+                  forward.
+                </p>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <section class="workspace-panel settings-card">
+                <span class="settings-icon">
+                  <Icon name="privacy" />
+                </span>
+                <h3>Your access</h3>
+                <p>
+                  You are signed in as{' '}
+                  <strong id="settings-account-email">the workspace owner</strong>.
+                </p>
+                <p>
+                  Owners can manage inquiries, clients, website content, and privacy requests.
+                  Staff can manage inquiries and clients.
+                </p>
+              </section>
+              <section class="workspace-panel settings-card">
+                <span class="settings-icon">
+                  <Icon name="content" />
+                </span>
+                <h3>Your website</h3>
+                <p>
+                  Website content is saved to your database. Published updates reach open
+                  website tabs automatically.
+                </p>
+                <a class="text-button" href="/" target="_blank" rel="noopener">
+                  Open your website ↗
+                </a>
+                <p class="field-help">Workspace version {version}</p>
+              </section>
+            </div>
+            <section class="workspace-panel settings-card delivery-settings">
+              <div>
+                <p class="eyebrow">EMAIL DELIVERY</p>
+                <h3>Notification status</h3>
+                <p id="email-caption">Checking your notification queue…</p>
+              </div>
+              <strong class="delivery-number" id="metric-email">
+                —
+              </strong>
+              <p>
+                {testEnvironment
+                  ? 'This staging workspace captures notifications for testing. Inquiry records are saved; outbound emails are not sent.'
+                  : 'Your email provider processes queued notifications. An inquiry remains in the inbox even if its email notification needs another attempt.'}
+              </p>
+            </section>
             <section
-              class="test-jobs-panel"
+              class="workspace-panel settings-card test-jobs-panel"
               aria-labelledby="test-jobs-heading"
               hidden
             >
               <div>
-                <p class="eyebrow">TEST OPERATIONS</p>
-                <h2 id="test-jobs-heading">Scheduled jobs</h2>
+                <p class="eyebrow">CONNECTION CHECKS</p>
+                <h3 id="test-jobs-heading">Workspace diagnostics</h3>
                 <p>
-                  Test mode captures email notices instead of sending them. Run
-                  the same maintenance handlers here when testing.
+                  Use these checks when reviewing the setup or troubleshooting with your team.
                 </p>
               </div>
               <div class="test-job-actions">
-                <>
-                  <button
-                    class="cms-secondary-button"
-                    id="check-submissions"
-                    type="button"
-                  >
-                    Check contact form
-                  </button>
-                  <button
-                    class="cms-secondary-button"
-                    id="verify-live-updates"
-                    type="button"
-                  >
-                    Verify live delivery
-                  </button>
-                  <button
-                    class="button button-dark"
-                    id="run-test-jobs"
-                    type="button"
-                  >
-                    Run test jobs
-                  </button>
-                </>
+                <button class="cms-secondary-button" id="check-submissions" type="button">
+                  Check contact form
+                </button>
+                {testEnvironment && (
+                  <>
+                    <button class="cms-secondary-button" id="verify-live-updates" type="button">
+                      Verify live delivery
+                    </button>
+                    <button class="button" id="run-test-jobs" type="button">
+                      Run test jobs
+                    </button>
+                  </>
+                )}
               </div>
               <div
                 id="submission-check-results"
                 class="submission-check-results"
                 role="status"
-              />
+              ></div>
             </section>
-          )
-        }
-        <section class="admin-view" id="inquiries-view">
-          <div class="admin-metrics">
-            <article>
-              <span>NEW</span><strong id="metric-new">—</strong><small
-                >Needs a first look</small
-              >
-            </article>
-            <article>
-              <span>IN PROGRESS</span><strong id="metric-progress">—</strong
-              ><small>Being followed up</small>
-            </article>
-            <article>
-              <span>WAITING</span><strong id="metric-waiting">—</strong><small
-                >Next step is pending</small
-              >
-            </article>
-            <article class="metric-notification">
-              <span>EMAIL QUEUE</span><strong id="metric-email">—</strong><small
-                id="email-caption">Outbox health</small
-              >
-            </article>
-          </div>
-          <div class="inbox-layout">
-            <section class="inquiry-list-panel">
-              <div class="panel-heading">
-                <div>
-                  <p class="eyebrow">YOUR LEADS</p><h2>Recent inquiries</h2><p
-                    class="inbox-updated-at"
-                    id="inbox-updated-at"
-                    role="status"
-                  >
-                    Checking for inquiries…
-                  </p>
-                </div><div class="inbox-panel-controls">
-                  <button
-                    id="inbox-refresh"
-                    class="cms-secondary-button"
-                    type="button">Refresh</button
-                  ><label class="filter-label"
-                    >Filter <select id="status-filter"
-                      ><option value="">All</option><option value="new"
-                        >New</option
-                      ><option value="in_progress">In progress</option><option
-                        value="waiting">Waiting</option
-                      ><option value="converted">Converted</option><option
-                        value="closed">Closed</option
-                      ></select
-                    ></label
-                  >
-                </div>
-              </div>
-              <div class="inquiry-list" id="inquiry-list">
-                <div class="loading-state">Loading inquiries…</div>
-              </div>
-              <button
-                id="inquiries-more"
-                class="cms-secondary-button list-more"
-                type="button"
-                hidden>Load older inquiries</button
-              >
+            <section class="workspace-panel workspace-guide">
+              <p class="eyebrow">A QUICK GUIDE</p>
+              <h3>From first inquiry to ongoing work.</h3>
+              <ol>
+                <li>
+                  <strong>Review the inquiry.</strong>
+                  <span>
+                    Read the message, then use Reply by email to start a conversation in your
+                    email application.
+                  </span>
+                </li>
+                <li>
+                  <strong>Record the next step.</strong>
+                  <span>
+                    Add a private follow-up note. Use In progress while you’re working or
+                    Waiting when you need a reply.
+                  </span>
+                </li>
+                <li>
+                  <strong>Add the client.</strong>
+                  <span>
+                    Once you’ve agreed to work together, choose Convert to client. Their
+                    original inquiry stays linked.
+                  </span>
+                </li>
+                <li>
+                  <strong>Keep the website current.</strong>
+                  <span>
+                    Edit your content, review it, and choose Save and publish. Revision history
+                    lets you restore earlier content.
+                  </span>
+                </li>
+              </ol>
             </section>
-            <aside class="inquiry-detail-panel" id="inquiry-detail">
-              <div class="empty-detail">
-                <span>↗</span><h2>Inquiry details</h2><p>
-                  Select a request to review its scope, record a follow-up, or
-                  convert it into a client.
-                </p>
-              </div>
-            </aside>
-          </div>
-        </section>
-        <section class="admin-view is-hidden" id="clients-view">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">CLIENT RELATIONSHIPS</p><h2>Clients</h2><p>
-                Converted inquiries, their current arrangement, and the original
-                conversation.
-              </p>
-            </div><button
-              id="clients-refresh"
-              class="cms-secondary-button"
-              type="button">Refresh</button
-            >
-          </div>
-          <div id="client-list" class="client-list">
-            <p class="loading-state">Loading clients…</p>
-          </div>
-          <button
-            id="clients-more"
-            class="cms-secondary-button list-more"
-            type="button"
-            hidden>Load older clients</button
-          >
-        </section>
-        <section class="admin-view is-hidden" id="privacy-view">
-          <div class="panel-heading privacy-panel-heading">
-            <div>
-              <p class="eyebrow">DATA REQUESTS</p><h2>Privacy requests</h2><p>
-                Verify the requester before sharing or changing personal
-                information.
-              </p>
-            </div><div class="inbox-panel-controls">
-              <label class="filter-label"
-                >Show <select id="privacy-filter"
-                  ><option value="open">Open requests</option><option
-                    value="completed">Completed requests</option
-                  ><option value="">All requests</option></select
-                ></label
-              ><button
-                class="button button-dark"
-                id="privacy-refresh"
-                type="button">Refresh</button
-              >
-            </div>
-          </div>
-          <div class="privacy-queue" id="privacy-queue">
-            <div class="loading-state">Loading requests…</div>
-          </div>
-          <button
-            id="privacy-more"
-            class="cms-secondary-button list-more"
-            type="button"
-            hidden>Load older requests</button
-          >
-        </section>
-        <section class="admin-view is-hidden" id="content-view">
-          <p
-            id="content-update-notice"
-            class="content-update-notice"
-            role="status"
-            hidden
-          >
-            A newer version was published. Your unsaved edits are preserved. Use
-            Reload latest to review it; saving an old revision will show a
-            conflict.
-          </p>
-          <div class="content-editor-intro">
-            <div>
-              <p class="eyebrow">OWNER CONTENT MANAGEMENT</p><h2>
-                Update the live website.
-              </h2><p>
-                Changes are validated, recorded in the content history, and
-                appear on the public site without a rebuild or deployment.
-              </p>
-            </div>
-            <div class="content-editor-controls">
-              <span class="content-revision" id="content-revision"
-                >Not loaded</span
-              ><button
-                class="cms-secondary-button"
-                id="reload-site-content"
-                type="button">Reload latest</button
-              ><button
-                class="cms-secondary-button"
-                id="toggle-content-history"
-                type="button">Revision history</button
-              >
-            </div>
-          </div>
-          <div class="content-history is-hidden" id="content-history"></div>
-          <div class="cms-editor-toolbar">
-            <nav class="cms-section-nav" aria-label="Website editor sections">
-              <button
-                type="button"
-                data-editor-tab="settings"
-                aria-controls="editor-settings"
-                aria-pressed="true">Page copy</button
-              >
-              <button
-                type="button"
-                data-editor-tab="services"
-                aria-controls="editor-services"
-                aria-pressed="false">Services</button
-              >
-              <button
-                type="button"
-                data-editor-tab="plans"
-                aria-controls="editor-plans"
-                aria-pressed="false">Packages</button
-              >
-              <button
-                type="button"
-                data-editor-tab="portfolio"
-                aria-controls="editor-portfolio"
-                aria-pressed="false">Our work</button
-              >
-              <button
-                type="button"
-                data-editor-tab="team"
-                aria-controls="editor-team"
-                aria-pressed="false">Team</button
-              >
-              <button
-                type="button"
-                data-editor-tab="faqs"
-                aria-controls="editor-faqs"
-                aria-pressed="false">Questions</button
-              >
-            </nav>
-            <div class="cms-save-row">
-              <p>
-                Save all sections together. Published changes appear
-                immediately.
-              </p><button class="button" id="save-site-content" type="button"
-                >Save and publish <span aria-hidden="true">↗</span></button
-              >
-            </div>
-          </div>
-          <section
-            class="cms-panel"
-            id="editor-settings"
-            data-editor-section="settings"
-            aria-label="Page copy"
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">BUSINESS DETAILS</p><h3>
-                  Identity and contact
-                </h3>
-              </div>
-            </div>
-            <div class="cms-settings-grid" id="cms-settings-fields"></div>
           </section>
-          <section
-            class="cms-panel"
-            id="editor-services"
-            data-editor-section="services"
-            aria-label="Services"
-            hidden
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">PUBLIC CATALOG</p><h3>Services</h3><p>
-                  These feed the service cards and the inquiry form.
-                </p>
-              </div><button
-                class="button button-dark cms-add-button"
-                id="add-service"
-                type="button">Add service</button
-              >
-            </div>
-            <div class="cms-item-list" id="cms-services"></div>
-          </section>
-          <section
-            class="cms-panel"
-            id="editor-faqs"
-            data-editor-section="faqs"
-            aria-label="Questions"
-            hidden
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">CUSTOMER QUESTIONS</p><h3>
-                  Frequently asked questions
-                </h3><p>
-                  Only published questions appear on the public website.
-                </p>
-              </div><button
-                class="button button-dark cms-add-button"
-                id="add-faq"
-                type="button">Add question</button
-              >
-            </div>
-            <div class="cms-item-list" id="cms-faqs"></div>
-          </section>
-          <section
-            class="cms-panel"
-            id="editor-plans"
-            data-editor-section="plans"
-            aria-label="Packages"
-            hidden
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">WEBSITE CONTENT</p><h3>
-                  Service packages
-                </h3><p>
-                  Update package names, prices, scope, and visibility. One
-                  package can be highlighted.
-                </p>
-              </div><button
-                class="button button-dark cms-add-button"
-                id="add-plans"
-                type="button">Add package</button
-              >
-            </div><div class="cms-item-list" id="cms-plans"></div>
-          </section>
-          <section
-            class="cms-panel"
-            id="editor-portfolio"
-            data-editor-section="portfolio"
-            aria-label="Our work"
-            hidden
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">WEBSITE CONTENT</p><h3>
-                  Work and case studies
-                </h3><p>
-                  Mark illustrative work as an example. Client case studies
-                  require verified results and permission before publishing.
-                </p>
-              </div><button
-                class="button button-dark cms-add-button"
-                id="add-portfolio"
-                type="button">Add portfolio</button
-              >
-            </div><div class="cms-item-list" id="cms-portfolio"></div>
-          </section>
-          <section
-            class="cms-panel"
-            id="editor-team"
-            data-editor-section="team"
-            aria-label="Team"
-            hidden
-          >
-            <div class="cms-panel-heading">
-              <div>
-                <p class="eyebrow">WEBSITE CONTENT</p><h3>
-                  People behind VSS
-                </h3><p>
-                  Maintain approved names, roles, introductions, and portrait
-                  image paths.
-                </p>
-              </div><button
-                class="button button-dark cms-add-button"
-                id="add-team"
-                type="button">Add team</button
-              >
-            </div><div class="cms-item-list" id="cms-team"></div>
-          </section>
-        </section>
-        <footer class="admin-footer">
-          <span>Keep responses clear, kind, and timely. · v{version}</span><a
-            href="/privacy/"
-            >Privacy notice <span aria-hidden="true">↗</span></a
-          >
-        </footer>
+          <footer class="admin-footer">
+            <span>
+              {site.name} <span class="footer-dot">·</span> Workspace
+            </span>
+            <a href="/privacy/" target="_blank" rel="noopener">
+              Privacy notice ↗
+            </a>
+          </footer>
+        </div>
       </main>
     </div>
+    <dialog
+      class="workspace-confirm"
+      id="workspace-confirm"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-description"
+    >
+      <form method="dialog">
+        <span class="confirm-icon" aria-hidden="true">
+          ↗
+        </span>
+        <h2 id="confirm-title">Confirm action</h2>
+        <p id="confirm-description"></p>
+        <div class="confirm-actions">
+          <button class="cms-secondary-button" value="cancel" autofocus>
+            Cancel
+          </button>
+          <button class="button" value="confirm" id="confirm-accept">
+            Continue
+          </button>
+        </div>
+      </form>
+    </dialog>
     <script src="../../scripts/owner/index.ts"></script>
   </body>
 </html>

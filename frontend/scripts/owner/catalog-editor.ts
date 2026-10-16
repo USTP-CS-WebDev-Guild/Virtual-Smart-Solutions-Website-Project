@@ -2,6 +2,7 @@
 // in backend/. All values are validated again by the server before publishing.
 import type { PublicSiteContent } from '../../../shared/site-content/defaults';
 import { byId, make } from './ui';
+import { attachImagePicker } from './image-picker';
 
 type Catalog = 'plans' | 'portfolio' | 'team';
 type Field = {
@@ -27,7 +28,7 @@ const fields: Record<Catalog, Field[]> = {
     { key: 'title', label: 'Work title', max: 120 },
     { key: 'category', label: 'Work category', max: 80 },
     { key: 'description', label: 'Work description', max: 500, multiline: true },
-    { key: 'image', label: 'Work image path', max: 180 },
+    { key: 'image', label: 'Work image', max: 180 },
     { key: 'outcome', label: 'Scope or verified outcome', max: 600, multiline: true },
     { key: 'kind', label: 'Work type', choices: ['example', 'case-study'] },
     {
@@ -41,7 +42,7 @@ const fields: Record<Catalog, Field[]> = {
     { key: 'name', label: 'Team member name', max: 120 },
     { key: 'role', label: 'Team member role', max: 100 },
     { key: 'bio', label: 'Team introduction', max: 500, multiline: true },
-    { key: 'image', label: 'Portrait image path', max: 180 },
+    { key: 'image', label: 'Portrait image', max: 180 },
     { key: 'published', label: 'Publish this team member', flag: true },
   ],
 };
@@ -92,13 +93,15 @@ export function renderCatalog(content: PublicSiteContent, changed: () => void) {
         let control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
         if (field.choices) {
           const select = make('select', 'cms-input');
-          for (const choice of field.choices)
-            select.add(
-              new Option(
-                choice === 'case-study' ? 'Verified client case study' : 'Illustrative engagement',
-                choice,
-              ),
+          for (const choice of field.choices) {
+            const option = make(
+              'option',
+              '',
+              choice === 'case-study' ? 'Verified client case study' : 'Illustrative engagement',
             );
+            option.value = choice;
+            select.append(option);
+          }
           select.value = String(item[field.key]);
           control = select;
         } else if (field.multiline || field.lines) {
@@ -126,10 +129,11 @@ export function renderCatalog(content: PublicSiteContent, changed: () => void) {
         control.addEventListener('change', changed);
         card.append(label);
         if (field.key === 'image') {
+          attachImagePicker(control as HTMLInputElement);
           const help = make(
             'small',
             'cms-image-help',
-            'Use an image in frontend/public/images/, for example /images/service-admin.webp. Add new image files through a reviewed repository change.',
+            'Choose an approved website image. Ask your website team when you need to add a new photo.',
           );
           card.append(help);
           const image = make('img', 'cms-image-preview');

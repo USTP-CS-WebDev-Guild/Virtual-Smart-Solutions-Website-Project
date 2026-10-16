@@ -1,3 +1,5 @@
+**Release 1.5.0:** existing projects start with [UPDATE-1.5.0.md](UPDATE-1.5.0.md). Client owners use [OWNER-GUIDE.md](OWNER-GUIDE.md).
+
 # Your first working system
 
 Allow about 15 minutes. Use Node.js 24 LTS, VS Code and Git. The full install/clone/deploy sequence is in README.md. Start in the folder containing `package.json`.

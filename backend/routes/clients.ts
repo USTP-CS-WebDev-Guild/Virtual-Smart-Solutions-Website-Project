@@ -2,10 +2,16 @@ import type { StaffRouteContext } from '../http/context';
 import { json, parseBody, resultError } from '../http/responses';
 import { clientStatusSchema } from '../validation/forms';
 import { PAGE_SIZE, pageCursor, beforeCursor, nextCursor } from '../lib/pagination';
+import { searchTerm, searchFilter } from '../lib/search';
 
 export async function clientRoutes(route: StaffRouteContext): Promise<Response | null> {
   const { path, method, request, url, db, actor, requestId } = route;
   if (path === '/api/admin/clients' && method === 'GET') {
+    const search = searchTerm(url);
+    if (search instanceof Response) return search;
+    const status = url.searchParams.get('status');
+    if (status && !['active', 'paused', 'closed'].includes(status))
+      return json({ error: 'invalid_status' }, 422, requestId);
     const cursor = pageCursor(url);
     if (cursor instanceof Response) return cursor;
     let query = db
@@ -14,6 +20,8 @@ export async function clientRoutes(route: StaffRouteContext): Promise<Response |
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(PAGE_SIZE + 1);
+    if (status) query = query.eq('status', status);
+    if (search) query = query.or(searchFilter(search, ['contact_name', 'email', 'company']));
     if (cursor) query = query.or(beforeCursor(cursor));
     const { data, error } = await query;
     if (error) throw new Error('clients_read_failed');

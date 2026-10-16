@@ -2,9 +2,15 @@ import type { PrivacyRequest } from './types';
 import { api } from './api';
 import { byId, formatDate, make, setAlert } from './ui';
 import { workspace } from './state';
+import { confirmAction } from './confirm';
 let pages = 1;
 let lastFilter = 'open';
 let requestVersion = 0;
+window.addEventListener('vss-session-closed', () => {
+  ++requestVersion;
+  pages = 1;
+  lastFilter = 'open';
+});
 
 function renderPrivacyRequests(requests: PrivacyRequest[]) {
   const queue = byId<HTMLElement>('privacy-queue');
@@ -35,7 +41,17 @@ function renderPrivacyRequests(requests: PrivacyRequest[]) {
   );
   queue.replaceChildren();
   if (!requests.length) {
-    queue.append(make('div', 'loading-state', 'No privacy requests.'));
+    const empty = make('div', 'workspace-panel loading-state');
+    empty.append(
+      make('span', 'empty-state-icon', '✓'),
+      make('h3', '', 'No requests in this view.'),
+      make(
+        'p',
+        '',
+        'Requests submitted through the privacy form appear here. Contact inquiries are managed in the inbox.',
+      ),
+    );
+    queue.append(empty);
     return;
   }
   for (const request of requests) {
@@ -141,7 +157,17 @@ function renderPrivacyRequests(requests: PrivacyRequest[]) {
         note.value = draft.note;
       }
       card.append(controls);
-      const complete = make('button', 'button button-dark', 'Record handling') as HTMLButtonElement;
+      const complete = make(
+        'button',
+        'button button-dark',
+        'Complete request',
+      ) as HTMLButtonElement;
+      const validate = () => {
+        complete.disabled = !verified.checked || note.value.trim().length < 10;
+      };
+      verified.addEventListener('change', validate);
+      note.addEventListener('input', validate);
+      validate();
       complete.type = 'button';
       complete.addEventListener('click', async () => {
         if (!verified.checked || note.value.trim().length < 10) {
@@ -152,6 +178,24 @@ function renderPrivacyRequests(requests: PrivacyRequest[]) {
           return;
         }
         complete.disabled = true;
+        const session = workspace.sessionVersion;
+        const anonymize = action.value.startsWith('delete_');
+        const accepted = await confirmAction(
+          anonymize ? 'Anonymize matching records?' : 'Complete this privacy request?',
+          anonymize
+            ? 'This will remove personal details from matching stored records for ' +
+                request.email +
+                '. Review the selected scope before continuing. This action cannot be undone from the workspace.'
+            : 'The selected action and your handling note will be recorded for ' +
+                request.email +
+                '.',
+          anonymize ? 'Anonymize and complete' : 'Complete request',
+          anonymize,
+        );
+        if (!accepted || session !== workspace.sessionVersion) {
+          validate();
+          return;
+        }
         try {
           await api('/api/admin/privacy-requests/' + encodeURIComponent(request.id) + '/complete', {
             method: 'PATCH',
@@ -161,6 +205,7 @@ function renderPrivacyRequests(requests: PrivacyRequest[]) {
               note: note.value.trim(),
             }),
           });
+          if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
           await loadPrivacyRequests();
           setAlert('Privacy request marked complete.', 'success');
         } catch (error) {
@@ -187,9 +232,12 @@ export async function loadPrivacyRequests(more = false) {
   const session = workspace.sessionVersion;
   const version = ++requestVersion;
   const filter = byId<HTMLSelectElement>('privacy-filter').value;
-  if (filter !== lastFilter) {
+  const search =
+    (document.getElementById('privacy-search') as HTMLInputElement | null)?.value.trim() || '';
+  const criteria = filter + '\n' + search;
+  if (criteria !== lastFilter) {
     pages = 1;
-    lastFilter = filter;
+    lastFilter = criteria;
   }
   const records = new Map<string, PrivacyRequest>();
   const target = more ? pages + 1 : pages;
@@ -198,6 +246,7 @@ export async function loadPrivacyRequests(more = false) {
   for (let i = 0; i < target; i++) {
     const query = new URLSearchParams();
     if (filter) query.set('status', filter);
+    if (search) query.set('q', search);
     if (cursor) query.set('cursor', cursor);
     const result: { requests: PrivacyRequest[]; nextCursor: string | null } = await api(
       '/api/admin/privacy-requests?' + query,

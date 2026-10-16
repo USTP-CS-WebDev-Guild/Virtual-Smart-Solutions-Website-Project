@@ -2,6 +2,7 @@ import { json, parseBody, resultError } from '../http/responses';
 import { statusSchema, inquiryNoteSchema } from '../validation/forms';
 import { PAGE_SIZE, pageCursor, beforeCursor, nextCursor } from '../lib/pagination';
 import type { StaffRouteContext } from '../http/context';
+import { searchTerm, searchFilter } from '../lib/search';
 
 function mapInquiry(row: Record<string, any>) {
   return {
@@ -34,6 +35,8 @@ export async function inquiryRoutes(route: StaffRouteContext): Promise<Response 
   }
 
   if (method === 'GET' && path === '/api/admin/inquiries') {
+    const search = searchTerm(url);
+    if (search instanceof Response) return search;
     const status = url.searchParams.get('status');
     const cursor = pageCursor(url);
     if (cursor instanceof Response) return cursor;
@@ -46,6 +49,7 @@ export async function inquiryRoutes(route: StaffRouteContext): Promise<Response 
       .order('id', { ascending: false })
       .limit(PAGE_SIZE + 1);
     if (status) query = query.eq('status', status);
+    if (search) query = query.or(searchFilter(search, ['name', 'email', 'company', 'service']));
     if (cursor) query = query.or(beforeCursor(cursor));
     const { data: rows, error } = await query;
     if (error) throw new Error('inquiries_read_failed');

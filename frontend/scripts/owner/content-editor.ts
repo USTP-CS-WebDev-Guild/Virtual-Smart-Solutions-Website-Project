@@ -4,18 +4,39 @@ import { showContentSection } from './content-navigation';
 import { byId, formatDate, make, setAlert } from './ui';
 import { renderCatalog, collectCatalog, emptyCatalogItem } from './catalog-editor';
 import { workspace } from './state';
+import { confirmAction } from './confirm';
+import { attachImagePicker } from './image-picker';
 
 let contentDirty = false;
+let publishing = false;
+let editVersion = 0;
+let contentRequestVersion = 0;
+function updateDraftState() {
+  const state = document.getElementById('content-draft-status');
+  if (state) {
+    state.textContent = contentDirty
+      ? 'You have unpublished changes.'
+      : 'Your changes are up to date.';
+    state.classList.toggle('is-dirty', contentDirty);
+  }
+  const save = document.getElementById('save-site-content') as HTMLButtonElement | null;
+  if (save) save.disabled = publishing || !contentDirty;
+}
 export function markContentDirty() {
   contentDirty = true;
+  ++editVersion;
+  updateDraftState();
 }
 export function hasContentDraft() {
   return contentDirty;
 }
 export function discardContentDraft() {
   contentDirty = false;
+  ++editVersion;
+  updateDraftState();
 }
 export async function handleLiveContentChange() {
+  if (publishing) return;
   if (contentDirty) {
     byId<HTMLElement>('content-update-notice').hidden = false;
     return;
@@ -102,12 +123,41 @@ function updateContentRevisionLabel(updatedAt: number | null) {
 
 function renderSiteContentEditor(content: PublicSiteContent, updatedAt: number | null) {
   contentDirty = false;
+  updateDraftState();
   byId<HTMLElement>('content-update-notice').hidden = true;
   const settingsContainer = byId<HTMLElement>('cms-settings-fields');
+  const openGroups = new Map(
+    Array.from(settingsContainer.querySelectorAll<HTMLDetailsElement>('[data-settings-group]')).map(
+      (group) => [group.dataset.settingsGroup!, group.open],
+    ),
+  );
   settingsContainer.replaceChildren();
+  const groups = new Map<string, HTMLElement>();
+  const groupFor = (key: string): [string, string] => {
+    if (key.startsWith('home')) return ['home', 'Home page'];
+    if (key.startsWith('services') || key === 'pricingNote')
+      return ['services', 'Services & pricing'];
+    if (key.startsWith('about')) return ['about', 'About page'];
+    if (key.startsWith('approach')) return ['approach', 'Approach page'];
+    if (key.startsWith('contact')) return ['contact', 'Contact page'];
+    if (key.startsWith('portfolio')) return ['portfolio', 'Our work page'];
+    if (key.startsWith('footer')) return ['footer', 'Footer'];
+    return ['business', 'Business details & contact'];
+  };
   for (const field of editableSettings) {
+    const [id, title] = groupFor(field.key);
+    if (!groups.has(id)) {
+      const section = make('details', 'cms-settings-group');
+      section.dataset.settingsGroup = id;
+      section.open = openGroups.get(id) ?? id === 'business';
+      section.append(make('summary', '', title));
+      const grid = make('div', 'cms-group-fields');
+      section.append(grid);
+      groups.set(id, grid);
+      settingsContainer.append(section);
+    }
     const control = cmsField(
-      settingsContainer,
+      groups.get(id)!,
       field.label,
       content.settings[field.key],
       field.maxLength,
@@ -159,8 +209,9 @@ function renderSiteContentEditor(content: PublicSiteContent, updatedAt: number |
     title.dataset.serviceField = 'title';
     const description = cmsField(card, 'Description', service.description, 500, true);
     description.dataset.serviceField = 'description';
-    const image = cmsField(card, 'Service image path', service.image, 180);
+    const image = cmsField(card, 'Service image', service.image, 180);
     image.dataset.serviceField = 'image';
+    attachImagePicker(image as HTMLInputElement);
     const examples = cmsField(
       card,
       'Examples · one per line',
@@ -232,12 +283,20 @@ function renumberCmsItems(container: HTMLElement, label: string) {
 
 export async function loadSiteContent() {
   const session = workspace.sessionVersion;
+  const request = ++contentRequestVersion;
+  const edits = editVersion;
   const result = await api<{
     content: PublicSiteContent;
     revision: number;
     updatedAt: number | null;
   }>('/api/admin/site-content');
-  if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
+  if (
+    session !== workspace.sessionVersion ||
+    byId<HTMLElement>('admin-app').hidden ||
+    request !== contentRequestVersion ||
+    edits !== editVersion
+  )
+    return;
   siteContent = result.content;
   siteContentRevision = result.revision;
   siteContentUpdatedAt = result.updatedAt;
@@ -315,7 +374,33 @@ export function addCmsFaq() {
 
 export async function saveSiteContent() {
   const content = collectSiteContent();
-  if (!content) return;
+  if (!content || !contentDirty || publishing) return;
+  const invalid = Array.from(
+    document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      '#content-view input,#content-view textarea',
+    ),
+  ).find((control) => !control.checkValidity());
+  if (invalid) {
+    const section = invalid.closest<HTMLElement>('[data-editor-section]')?.dataset.editorSection;
+    if (section) showContentSection(section);
+    const group = invalid.closest('details');
+    if (group) group.open = true;
+    invalid.reportValidity();
+    setAlert('Please review the highlighted field before publishing.', 'error');
+    return;
+  }
+  publishing = true;
+  const session = workspace.sessionVersion;
+  const request = ++contentRequestVersion;
+  const edits = editVersion;
+  const controls = new Map(
+    Array.from(
+      document.querySelectorAll<
+        HTMLInputElement | HTMLButtonElement | HTMLSelectElement | HTMLTextAreaElement
+      >('#content-view input,#content-view textarea,#content-view select,#content-view button'),
+    ).map((control) => [control, control.disabled]),
+  );
+  for (const control of controls.keys()) control.disabled = true;
   const button = byId<HTMLButtonElement>('save-site-content');
   button.disabled = true;
   try {
@@ -327,12 +412,20 @@ export async function saveSiteContent() {
       method: 'PUT',
       body: JSON.stringify({ revision: siteContentRevision, content }),
     });
+    if (
+      session !== workspace.sessionVersion ||
+      request !== contentRequestVersion ||
+      edits !== editVersion ||
+      byId<HTMLElement>('admin-app').hidden
+    )
+      return;
     siteContent = result.content;
     siteContentRevision = result.revision;
     siteContentUpdatedAt = result.updatedAt;
     renderSiteContentEditor(result.content, result.updatedAt);
     setAlert('Website content saved and published.', 'success');
   } catch (error) {
+    if (session !== workspace.sessionVersion) return;
     if (error instanceof ContentValidationError) showContentSection(error.section);
     const message =
       error instanceof Error && error.message === 'content_revision_conflict'
@@ -342,7 +435,13 @@ export async function saveSiteContent() {
           : 'Could not save website content.';
     setAlert(message, 'error');
   } finally {
-    button.disabled = false;
+    if (session === workspace.sessionVersion) {
+      for (const [control, disabled] of controls) {
+        if (control.isConnected) control.disabled = disabled;
+      }
+      publishing = false;
+      updateDraftState();
+    }
   }
 }
 
@@ -355,9 +454,11 @@ type ContentHistoryItem = {
 };
 
 export async function loadContentHistory() {
+  const session = workspace.sessionVersion;
   const panel = byId<HTMLElement>('content-history');
   panel.replaceChildren(make('div', 'loading-state', 'Loading revisions…'));
   const result = await api<{ history: ContentHistoryItem[] }>('/api/admin/site-content/history');
+  if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
   panel.replaceChildren();
   if (!result.history.length) {
     panel.append(make('p', 'loading-state', 'No content changes have been published yet.'));
@@ -384,17 +485,32 @@ export async function loadContentHistory() {
 }
 
 async function restoreContentRevision(revision: number, button: HTMLButtonElement) {
+  if (publishing) return;
   if (
-    !window.confirm(
-      `Restore revision ${revision}? This will publish its content as a new revision.`,
-    )
+    !(await confirmAction(
+      'Restore revision ' + revision + '?',
+      'This replaces the current website content and publishes the selected revision. Any unpublished changes in this editor will be discarded.',
+      'Restore and publish',
+    ))
   )
     return;
+  if (publishing) return;
+  publishing = true;
+  const session = workspace.sessionVersion;
+  const controls = new Map(
+    Array.from(
+      document.querySelectorAll<
+        HTMLInputElement | HTMLButtonElement | HTMLSelectElement | HTMLTextAreaElement
+      >('#content-view input,#content-view textarea,#content-view select,#content-view button'),
+    ).map((control) => [control, control.disabled]),
+  );
+  for (const control of controls.keys()) control.disabled = true;
   button.disabled = true;
   try {
     const snapshot = await api<{ content: PublicSiteContent }>(
       '/api/admin/site-content/history/' + revision,
     );
+    if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
     const saved = await api<{
       content: PublicSiteContent;
       revision: number;
@@ -403,6 +519,7 @@ async function restoreContentRevision(revision: number, button: HTMLButtonElemen
       method: 'PUT',
       body: JSON.stringify({ revision: siteContentRevision, content: snapshot.content }),
     });
+    if (session !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
     siteContent = saved.content;
     siteContentRevision = saved.revision;
     siteContentUpdatedAt = saved.updatedAt;
@@ -420,8 +537,14 @@ async function restoreContentRevision(revision: number, button: HTMLButtonElemen
         : error instanceof Error
           ? error.message
           : 'Could not restore that revision.';
-    setAlert(message, 'error');
-    button.disabled = false;
+    if (session === workspace.sessionVersion) setAlert(message, 'error');
+  } finally {
+    if (session === workspace.sessionVersion) {
+      for (const [control, disabled] of controls)
+        if (control.isConnected) control.disabled = disabled;
+      publishing = false;
+      updateDraftState();
+    }
   }
 }
 
@@ -432,3 +555,13 @@ export function addCmsCatalog(kind: 'plans' | 'portfolio' | 'team') {
   renderSiteContentEditor(draft, siteContentUpdatedAt);
   markContentDirty();
 }
+
+window.addEventListener('vss-session-closed', () => {
+  ++contentRequestVersion;
+  ++editVersion;
+  contentDirty = false;
+  publishing = false;
+  siteContent = null;
+  siteContentRevision = 0;
+  siteContentUpdatedAt = null;
+});
