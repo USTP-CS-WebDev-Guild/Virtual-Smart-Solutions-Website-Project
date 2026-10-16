@@ -1,0 +1,136 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+---
+
+<form
+  class="privacy-request-form form-card"
+  data-form="privacy-request"
+  method="post"
+  action="/api/privacy-requests"
+>
+  <noscript
+    ><p class="form-status is-error">
+      JavaScript is required to save a request securely. You can also <a
+        href={"mailto:" + DEFAULT_SITE_CONTENT.settings.privacyEmail}
+        >email our privacy contact</a
+      >.
+    </p></noscript
+  >
+  <h2>Send a privacy request</h2>
+  <p>
+    Use this form to ask about access, correction, export, or deletion of
+    information you shared with us.
+  </p>
+  <div class="form-row">
+    <label
+      >Your name<input
+        name="name"
+        autocomplete="name"
+        required
+        minlength="2"
+        maxlength="120"
+      /></label
+    >
+    <label
+      >Your email<input
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        maxlength="254"
+      /></label
+    >
+  </div>
+  <label
+    >Request type
+    <select name="requestType" required>
+      <option value="">Choose one</option>
+      <option value="access">Access to my information</option>
+      <option value="correction">Correct my information</option>
+      <option value="export">Export my information</option>
+      <option value="deletion">Delete my information</option>
+      <option value="other">Other privacy question</option>
+    </select>
+  </label>
+  <label
+    >Details<textarea
+      name="message"
+      rows="4"
+      required
+      minlength="5"
+      maxlength="2000"></textarea></label
+  >
+  <label class="check-label"
+    ><input name="privacyAcknowledged" type="checkbox" required /><span
+      >I understand this form will be used to process my privacy request.</span
+    ></label
+  >
+  <div class="honeypot" aria-hidden="true">
+    <label
+      >Leave empty<input
+        name="website"
+        tabindex="-1"
+        autocomplete="off"
+      /></label
+    >
+  </div>
+  <div class="form-actions">
+    <button class="button button-dark" type="submit" disabled
+      >Submit request <span aria-hidden="true">↗</span></button
+    >
+    <p class="form-status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+<script>
+  import {
+    submitPublicForm,
+    submissionKey,
+    forgetSubmissionKey,
+  } from "../scripts/submission";
+  const form = document.querySelector<HTMLFormElement>(
+    '[data-form="privacy-request"]',
+  );
+  if (form) {
+    const button = form.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
+    const status = form.querySelector<HTMLElement>(".form-status");
+    const keyName = "vss-privacy-idempotency-key";
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity() || !button || !status) return;
+      button.disabled = true;
+      form.setAttribute("aria-busy", "true");
+      status.textContent = "Submitting securely…";
+      const values = new FormData(form);
+      const payload = {
+        idempotencyKey: submissionKey(keyName),
+        name: String(values.get("name") || ""),
+        email: String(values.get("email") || ""),
+        requestType: String(values.get("requestType") || ""),
+        message: String(values.get("message") || ""),
+        privacyAcknowledged: values.get("privacyAcknowledged") === "on",
+        website: String(values.get("website") || ""),
+      };
+      try {
+        const result = await submitPublicForm(
+          "/api/privacy-requests",
+          payload,
+          "privacyRequestId",
+        );
+        status.textContent = `Your privacy request has been received. Reference: ${result.id.slice(0, 8).toUpperCase()}.`;
+        status.className = "form-status is-success";
+        forgetSubmissionKey(keyName);
+        form.reset();
+      } catch (error) {
+        status.textContent =
+          error instanceof Error ? error.message : "Please try again.";
+        status.className = "form-status is-error";
+      } finally {
+        button.disabled = false;
+        form.setAttribute("aria-busy", "false");
+      }
+    });
+    if (button) button.disabled = false;
+  }
+</script>

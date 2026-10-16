@@ -1,0 +1,107 @@
+---
+import { DEFAULT_SITE_CONTENT as content } from "../../shared/site-content/defaults";
+---
+
+<div class="vss-plans" data-public-plans>
+  {
+    content.plans
+      .filter((x) => x.published)
+      .map((plan) => (
+        <article
+          class:list={["vss-plan", { "is-featured": plan.featured }]}
+          data-plan-id={plan.id}
+        >
+          {plan.featured && (
+            <span class="vss-plan-ribbon">A LITTLE MORE SUPPORT</span>
+          )}
+          <span class="vss-eyebrow">{plan.name}</span>
+          <>
+            <h3>
+              {plan.price}
+              <small>{plan.period}</small>
+            </h3>
+            <p>{plan.description}</p>
+            <ul>
+              {plan.features.map((feature) => (
+                <li>
+                  <span aria-hidden="true">✓</span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <a
+              class:list={[
+                "vss-button",
+                plan.featured ? "vss-button-blue" : "vss-button-outline",
+              ]}
+              href={"/contact/?plan=" + plan.id}
+            >
+              Discuss {plan.name} <span aria-hidden="true">↗</span>
+            </a>
+          </>
+        </article>
+      ))
+  }
+</div>
+<details class="vss-comparison">
+  <summary
+    >Compare the working arrangements <span aria-hidden="true">+</span></summary
+  >
+  <div
+    class="vss-table-scroll"
+    tabindex="0"
+    role="region"
+    aria-label="Package comparison, scroll horizontally on narrow screens"
+  >
+    <table data-plan-comparison>
+      <caption
+        >Published starting packages. Final scope and fees are confirmed in
+        writing.</caption
+      >
+      <thead
+        ><tr
+          ><th scope="col">At a glance</th>{
+            content.plans
+              .filter((x) => x.published)
+              .map((p) => <th scope="col">{p.name}</th>)
+          }</tr
+        ></thead
+      >
+      <tbody>
+        <tr
+          ><th scope="row">Starting fee</th>{
+            content.plans
+              .filter((x) => x.published)
+              .map((p) => (
+                <td>
+                  {p.price} {p.period}
+                </td>
+              ))
+          }</tr
+        >
+        <tr
+          ><th scope="row">Good fit</th>{
+            content.plans
+              .filter((x) => x.published)
+              .map((p) => <td>{p.description}</td>)
+          }</tr
+        >
+        <tr
+          ><th scope="row">Included support</th>{
+            content.plans
+              .filter((x) => x.published)
+              .map((p) => (
+                <td>
+                  <ul>
+                    {p.features.map((f) => (
+                      <li>{f}</li>
+                    ))}
+                  </ul>
+                </td>
+              ))
+          }</tr
+        >
+      </tbody>
+    </table>
+  </div>
+</details>

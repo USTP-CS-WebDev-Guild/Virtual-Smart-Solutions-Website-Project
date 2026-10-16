@@ -1,0 +1,560 @@
+---
+import "../../styles/global.css";
+import "../../styles/workspace.css";
+import "../../styles/brand.css";
+import { site } from "../../data/site";
+import Brand from "../../components/Brand.astro";
+import { version } from "../../../package.json";
+const classroom =
+  import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE === "true";
+const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === "true";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="app-release" content={version} />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#fdf9ed" />
+    <title>Staff inbox — {site.name}</title>
+    <link rel="icon" type="image/svg+xml" href="/brand/mark.svg" />
+  </head>
+  <body
+    class="admin-page"
+    data-test-environment={testEnvironment ? "true" : "false"}
+  >
+    <a class="skip-link" href="#admin-login">Skip to workspace</a>
+    <section
+      class="admin-login"
+      id="admin-login"
+      aria-labelledby="login-heading"
+    >
+      <section class="admin-login-card">
+        <Brand />
+        <p class="eyebrow">OWNER AND STAFF ACCESS</p>
+        <h1 id="login-heading">Sign in to the workspace.</h1>
+        <p class="admin-login-owner">
+          {
+            classroom
+              ? "Use the local owner or staff account printed in your terminal. Run npm run accounts to see it again."
+              : "Use the email account created for you by the company owner."
+          }
+        </p>
+        <form id="staff-login-form" method="post" action="/api/auth/session">
+          <noscript
+            ><p class="form-status is-error">
+              Enable JavaScript to sign in securely. Sign-in is disabled while
+              the application is unavailable.
+            </p></noscript
+          >
+          <label for="staff-email">Work email</label>
+          <input
+            id="staff-email"
+            name="email"
+            type="email"
+            autocomplete="username"
+            maxlength="254"
+            required
+          />
+          <label for="staff-password">Password</label>
+          <input
+            id="staff-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            minlength="8"
+            maxlength="200"
+            required
+          />
+          <button class="button" type="submit" disabled
+            >Open owner workspace <span aria-hidden="true">↗</span></button
+          >
+          <p
+            class="admin-login-status"
+            id="staff-login-status"
+            role="status"
+            aria-live="polite"
+          >
+          </p>
+        </form>
+        <noscript
+          ><p class="admin-login-note">
+            Enable JavaScript in your browser to sign in.
+          </p></noscript
+        >
+        <p class="admin-login-note">
+          Staff access is managed by the owner. New accounts cannot be created
+          from this page.
+        </p>
+        <a class="admin-login-back" href="/">← Back to the public site</a>
+      </section>
+    </section>
+    <div class="admin-shell" id="admin-app" hidden>
+      <aside class="admin-sidebar">
+        <Brand />
+        <div class="admin-workspace">
+          <span class="workspace-avatar">V</span><div>
+            <small>WORKSPACE</small><strong data-site-content="shortName"
+              >{site.shortName}</strong
+            >
+          </div><span aria-hidden="true">⌄</span>
+        </div>
+        <nav class="admin-nav" aria-label="Staff navigation">
+          <button
+            class="admin-nav-item is-active"
+            type="button"
+            data-view="inquiries"
+            ><span aria-hidden="true">▤</span> Inquiries <span
+              class="nav-count"
+              id="new-count">0</span
+            ></button
+          >
+          <button class="admin-nav-item" type="button" data-view="clients"
+            ><span aria-hidden="true">◷</span> Clients</button
+          >
+          <button
+            class="admin-nav-item is-hidden"
+            type="button"
+            data-view="privacy"
+            ><span aria-hidden="true">◈</span> Privacy requests</button
+          >
+          <button
+            class="admin-nav-item is-hidden"
+            id="content-nav"
+            type="button"
+            data-view="content"
+            ><span aria-hidden="true">✎</span> Website editor</button
+          >
+        </nav>
+        <div class="admin-sidebar-bottom">
+          <div class="sidebar-help">
+            <span>✓</span><p>Every inquiry deserves a clear next step.</p>
+          </div>
+          <a href="/" class="sidebar-site-link"
+            >View public site <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </aside>
+      <main class="admin-main" id="admin-main">
+        <header class="admin-topbar">
+          <div>
+            <p class="eyebrow">
+              <span data-site-content="shortName">{site.shortName}</span> / STAFF
+              SPACE
+            </p><h1 id="page-heading">Inquiry inbox</h1>
+          </div>
+          <div class="admin-top-actions">
+            <span class="system-status" role="status"
+              ><i aria-hidden="true"></i> Connecting live updates…</span
+            ><button
+              class="icon-button"
+              id="refresh-button"
+              type="button"
+              aria-label="Refresh current view">↻</button
+            ><span class="user-pill">V</span><button
+              class="admin-signout"
+              id="sign-out"
+              type="button">Sign out</button
+            >
+          </div>
+        </header>
+        <div
+          class="admin-alert"
+          id="admin-alert"
+          role="status"
+          aria-live="polite"
+        >
+        </div>
+        {
+          testEnvironment && (
+            <section
+              class="test-jobs-panel"
+              aria-labelledby="test-jobs-heading"
+              hidden
+            >
+              <div>
+                <p class="eyebrow">TEST OPERATIONS</p>
+                <h2 id="test-jobs-heading">Scheduled jobs</h2>
+                <p>
+                  Test mode captures email notices instead of sending them. Run
+                  the same maintenance handlers here when testing.
+                </p>
+              </div>
+              <div class="test-job-actions">
+                <>
+                  <button
+                    class="cms-secondary-button"
+                    id="check-submissions"
+                    type="button"
+                  >
+                    Check contact form
+                  </button>
+                  <button
+                    class="cms-secondary-button"
+                    id="verify-live-updates"
+                    type="button"
+                  >
+                    Verify live delivery
+                  </button>
+                  <button
+                    class="button button-dark"
+                    id="run-test-jobs"
+                    type="button"
+                  >
+                    Run test jobs
+                  </button>
+                </>
+              </div>
+              <div
+                id="submission-check-results"
+                class="submission-check-results"
+                role="status"
+              />
+            </section>
+          )
+        }
+        <section class="admin-view" id="inquiries-view">
+          <div class="admin-metrics">
+            <article>
+              <span>NEW</span><strong id="metric-new">—</strong><small
+                >Needs a first look</small
+              >
+            </article>
+            <article>
+              <span>IN PROGRESS</span><strong id="metric-progress">—</strong
+              ><small>Being followed up</small>
+            </article>
+            <article>
+              <span>WAITING</span><strong id="metric-waiting">—</strong><small
+                >Next step is pending</small
+              >
+            </article>
+            <article class="metric-notification">
+              <span>EMAIL QUEUE</span><strong id="metric-email">—</strong><small
+                id="email-caption">Outbox health</small
+              >
+            </article>
+          </div>
+          <div class="inbox-layout">
+            <section class="inquiry-list-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">YOUR LEADS</p><h2>Recent inquiries</h2><p
+                    class="inbox-updated-at"
+                    id="inbox-updated-at"
+                    role="status"
+                  >
+                    Checking for inquiries…
+                  </p>
+                </div><div class="inbox-panel-controls">
+                  <button
+                    id="inbox-refresh"
+                    class="cms-secondary-button"
+                    type="button">Refresh</button
+                  ><label class="filter-label"
+                    >Filter <select id="status-filter"
+                      ><option value="">All</option><option value="new"
+                        >New</option
+                      ><option value="in_progress">In progress</option><option
+                        value="waiting">Waiting</option
+                      ><option value="converted">Converted</option><option
+                        value="closed">Closed</option
+                      ></select
+                    ></label
+                  >
+                </div>
+              </div>
+              <div class="inquiry-list" id="inquiry-list">
+                <div class="loading-state">Loading inquiries…</div>
+              </div>
+              <button
+                id="inquiries-more"
+                class="cms-secondary-button list-more"
+                type="button"
+                hidden>Load older inquiries</button
+              >
+            </section>
+            <aside class="inquiry-detail-panel" id="inquiry-detail">
+              <div class="empty-detail">
+                <span>↗</span><h2>Inquiry details</h2><p>
+                  Select a request to review its scope, record a follow-up, or
+                  convert it into a client.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+        <section class="admin-view is-hidden" id="clients-view">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">CLIENT RELATIONSHIPS</p><h2>Clients</h2><p>
+                Converted inquiries, their current arrangement, and the original
+                conversation.
+              </p>
+            </div><button
+              id="clients-refresh"
+              class="cms-secondary-button"
+              type="button">Refresh</button
+            >
+          </div>
+          <div id="client-list" class="client-list">
+            <p class="loading-state">Loading clients…</p>
+          </div>
+          <button
+            id="clients-more"
+            class="cms-secondary-button list-more"
+            type="button"
+            hidden>Load older clients</button
+          >
+        </section>
+        <section class="admin-view is-hidden" id="privacy-view">
+          <div class="panel-heading privacy-panel-heading">
+            <div>
+              <p class="eyebrow">DATA REQUESTS</p><h2>Privacy requests</h2><p>
+                Verify the requester before sharing or changing personal
+                information.
+              </p>
+            </div><div class="inbox-panel-controls">
+              <label class="filter-label"
+                >Show <select id="privacy-filter"
+                  ><option value="open">Open requests</option><option
+                    value="completed">Completed requests</option
+                  ><option value="">All requests</option></select
+                ></label
+              ><button
+                class="button button-dark"
+                id="privacy-refresh"
+                type="button">Refresh</button
+              >
+            </div>
+          </div>
+          <div class="privacy-queue" id="privacy-queue">
+            <div class="loading-state">Loading requests…</div>
+          </div>
+          <button
+            id="privacy-more"
+            class="cms-secondary-button list-more"
+            type="button"
+            hidden>Load older requests</button
+          >
+        </section>
+        <section class="admin-view is-hidden" id="content-view">
+          <p
+            id="content-update-notice"
+            class="content-update-notice"
+            role="status"
+            hidden
+          >
+            A newer version was published. Your unsaved edits are preserved. Use
+            Reload latest to review it; saving an old revision will show a
+            conflict.
+          </p>
+          <div class="content-editor-intro">
+            <div>
+              <p class="eyebrow">OWNER CONTENT MANAGEMENT</p><h2>
+                Update the live website.
+              </h2><p>
+                Changes are validated, recorded in the content history, and
+                appear on the public site without a rebuild or deployment.
+              </p>
+            </div>
+            <div class="content-editor-controls">
+              <span class="content-revision" id="content-revision"
+                >Not loaded</span
+              ><button
+                class="cms-secondary-button"
+                id="reload-site-content"
+                type="button">Reload latest</button
+              ><button
+                class="cms-secondary-button"
+                id="toggle-content-history"
+                type="button">Revision history</button
+              >
+            </div>
+          </div>
+          <div class="content-history is-hidden" id="content-history"></div>
+          <div class="cms-editor-toolbar">
+            <nav class="cms-section-nav" aria-label="Website editor sections">
+              <button
+                type="button"
+                data-editor-tab="settings"
+                aria-controls="editor-settings"
+                aria-pressed="true">Page copy</button
+              >
+              <button
+                type="button"
+                data-editor-tab="services"
+                aria-controls="editor-services"
+                aria-pressed="false">Services</button
+              >
+              <button
+                type="button"
+                data-editor-tab="plans"
+                aria-controls="editor-plans"
+                aria-pressed="false">Packages</button
+              >
+              <button
+                type="button"
+                data-editor-tab="portfolio"
+                aria-controls="editor-portfolio"
+                aria-pressed="false">Our work</button
+              >
+              <button
+                type="button"
+                data-editor-tab="team"
+                aria-controls="editor-team"
+                aria-pressed="false">Team</button
+              >
+              <button
+                type="button"
+                data-editor-tab="faqs"
+                aria-controls="editor-faqs"
+                aria-pressed="false">Questions</button
+              >
+            </nav>
+            <div class="cms-save-row">
+              <p>
+                Save all sections together. Published changes appear
+                immediately.
+              </p><button class="button" id="save-site-content" type="button"
+                >Save and publish <span aria-hidden="true">↗</span></button
+              >
+            </div>
+          </div>
+          <section
+            class="cms-panel"
+            id="editor-settings"
+            data-editor-section="settings"
+            aria-label="Page copy"
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">BUSINESS DETAILS</p><h3>
+                  Identity and contact
+                </h3>
+              </div>
+            </div>
+            <div class="cms-settings-grid" id="cms-settings-fields"></div>
+          </section>
+          <section
+            class="cms-panel"
+            id="editor-services"
+            data-editor-section="services"
+            aria-label="Services"
+            hidden
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">PUBLIC CATALOG</p><h3>Services</h3><p>
+                  These feed the service cards and the inquiry form.
+                </p>
+              </div><button
+                class="button button-dark cms-add-button"
+                id="add-service"
+                type="button">Add service</button
+              >
+            </div>
+            <div class="cms-item-list" id="cms-services"></div>
+          </section>
+          <section
+            class="cms-panel"
+            id="editor-faqs"
+            data-editor-section="faqs"
+            aria-label="Questions"
+            hidden
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">CUSTOMER QUESTIONS</p><h3>
+                  Frequently asked questions
+                </h3><p>
+                  Only published questions appear on the public website.
+                </p>
+              </div><button
+                class="button button-dark cms-add-button"
+                id="add-faq"
+                type="button">Add question</button
+              >
+            </div>
+            <div class="cms-item-list" id="cms-faqs"></div>
+          </section>
+          <section
+            class="cms-panel"
+            id="editor-plans"
+            data-editor-section="plans"
+            aria-label="Packages"
+            hidden
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">WEBSITE CONTENT</p><h3>
+                  Service packages
+                </h3><p>
+                  Update package names, prices, scope, and visibility. One
+                  package can be highlighted.
+                </p>
+              </div><button
+                class="button button-dark cms-add-button"
+                id="add-plans"
+                type="button">Add package</button
+              >
+            </div><div class="cms-item-list" id="cms-plans"></div>
+          </section>
+          <section
+            class="cms-panel"
+            id="editor-portfolio"
+            data-editor-section="portfolio"
+            aria-label="Our work"
+            hidden
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">WEBSITE CONTENT</p><h3>
+                  Work and case studies
+                </h3><p>
+                  Mark illustrative work as an example. Client case studies
+                  require verified results and permission before publishing.
+                </p>
+              </div><button
+                class="button button-dark cms-add-button"
+                id="add-portfolio"
+                type="button">Add portfolio</button
+              >
+            </div><div class="cms-item-list" id="cms-portfolio"></div>
+          </section>
+          <section
+            class="cms-panel"
+            id="editor-team"
+            data-editor-section="team"
+            aria-label="Team"
+            hidden
+          >
+            <div class="cms-panel-heading">
+              <div>
+                <p class="eyebrow">WEBSITE CONTENT</p><h3>
+                  People behind VSS
+                </h3><p>
+                  Maintain approved names, roles, introductions, and portrait
+                  image paths.
+                </p>
+              </div><button
+                class="button button-dark cms-add-button"
+                id="add-team"
+                type="button">Add team</button
+              >
+            </div><div class="cms-item-list" id="cms-team"></div>
+          </section>
+        </section>
+        <footer class="admin-footer">
+          <span>Keep responses clear, kind, and timely. · v{version}</span><a
+            href="/privacy/"
+            >Privacy notice <span aria-hidden="true">↗</span></a
+          >
+        </footer>
+      </main>
+    </div>
+    <script src="../../scripts/owner/index.ts"></script>
+  </body>
+</html>

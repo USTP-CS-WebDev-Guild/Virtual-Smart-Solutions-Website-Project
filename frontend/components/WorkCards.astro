@@ -1,0 +1,57 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+interface Props {
+  limit?: number;
+}
+const { limit = 16 } = Astro.props;
+const items = DEFAULT_SITE_CONTENT.portfolio.filter((x) => x.published && (x.kind === "example" || x.approved)).slice(0, limit);
+const categories = ["All", ...new Set(items.map((x) => x.category))];
+---
+
+<div class="vss-work-tools" data-work-tools hidden={!items.length}>
+  <div
+    class="vss-filter-list"
+    data-work-filters
+    role="group"
+    aria-label="Filter work by service"
+  >
+    {categories.map((category) => <button class="vss-filter" type="button" data-work-category={category} aria-pressed={category === "All" ? "true" : "false"} disabled>{category}</button>)}
+  </div>
+  <p data-work-count role="status" aria-live="polite">{items.length} {items.length === 1 ? "engagement" : "engagements"} shown</p>
+</div>
+<div class="vss-work-grid" data-public-portfolio data-limit={limit} data-filter-ready="true">
+  {
+    items.map((work, index) => (
+        <article class:list={["vss-work-card", { "is-work-featured": index === 0 }]} data-work-id={work.id}>
+          <>
+            <div class="vss-work-image">
+              <>
+                <img
+                  src={work.image}
+                  alt={work.title + " — illustrative image"}
+                  width="1000"
+                  height="670"
+                  loading="lazy"
+                />
+                <span>
+                  {work.kind === "example"
+                    ? "ILLUSTRATIVE ENGAGEMENT"
+                    : "CLIENT CASE STUDY"}
+                </span>
+              </>
+            </div>
+            <div class="vss-work-copy">
+              <>
+                <span class="vss-eyebrow">{work.category}</span>
+                <h3>{work.title}</h3>
+                <p>{work.description}</p>
+                <p class="vss-work-outcome">{work.outcome}</p>
+                <button class="vss-text-link vss-work-open" type="button" data-work-open={work.id} disabled>View the details <span aria-hidden="true">↗</span></button>
+                <noscript><a class="vss-text-link" href="/contact/">Discuss similar support ↗</a></noscript>
+              </>
+            </div>
+          </>
+        </article>
+      ))
+  }
+</div>

@@ -1,0 +1,75 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+interface Props {
+  detail?: boolean;
+  limit?: number;
+}
+const { detail = false, limit = 20 } = Astro.props;
+const services = DEFAULT_SITE_CONTENT.services
+  .filter((x) => x.published)
+  .slice(0, limit);
+---
+
+<div
+  class:list={["vss-services", { "vss-services-detail": detail }]}
+  data-public-services
+  data-service-layout={detail ? "detail" : "cards"}
+  data-limit={limit}
+>
+  {
+    services.map((service, index) => (
+      <article class="vss-service-card" data-service-id={service.id} id={detail ? service.id : undefined}>
+        <>
+          <div class="vss-service-image">
+            <>
+              <img
+                src={service.image}
+                alt={`${service.title} — illustrative work environment`}
+                width="1000"
+                height="670"
+                loading="lazy"
+              />
+              <span class="vss-service-number">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <a
+                class="vss-round-link"
+                href={"/contact/?service=" + service.id}
+                aria-label={"Inquire about " + service.title}
+              >
+                ↗
+              </a>
+            </>
+          </div>
+          <div class="vss-service-copy">
+            <span class="vss-eyebrow">
+              {detail
+                ? "VSS / SERVICE " + String(index + 1).padStart(2, "0")
+                : "A LITTLE MORE ROOM TO GROW"}
+            </span>
+            <h3>{service.title}</h3>
+            <p>{service.description}</p>
+            {detail && (
+              <ul>
+                {service.examples.map((example) => (
+                  <li>{example}</li>
+                ))}
+              </ul>
+            )}
+            <a
+              class="vss-text-link"
+              href={
+                detail
+                  ? "/contact/?service=" + service.id
+                  : "/services/#" + service.id
+              }
+            >
+              {detail ? "Discuss this service" : "Explore service"}{" "}
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </>
+      </article>
+    ))
+  }
+</div>

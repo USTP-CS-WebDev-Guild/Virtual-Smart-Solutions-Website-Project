@@ -1,0 +1,35 @@
+/* Shared identity; no public-page layout rules enter the owner workspace. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+}
+.brand-name {
+  font: 800 16px/1.2 var(--sans);
+  letter-spacing: -0.04em;
+  max-width: 225px;
+}
+.vss-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #ffffff;
+  background: #2457d6;
+  flex-shrink: 0;
+}
+.brand-inverse {
+  color: #f8f9fb;
+}
+.brand-inverse .vss-brand-mark {
+  background: #eceef1;
+  color: #202228;
+}
+@media (max-width: 599px) {
+  .brand-name {
+    font-size: 14px;
+    max-width: 190px;
+  }
+}

@@ -1,0 +1,107 @@
+---
+import Brand from "./Brand.astro";
+import { site, settings } from "../data/site";
+const services = [
+  ["virtual-assistant", "Virtual Assistant"],
+  ["data-entry", "Data Entry"],
+  ["social-media", "Social Media Marketing"],
+  ["bookkeeping", "Bookkeeping"],
+  ["appointment-setting", "Appointment Setting"],
+];
+const benefits = [
+  ["↗", "Fast Onboarding", "Start within 48 hours"],
+  ["✓", "NDA Protected", "Your data stays private"],
+  ["◎", "Global Ready", "Any time zone, any industry"],
+  ["✳", "Quality Assured", "Double-checked every task"],
+];
+---
+
+<section class="vss-closing" data-motion-region>
+  <div class="vss-container">
+    <div data-reveal>
+      <span class="vss-eyebrow"
+        >YOUR NEXT CHAPTER STARTS WITH A CONVERSATION</span
+      ><h2>Make room for<br /><em>what’s next.</em></h2>
+    </div>
+    <div class="vss-closing-action" data-reveal>
+      <a class="vss-button vss-button-white" href="/contact/"
+        ><span data-site-content="homePrimaryCta"
+          >{settings.homePrimaryCta}</span
+        ><span aria-hidden="true">↗</span></a
+      >
+      <p>
+        Tell us about your workload.<br />We’ll take it from there, together.
+      </p>
+    </div>
+  </div>
+</section>
+<footer class="vss-footer">
+  <div class="vss-container vss-footer-grid">
+    <div class="vss-footer-brand">
+      <Brand inverse /><p data-site-content="footerTagline">
+        {settings.footerTagline}
+      </p>
+      <a
+        data-site-email="business"
+        href={site.email ? "mailto:" + site.email : undefined}
+        hidden={!site.email}>{site.email}</a
+      >
+      <span data-site-content="location">{site.location}</span>
+    </div>
+    <nav aria-label="Footer quick links">
+      <h3>Quick Links</h3><a href="/">Home</a><a href="/services/">Services</a
+      ><a href="/portfolio/">Our Work</a><a href="/about/">About Us</a><a
+        href="/contact/">Contact</a
+      >
+    </nav>
+    <nav aria-label="Footer services">
+      <h3>Services</h3><div data-footer-services>
+        {
+          services.map(([id, title]) => (
+            <a href={"/services/#" + id} data-footer-service={id}>{title}</a>
+          ))
+        }
+      </div>
+    </nav>
+    <div class="vss-footer-benefits">
+      <h3>Why VSS</h3>{
+        benefits.map(([icon, title, text]) => (
+          <div>
+            <>
+              <span aria-hidden="true">{icon}</span>
+              <p>
+                <>
+                  <strong>{title}</strong>
+                  <small>{text}</small>
+                </>
+              </p>
+            </>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <div class="vss-container vss-footer-utilities">
+    <a href="/approach/">How we work</a><a href="/privacy/">Privacy notice</a><a
+      href="/admin/">Owner sign-in ↗</a
+    >
+    <button
+      type="button"
+      id="footer-motion-toggle"
+      data-motion-toggle
+      aria-pressed="true"
+      hidden>Pause animations</button
+    >
+  </div>
+  <div class="vss-container vss-footer-bottom">
+    <p>
+      © {new Date().getFullYear()}{" "}<span data-site-content="businessName"
+        >{site.name}</span
+      > · All rights reserved
+    </p>
+    <span data-service-status data-state="unknown" role="status"
+      >Service status unchecked</span
+    >
+    <a href="#main">Back to top ↑</a>
+  </div>
+</footer>

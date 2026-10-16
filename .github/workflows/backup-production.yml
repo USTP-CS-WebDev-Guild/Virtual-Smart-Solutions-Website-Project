@@ -1,0 +1,36 @@
+name: encrypted Supabase backup
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-encrypt-store:
+    # Enable ONLY in the restricted team/client operations repository.
+    # No private paid GitHub environment/approval feature is required.
+    if: vars.ENABLE_PRODUCTION_BACKUP == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Export app schema AND data, then encrypt
+        run: node devops/scripts/backup-database.mjs "$RUNNER_TEMP/vss.sql.enc"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      - name: Store encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: vss-weekly-${{ github.run_id }}
+          path: ${{ runner.temp }}/vss.sql.enc
+          if-no-files-found: error
+          retention-days: 90

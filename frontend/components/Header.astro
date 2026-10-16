@@ -1,0 +1,71 @@
+---
+import Brand from "./Brand.astro";
+import { settings } from "../data/site";
+const links = [
+  ["/", "Home"],
+  ["/services/", "Services"],
+  ["/portfolio/", "Our work"],
+  ["/about/", "About"],
+];
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isCurrent = (href: string) =>
+  (href.replace(/\/$/, "") || "/") === path ? "page" : undefined;
+---
+
+<header class="vss-header">
+  <div class="vss-container vss-nav">
+    <Brand /><nav class="vss-desktop-nav" aria-label="Main navigation">
+      {
+        links.map(([href, label]) => (
+          <a
+            href={href}
+            aria-current={isCurrent(href!)}
+            data-astro-prefetch
+          >
+            {label}
+          </a>
+        ))
+      }
+    </nav><a class="vss-button vss-button-dark vss-header-cta" href="/contact/" data-astro-prefetch
+      ><span data-site-content="homePrimaryCta">{settings.homePrimaryCta}</span>
+      <span aria-hidden="true">↗</span></a
+    ><button
+      class="vss-menu-toggle"
+      id="mobile-menu-toggle"
+      type="button"
+      aria-label="Open navigation"
+      aria-controls="mobile-menu"
+      aria-expanded="false"
+      ><span data-menu-label>Menu</span><span class="vss-menu-icon" aria-hidden="true"><i></i><i></i></span></button
+    >
+  </div>
+  <div class="vss-menu-backdrop" data-menu-backdrop hidden aria-hidden="true"></div>
+  <nav
+    class="vss-mobile-menu"
+    id="mobile-menu"
+    aria-label="Mobile navigation"
+    hidden
+    inert
+  >
+    <div class="vss-menu-heading"><span>Explore VSS</span><span>Navigation</span></div>
+    <div class="vss-menu-links">
+      {[...links, ["/approach/", "How we work"]].map(([href, label]) => (
+        <a href={href} aria-current={isCurrent(href!)} data-astro-prefetch>
+          <span>{label}</span><span aria-hidden="true">↗</span>
+        </a>
+      ))}
+    </div>
+    <div class="vss-menu-footer">
+      <a class="vss-button vss-button-dark" href="/contact/" aria-current={isCurrent("/contact/")} data-astro-prefetch>
+        <span data-site-content="homePrimaryCta">{settings.homePrimaryCta}</span><span aria-hidden="true">↗</span>
+      </a>
+      <p>Philippines based. Working worldwide.</p>
+    </div>
+  </nav>
+  <span class="vss-scroll-progress" aria-hidden="true" data-scroll-progress
+  ></span>
+</header>
+<script>
+  import { setupNavigation } from "../lib/navigation";
+  setupNavigation();
+</script>

@@ -1,0 +1,78 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TeamCards from "../components/TeamCards.astro";
+import { settings } from "../data/site";
+---
+
+<BaseLayout
+  title="About our Philippine virtual assistant company"
+  description="Meet the people behind Virtual Smart Solutions and learn how VSS approaches clear, dependable remote support for businesses worldwide."
+  ><div class="vss-about-shell">
+    <section class="vss-about-hero vss-container">
+      <div>
+        <p class="vss-pill">
+          <span class="vss-dot"></span><span data-site-content="aboutEyebrow"
+            >{settings.aboutEyebrow}</span
+          >
+        </p><h1>
+          <span data-site-content="aboutHeadline">{settings.aboutHeadline}</span
+          ><br /><em data-site-content="aboutEmphasis"
+            >{settings.aboutEmphasis}</em
+          >
+        </h1><p data-site-content="aboutLead">{settings.aboutLead}</p><a
+          class="vss-button vss-button-primary"
+          href="/contact/">Work with us <span aria-hidden="true">↗</span></a
+        >
+      </div><div class="vss-about-photo" data-motion-region>
+        <img
+          class="vss-motion-loop"
+          src="/images/remote-work.webp"
+          alt="An illustrative collaborative remote work environment"
+          width="700"
+          height="467"
+        /><span>PHILIPPINE TALENT. A WORLDWIDE MINDSET.</span>
+      </div>
+    </section>
+  </div><section class="vss-section vss-process-band">
+    <div class="vss-container">
+      <div class="vss-section-heading">
+        <div>
+          <p class="vss-eyebrow">THE WAY WE SHOW UP</p><h2>
+            Good people.<br /><em>Shared working principles.</em>
+          </h2>
+        </div><p>
+          Strong support is built through everyday actions: a clear update, a
+          checked detail, a question asked at the right time.
+        </p>
+      </div><div class="vss-values">
+        <article>
+          <span>01 / CARE</span><h3>Details matter.</h3><p>
+            We work from agreed instructions, check the work, and keep the next
+            step visible.
+          </p>
+        </article><article>
+          <span>02 / TRUST</span><h3>Access with purpose.</h3><p>
+            Client-approved tools, clear permissions, and a conversation before
+            sensitive access.
+          </p>
+        </article><article>
+          <span>03 / PARTNERSHIP</span><h3>Progress, together.</h3><p>
+            Questions and exceptions go to the right person, with a
+            communication rhythm that works.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section><section
+    class="vss-section vss-container vss-team-section"
+    data-motion-region
+  >
+    <div class="vss-section-heading">
+      <div>
+        <p class="vss-eyebrow">THE PEOPLE BEHIND VSS</p><h2>
+          A shared ambition.<br /><em>A personal approach.</em>
+        </h2>
+      </div>
+    </div><TeamCards />
+  </section></BaseLayout
+>

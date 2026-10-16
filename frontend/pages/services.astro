@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ServiceCards from '../components/ServiceCards.astro';
+import PlanCards from '../components/PlanCards.astro';
+import FaqList from '../components/FaqList.astro';
+import { settings } from '../data/site';
+---
+
+<BaseLayout
+  title="Virtual assistant services and packages"
+  description="Explore VSS virtual assistance, data entry, social media marketing, bookkeeping, and appointment setting, with clear package options and written scopes."
+  ><section class="vss-page-hero vss-container">
+    <p class="vss-pill">
+      <span class="vss-dot"></span><span data-site-content="servicesEyebrow"
+        >{settings.servicesEyebrow}</span>
+    </p><h1>
+      <span data-site-content="servicesHeadline">{settings.servicesHeadline}</span><br /><em
+        data-site-content="servicesEmphasis">{settings.servicesEmphasis}</em>
+    </h1><p data-site-content="servicesLead">{settings.servicesLead}</p>
+  </section><section class="vss-container vss-service-page">
+    <ServiceCards detail />
+  </section><section class="vss-section vss-package-section" id="packages">
+    <div class="vss-container">
+      <div class="vss-centered-heading">
+        <p class="vss-eyebrow">CHOOSE A STARTING POINT</p><h2>
+          Support that fits<br /><em>the way you work.</em>
+        </h2><p>
+          Select a package to carry your preference into the inquiry. We confirm the final
+          arrangement together.
+        </p>
+      </div><PlanCards /><p class="vss-pricing-note" data-site-content="pricingNote">
+        {settings.pricingNote}
+      </p>
+    </div>
+  </section><section class="vss-section vss-container vss-faq-layout" data-public-faq-section>
+    <div>
+      <p class="vss-eyebrow">BEFORE WE BEGIN</p><h2>
+        A little clarity<br /><em>goes a long way.</em>
+      </h2>
+    </div><FaqList />
+  </section></BaseLayout
+>

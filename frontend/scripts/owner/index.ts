@@ -1,0 +1,430 @@
+// Owner workspace entrypoint: sign-in, navigation, and feature wiring.
+import { supabase } from './session';
+import { api } from './api';
+import { byId, make, setAlert, showWorkspaceLogin, setWorkspaceRole } from './ui';
+import { loadInquiries, openInquiry } from './inquiries';
+import { loadClients } from './clients';
+import { loadPrivacyRequests } from './privacy';
+import {
+  loadSiteContent,
+  addCmsCatalog,
+  addCmsService,
+  addCmsFaq,
+  loadContentHistory,
+  saveSiteContent,
+} from './content-editor';
+import { initializeContentNavigation } from './content-navigation';
+import { loginErrorMessage } from './login-errors';
+import { connectLiveUpdates, type LiveState } from '../../lib/live-updates';
+import { workspace, type WorkspaceView } from './state';
+import {
+  markContentDirty,
+  hasContentDraft,
+  discardContentDraft,
+  handleLiveContentChange,
+} from './content-editor';
+
+function showView(view: WorkspaceView, refresh = true) {
+  if (workspace.view === 'content' && view !== 'content' && hasContentDraft()) {
+    if (!window.confirm('Discard your unsaved website edits and leave the editor?')) return;
+    discardContentDraft();
+  }
+  workspace.view = view;
+  document.querySelectorAll<HTMLElement>('.admin-view').forEach((section) => {
+    section.classList.toggle('is-hidden', section.id !== view + '-view');
+  });
+  byId<HTMLElement>('page-heading').textContent =
+    view === 'inquiries'
+      ? 'Inquiry inbox'
+      : view === 'clients'
+        ? 'Clients'
+        : view === 'privacy'
+          ? 'Privacy requests'
+          : 'Website editor';
+  document.querySelectorAll<HTMLButtonElement>('.admin-nav-item').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.view === view);
+  });
+  setAlert('');
+  if (view === 'clients') {
+    loadClients().catch((error) => setAlert(error.message, 'error'));
+  } else if (view === 'privacy') {
+    loadPrivacyRequests().catch((error) => setAlert(error.message, 'error'));
+  } else if (view === 'content') {
+    loadSiteContent().catch((error) => setAlert(error.message, 'error'));
+  } else if (refresh) {
+    loadInquiries().catch((error) => setAlert(error.message, 'error'));
+  }
+}
+
+let dashboardStarted = false;
+let sessionCheckVersion = 0;
+
+function startDashboard() {
+  if (!dashboardStarted) {
+    dashboardStarted = true;
+    initializeContentNavigation();
+    document.querySelectorAll<HTMLButtonElement>('.admin-nav-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        const view = button.dataset.view;
+        showView(
+          view === 'privacy'
+            ? 'privacy'
+            : view === 'content'
+              ? 'content'
+              : view === 'clients'
+                ? 'clients'
+                : 'inquiries',
+        );
+      });
+    });
+    for (const kind of ['plans', 'portfolio', 'team'] as const)
+      byId<HTMLButtonElement>('add-' + kind).addEventListener('click', () => addCmsCatalog(kind));
+    byId<HTMLButtonElement>('add-service').addEventListener('click', addCmsService);
+    byId<HTMLButtonElement>('add-faq').addEventListener('click', addCmsFaq);
+    byId<HTMLButtonElement>('reload-site-content').addEventListener('click', () => {
+      if (
+        window.confirm(
+          'Reloading replaces the current editor fields and discards unsaved changes. Continue?',
+        )
+      ) {
+        loadSiteContent().catch((error) => setAlert(error.message, 'error'));
+      }
+    });
+    byId<HTMLButtonElement>('toggle-content-history').addEventListener('click', () => {
+      const panel = byId<HTMLElement>('content-history');
+      const isOpening = panel.classList.contains('is-hidden');
+      panel.classList.toggle('is-hidden', !isOpening);
+      if (isOpening) loadContentHistory().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('save-site-content').addEventListener('click', () => {
+      void saveSiteContent();
+    });
+    byId<HTMLSelectElement>('status-filter').addEventListener('change', () => {
+      loadInquiries().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('refresh-button').addEventListener('click', () => {
+      refreshCurrentView().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('inbox-refresh').addEventListener('click', () => {
+      loadInquiries().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('privacy-refresh').addEventListener('click', () => {
+      loadPrivacyRequests().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLSelectElement>('privacy-filter').addEventListener('change', () => {
+      loadPrivacyRequests().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('privacy-more').addEventListener('click', () => {
+      loadPrivacyRequests(true).catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('inquiries-more').addEventListener('click', () => {
+      loadInquiries(false, true).catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('clients-refresh').addEventListener('click', () => {
+      loadClients().catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLButtonElement>('clients-more').addEventListener('click', () => {
+      loadClients(true).catch((error) => setAlert(error.message, 'error'));
+    });
+    byId<HTMLElement>('content-view').addEventListener('input', markContentDirty);
+    byId<HTMLElement>('content-view').addEventListener('change', markContentDirty);
+    window.addEventListener('vss-open-inquiry', (event) => {
+      const id = (event as CustomEvent<string>).detail;
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+      showView('inquiries', false);
+      openInquiry(id).catch((error) => setAlert(error.message, 'error'));
+    });
+    document.getElementById('check-submissions')?.addEventListener('click', () => {
+      void checkSubmissions();
+    });
+    document.getElementById('verify-live-updates')?.addEventListener('click', () => {
+      void verifyLiveDelivery();
+    });
+
+    const runTestJobsButton = document.getElementById('run-test-jobs') as HTMLButtonElement | null;
+    runTestJobsButton?.addEventListener('click', async () => {
+      runTestJobsButton.disabled = true;
+      runTestJobsButton.textContent = 'Running jobs…';
+      try {
+        const result = await api<{ email: { processed: number; captured: number } }>(
+          '/api/admin/test/run-jobs',
+          {
+            method: 'POST',
+            body: JSON.stringify({}),
+          },
+        );
+        await loadInquiries();
+        setAlert(
+          `Jobs completed. ${result.email.processed} notification(s) processed; ${result.email.captured} captured. Privacy retention was checked.`,
+          'success',
+        );
+      } catch (error) {
+        setAlert(error instanceof Error ? error.message : 'Could not run the test jobs.', 'error');
+      } finally {
+        runTestJobsButton.disabled = false;
+        runTestJobsButton.textContent = 'Run test jobs';
+      }
+    });
+  }
+  showView('inquiries', false);
+  if (workspace.actorRole === 'owner') void checkSubmissions();
+  startWorkspaceLive();
+
+  loadInquiries().catch((error) => {
+    byId<HTMLElement>('inquiry-list').replaceChildren(
+      make('div', 'loading-state is-error', error.message),
+    );
+    setAlert(error.message, 'error');
+  });
+}
+
+let stopLive: (() => void) | null = null;
+let lastStaffRevision = -1;
+window.addEventListener('vss-session-closed', () => {
+  stopLive?.();
+  stopLive = null;
+  lastStaffRevision = -1;
+  discardContentDraft();
+  workspace.view = 'inquiries';
+});
+window.addEventListener('pagehide', () => {
+  stopLive?.();
+  stopLive = null;
+});
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) void checkStaffSession();
+});
+window.addEventListener('beforeunload', (event) => {
+  if (hasContentDraft()) event.preventDefault();
+});
+
+async function refreshCurrentView() {
+  if (workspace.view === 'clients') await loadClients();
+  else if (workspace.view === 'privacy') await loadPrivacyRequests();
+  else if (workspace.view === 'content') await handleLiveContentChange();
+  else await loadInquiries();
+}
+
+function startWorkspaceLive() {
+  stopLive?.();
+  if (!supabase) return;
+  const session = workspace.sessionVersion;
+  const current = () =>
+    session === workspace.sessionVersion && !byId<HTMLElement>('admin-app').hidden;
+  const labels: Record<LiveState, string> = {
+    connecting: 'Connecting live updates…',
+    live: 'Live updates connected',
+    reconnecting: 'Reconnecting live updates…',
+    offline: 'Offline — reconnect to update',
+    setup_required: 'Live updates need database setup',
+  };
+  stopLive = connectLiveUpdates(
+    supabase,
+    workspace.actorRole === 'owner' ? ['staff', 'owner', 'public'] : ['staff', 'public'],
+    {
+      verify: async () => (await api<{ ready: boolean }>('/api/admin/realtime-status')).ready,
+      observed: (scope, revision) => {
+        if (!current() || scope !== 'staff') return;
+        lastStaffRevision = Math.max(lastStaffRevision, revision);
+        window.dispatchEvent(new Event('vss-live-delivery'));
+      },
+      state: (state) => {
+        if (!current()) return;
+        const status = document.querySelector<HTMLElement>('.system-status');
+        if (!status) return;
+        status.className =
+          'system-status' +
+          (state === 'live' ? ' is-online' : state === 'connecting' ? '' : ' is-offline');
+        status.replaceChildren(make('i'), document.createTextNode(' ' + labels[state]));
+      },
+      changed: async (scopes) => {
+        if (!current()) return;
+        const jobs: Promise<unknown>[] = [];
+        if (scopes.has('staff')) {
+          jobs.push(loadInquiries(true));
+          if (workspace.view === 'clients') jobs.push(loadClients());
+        }
+        if (scopes.has('owner') && workspace.actorRole === 'owner' && workspace.view === 'privacy')
+          jobs.push(loadPrivacyRequests());
+        if (scopes.has('public') && workspace.actorRole === 'owner' && workspace.view === 'content')
+          jobs.push(handleLiveContentChange());
+        await Promise.all(jobs);
+      },
+    },
+  );
+}
+
+async function verifyLiveDelivery() {
+  const button = byId<HTMLButtonElement>('verify-live-updates');
+  const session = workspace.sessionVersion;
+  button.disabled = true;
+  const started = performance.now();
+  let cleanup = () => {};
+  try {
+    const result = await api<{ revision: number }>('/api/admin/test/live-check', {
+      method: 'POST',
+      body: '{}',
+    });
+    const target = Number(result.revision);
+    if (!Number.isFinite(target))
+      throw new Error('Live verification did not return a database revision.');
+    await new Promise<void>((resolve, reject) => {
+      const received = () => {
+        if (session !== workspace.sessionVersion) {
+          cleanup();
+          reject(new Error('Sign in again to verify live delivery.'));
+        } else if (lastStaffRevision >= target) {
+          cleanup();
+          resolve();
+        }
+      };
+      const timer = window.setTimeout(() => {
+        cleanup();
+        reject(
+          new Error(
+            'The database update did not reach this browser. Check Realtime setup and WebSocket access.',
+          ),
+        );
+      }, 15_000);
+      cleanup = () => {
+        window.clearTimeout(timer);
+        window.removeEventListener('vss-live-delivery', received);
+      };
+      window.addEventListener('vss-live-delivery', received);
+      received();
+    });
+    if (session === workspace.sessionVersion)
+      setAlert(
+        `Live delivery verified in ${Math.round(performance.now() - started)} ms. The database update reached this browser.`,
+        'success',
+      );
+  } catch (error) {
+    if (session === workspace.sessionVersion)
+      setAlert(error instanceof Error ? error.message : 'Live verification failed.', 'error');
+  } finally {
+    cleanup();
+    button.disabled = false;
+  }
+}
+
+async function checkSubmissions() {
+  const container = document.getElementById('submission-check-results');
+  if (!container || workspace.actorRole !== 'owner') return;
+  const version = workspace.sessionVersion;
+  container.textContent = 'Checking contact form setup…';
+  try {
+    const result = await api<{
+      ok: boolean;
+      checks: Array<{ name: string; ok: boolean; message: string }>;
+    }>('/api/admin/submission-checks');
+    if (version !== workspace.sessionVersion || byId<HTMLElement>('admin-app').hidden) return;
+    container.replaceChildren();
+    if (result.ok)
+      container.append(
+        make(
+          'p',
+          '',
+          'Contact form settings passed. Submit an inquiry to verify receipt in this inbox.',
+        ),
+      );
+    for (const check of result.checks.filter((item) => !item.ok)) {
+      container.append(make('p', 'is-error', check.name + ': ' + check.message));
+    }
+  } catch {
+    if (version === workspace.sessionVersion && !byId<HTMLElement>('admin-app').hidden) {
+      container.textContent =
+        'Setup checks could not be completed. Check the API function log in Netlify.';
+    }
+  }
+}
+
+async function checkStaffSession() {
+  const checkVersion = ++sessionCheckVersion;
+  byId<HTMLElement>('admin-app').hidden = true;
+  if (!supabase) {
+    showWorkspaceLogin(
+      'Owner sign-in is not configured. Add the public Supabase URL and anon key, then rebuild the site.',
+    );
+    return;
+  }
+  try {
+    const { data: auth } = await supabase.auth.getSession();
+    if (checkVersion !== sessionCheckVersion) return;
+    if (!auth.session) {
+      showWorkspaceLogin();
+      return;
+    }
+    const response = await api<{
+      authenticated: boolean;
+      user: { role: 'owner' | 'staff' } | null;
+    }>('/api/auth/session');
+    // A sign-out in another tab must invalidate an in-flight staff check.
+    if (checkVersion !== sessionCheckVersion) return;
+    if (!response.authenticated) {
+      await supabase.auth.signOut();
+      showWorkspaceLogin(
+        'This account is not enabled for staff access. Ask the owner to check your staff account.',
+      );
+      return;
+    }
+    setWorkspaceRole(response.user?.role || 'staff');
+    byId<HTMLElement>('admin-login').hidden = true;
+    byId<HTMLElement>('admin-app').hidden = false;
+    startDashboard();
+  } catch (error) {
+    showWorkspaceLogin(
+      error instanceof Error ? error.message : 'Could not verify your staff account.',
+    );
+  }
+}
+
+const loginForm = byId<HTMLFormElement>('staff-login-form');
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const status = byId<HTMLElement>('staff-login-status');
+  const button = loginForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+  if (!button) return;
+  if (!supabase) {
+    status.textContent = 'Owner sign-in is not configured. Ask the site owner to finish the setup.';
+    return;
+  }
+  button.disabled = true;
+  status.textContent = 'Checking account…';
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: byId<HTMLInputElement>('staff-email').value.trim(),
+      password: byId<HTMLInputElement>('staff-password').value,
+    });
+    if (error) {
+      status.textContent = loginErrorMessage(error);
+      return;
+    }
+    await checkStaffSession();
+    if (!byId<HTMLElement>('admin-app').hidden) status.textContent = '';
+  } catch (error) {
+    status.textContent = loginErrorMessage(error);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Enable only after the submit handler exists; never fall back to a GET with credentials.
+const loginButton = loginForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+if (loginButton) loginButton.disabled = false;
+
+byId<HTMLButtonElement>('sign-out').addEventListener('click', async () => {
+  ++sessionCheckVersion;
+  showWorkspaceLogin('Signing out…');
+  await supabase?.auth.signOut();
+  showWorkspaceLogin('You have signed out.');
+});
+
+// Keep the UI closed when Supabase expires the session or another tab signs out.
+supabase?.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    ++sessionCheckVersion;
+    showWorkspaceLogin('You have signed out. Sign in again to continue.');
+  }
+});
+
+void checkStaffSession();

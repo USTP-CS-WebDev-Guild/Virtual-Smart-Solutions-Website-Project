@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible issue in the site or staff workspace.
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Primary role
+      options:
+        - UI/UX
+        - Frontend
+        - Backend
+        - DevOps
+        - Cross-role
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Use synthetic data. Do not include customer names, emails, or screenshots of real inquiries.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Choose ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: viewport
+    attributes:
+      label: Device and viewport (for visual issues)
+      placeholder: Phone, 390 × 844 CSS pixels
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true

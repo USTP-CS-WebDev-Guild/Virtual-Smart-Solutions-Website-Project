@@ -1,0 +1,453 @@
+/* Interactive UI surfaces. Layout/palette tokens: vss.css. Animation: motion.css. */
+.vss-service-explorer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 54px;
+  margin-bottom: 48px;
+  padding: 42px;
+  border: 1px solid #d7dbe2;
+  border-radius: 25px;
+  background: #f8f9fb;
+}
+.vss-explorer-intro h2 {
+  font-size: clamp(32px, 3.5vw, 48px);
+  margin: 15px 0 20px;
+}
+.vss-explorer-intro > p:not(.vss-eyebrow) {
+  color: #565b65;
+  font-size: 15px;
+  line-height: 1.85;
+}
+.vss-choice-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 26px;
+}
+.vss-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 51px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid #d7dbe2;
+  border-radius: 11px;
+  background: transparent;
+  color: #383c44;
+  text-align: left;
+  font: 650 14px/1.6 var(--sans);
+  cursor: pointer;
+}
+.vss-choice[aria-pressed="true"] {
+  background: #383c44;
+  border-color: #383c44;
+  color: #f8f9fb;
+}
+.vss-choice-index {
+  color: #737984;
+  font-size: 11px;
+}
+.vss-choice[aria-pressed="true"] .vss-choice-index {
+  color: #eceef1;
+}
+.vss-choice-name {
+  margin-right: auto;
+}
+.vss-explorer-panel {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eceef1;
+  background: #ffffff;
+  border-radius: 19px;
+  box-shadow: 0 16px 36px #383c440d;
+}
+.vss-explorer-detail {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  align-self: stretch;
+}
+.vss-explorer-detail[data-active="false"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+.vss-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.vss-explorer-image {
+  width: 100%;
+  height: 210px;
+  display: block;
+  object-fit: cover;
+  background: #eceef1;
+}
+.vss-explorer-copy {
+  padding: 28px;
+}
+.vss-explorer-copy h3 {
+  font-size: 34px;
+  margin-block: 15px;
+}
+.vss-explorer-copy p {
+  color: #737984;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.vss-explorer-copy ul {
+  list-style: none;
+  margin: 22px 0;
+  padding: 18px 0;
+  border-block: 1px solid #eceef1;
+}
+.vss-explorer-copy li {
+  display: flex;
+  gap: 10px;
+  color: #565b65;
+  font-size: 14px;
+  line-height: 1.8;
+  padding-block: 5px;
+}
+.vss-explorer-copy li::before {
+  content: "✓";
+  color: #565b65;
+}
+.vss-work-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+.vss-filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.vss-filter {
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 1px solid #d7dbe2;
+  border-radius: 99px;
+  color: #565b65;
+  background: #ffffff;
+  font: 600 13px/1.5 var(--sans);
+  cursor: pointer;
+}
+.vss-filter[aria-pressed="true"] {
+  color: #f8f9fb;
+  border-color: #383c44;
+  background: #383c44;
+}
+.vss-work-tools > p {
+  margin: 0;
+  color: #737984;
+  font-size: 13px;
+}
+.vss-work-open {
+  font-family: inherit;
+  background: transparent;
+  border-inline: 0;
+  border-top: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+.vss-work-dialog {
+  width: min(940px, calc(100% - 40px));
+  max-height: 90dvh;
+  padding: 0;
+  color: #f8f9fb;
+  background: #202228;
+  border: 1px solid #737984;
+  border-radius: 25px;
+  box-shadow: 0 35px 140px #00000055;
+  overscroll-behavior: contain;
+}
+.vss-work-dialog::backdrop {
+  background: #101116d9;
+}
+.vss-dialog-body {
+  padding: 38px;
+}
+.vss-dialog-close {
+  display: block;
+  margin: 0 0 20px auto;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  border: 1px solid #969ca7;
+  color: #f8f9fb;
+  background: #383c44;
+  font: 650 14px var(--sans);
+  cursor: pointer;
+}
+.vss-dialog-body > .vss-eyebrow {
+  color: #eceef1;
+}
+.vss-dialog-body h2 {
+  font-size: clamp(33px, 5vw, 50px);
+  line-height: 1.08;
+  margin-block: 15px 28px;
+}
+.vss-dialog-body > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 390px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.vss-dialog-body > p {
+  color: #d7dbe2;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.vss-dialog-outcome {
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid #565b65;
+  background: #383c44;
+  color: #f8f9fb !important;
+}
+.vss-dialog-body .vss-button {
+  background: #eceef1;
+  color: #383c44;
+}
+.vss-work-dialog :focus-visible {
+  outline-color: #eceef1;
+}
+.vss-comparison {
+  margin-top: 34px;
+  border: 1px solid #737984;
+  border-radius: 16px;
+  background: #202228;
+  color: #f8f9fb;
+  overflow: hidden;
+}
+.vss-comparison > summary {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.vss-comparison > summary::-webkit-details-marker {
+  display: none;
+}
+.vss-comparison > summary span {
+  font-size: 24px;
+  line-height: 1;
+  color: #eceef1;
+}
+.vss-comparison[open] > summary span {
+  transform: rotate(45deg);
+}
+.vss-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.vss-table-scroll table {
+  width: 100%;
+  min-width: 750px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+}
+.vss-table-scroll caption {
+  text-align: left;
+  color: #d7dbe2;
+  font-size: 13px;
+  padding: 20px 24px;
+}
+.vss-table-scroll :is(th, td) {
+  padding: 18px 20px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.75;
+  border: 1px solid #737984;
+}
+.vss-table-scroll thead {
+  background: #383c44;
+  color: #f8f9fb;
+}
+.vss-table-scroll tbody th {
+  background: #383c44;
+}
+.vss-table-scroll ul {
+  padding-left: 16px;
+  margin: 0;
+}
+.vss-faq-layout {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 100px;
+}
+.vss-faq-layout > div > p:not(.vss-eyebrow) {
+  color: #737984;
+  margin-block: 25px 15px;
+  font-size: 15px;
+}
+.vss-faq-content {
+  min-width: 0;
+}
+.vss-faq-search {
+  border: 1px solid #d7dbe2;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 15px;
+}
+.vss-faq-search label {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: 12px;
+  color: #383c44;
+}
+.vss-faq-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px;
+  font: 16px var(--sans);
+  color: #383c44;
+  background: #f8f9fb;
+  border: 1px solid #b9bec8;
+  border-radius: 9px;
+}
+.vss-faq-search > p {
+  margin-bottom: 0;
+  font-size: 13px;
+  color: #737984;
+}
+.vss-faq {
+  border-bottom: 1px solid #d7dbe2;
+}
+.vss-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 25px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #383c44;
+  cursor: pointer;
+  list-style: none;
+}
+.vss-faq summary::-webkit-details-marker {
+  display: none;
+}
+.vss-faq summary > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7dbe2;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: #565b65;
+  font-size: 23px;
+  font-weight: 400;
+}
+.vss-faq[open] summary > span {
+  transform: rotate(45deg);
+  background: #eceef1;
+  color: #565b65;
+}
+.vss-faq > p {
+  margin: 0;
+  padding: 0 40px 27px 0;
+  color: #737984;
+  font-size: 15px;
+  line-height: 1.9;
+}
+@media (max-width: 1000px) {
+  .vss-service-explorer {
+    gap: 30px;
+    padding: 30px;
+  }
+  .vss-faq-layout {
+    gap: 50px;
+  }
+}
+@media (max-width: 799px) {
+  .vss-service-explorer {
+    grid-template-columns: 1fr;
+  }
+  .vss-choice-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vss-choice-index {
+    display: none;
+  }
+  .vss-explorer-image {
+    height: 260px;
+  }
+  .vss-faq-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 599px) {
+  .vss-service-explorer {
+    padding: 25px 20px;
+    border-radius: 20px;
+  }
+  .vss-choice-list {
+    grid-template-columns: 1fr;
+  }
+  .vss-choice-index {
+    display: inline;
+  }
+  .vss-explorer-copy {
+    padding: 24px;
+  }
+  .vss-explorer-copy h3 {
+    font-size: 32px;
+  }
+  .vss-explorer-image {
+    height: 210px;
+  }
+  .vss-filter {
+    padding-inline: 14px;
+    font-size: 12px;
+  }
+  .vss-dialog-body {
+    padding: 25px;
+  }
+  .vss-dialog-body > img {
+    max-height: 270px;
+  }
+  .vss-dialog-outcome {
+    padding: 18px;
+  }
+  .vss-faq > p {
+    padding-right: 12px;
+  }
+}
+/* When JS adds a detail button, avoid two competing CTAs on every card. */
+.vss-work-copy:has([data-work-open]:not([hidden])) > a {
+  display: none !important;
+}
+html:has(.vss-work-dialog[open]) {
+  overflow: hidden;
+}
+html {
+  scrollbar-gutter: stable;
+}
+.vss-explorer-panel,
+.vss-work-grid {
+  overflow-anchor: none;
+}

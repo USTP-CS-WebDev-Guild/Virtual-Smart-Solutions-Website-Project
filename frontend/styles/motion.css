@@ -1,0 +1,389 @@
+/* One motion vocabulary: short entrances, calm ambient loops, immediate feedback.
+   HTML is readable before JS. Reduced motion and the pause controls override all effects. */
+.public-page {
+  --vss-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+html {
+  scroll-behavior: auto;
+}
+html[data-motion="on"] {
+  scroll-behavior: smooth;
+}
+/* Page links render normally. No full-page snapshots, sliding documents or
+   cross-fading headers: content and the active link are ready immediately. */
+/* Ongoing activity / visible viewport and tab only. */
+@keyframes vss-float-left {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+@keyframes vss-float-right {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 7px;
+  }
+}
+@keyframes vss-float-note {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+@keyframes vss-photo-drift {
+  from {
+    transform: scale(1.025);
+  }
+  to {
+    transform: scale(1.075);
+  }
+}
+@keyframes vss-team-drift {
+  from {
+    transform: scale(1.015);
+  }
+  to {
+    transform: scale(1.045);
+  }
+}
+@keyframes vss-ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+html[data-motion="on"] .public-page .vss-card-one {
+  animation: vss-float-left 6s ease-in-out infinite;
+}
+html[data-motion="on"] .public-page .vss-floating-photo {
+  animation: vss-float-right 7.5s ease-in-out -2s infinite;
+}
+html[data-motion="on"] .public-page .vss-card-two {
+  animation: vss-float-note 7s ease-in-out -1s infinite;
+}
+html[data-motion="on"] .public-page .vss-hero-photo,
+html[data-motion="on"] .public-page .vss-about-photo > img {
+  animation: vss-photo-drift 16s ease-in-out infinite alternate;
+}
+html[data-motion="on"] .public-page .vss-person-image > img {
+  animation: vss-team-drift 14s ease-in-out infinite alternate;
+}
+html[data-motion="on"] .public-page .vss-person:nth-child(even) img {
+  animation-delay: -5s;
+}
+
+/* Expertise marquee / duplicated visual group, one accessible list. */
+.vss-service-strip {
+  overflow: hidden;
+  background: #eceef1;
+  color: #383c44;
+  border-block: 1px solid #d7dbe2;
+}
+.vss-ticker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-block: 17px;
+}
+.vss-ticker-heading p {
+  color: #565b65;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+.vss-ticker-heading button {
+  min-height: 44px;
+  padding: 9px 15px;
+  flex-shrink: 0;
+  border: 1px solid #969ca7;
+  border-radius: 99px;
+  background: #f8f9fb;
+  color: #383c44;
+  font: 600 12px var(--sans);
+  cursor: pointer;
+}
+.vss-ticker-viewport {
+  padding-block: 5px 27px;
+}
+.vss-ticker-track {
+  display: flex;
+  width: 100%;
+}
+.vss-ticker-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 16px 32px;
+  padding-inline: 24px;
+}
+.vss-ticker-group[aria-hidden="true"] {
+  display: none;
+}
+.vss-ticker-group span {
+  color: #383c44;
+  font: 600 24px/1.5 var(--display);
+  letter-spacing: -0.03em;
+}
+.vss-ticker-group i {
+  color: #565b65;
+  font-size: 27px;
+  font-style: normal;
+}
+html[data-motion="on"] .vss-ticker-track {
+  width: max-content;
+  animation: vss-ticker-scroll 38s linear infinite;
+}
+html[data-motion="on"] .vss-ticker-group {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  width: auto;
+  min-width: 100vw;
+  gap: clamp(35px, 4vw, 75px);
+  padding-inline: 36px;
+  white-space: nowrap;
+}
+html[data-motion="on"] .vss-ticker-group[aria-hidden="true"] {
+  display: flex;
+}
+
+html[data-motion="on"] .public-page [data-motion-region] .vss-motion-loop {
+  animation-play-state: paused;
+}
+html[data-motion="on"][data-page-visible="true"]
+  .public-page
+  [data-motion-region][data-region-visible="true"]
+  .vss-motion-loop {
+  animation-play-state: running;
+}
+.vss-service-strip:focus-within .vss-ticker-track {
+  animation-play-state: paused !important;
+}
+/* Pointer effects are useful feedback; touch users see the complete default design. */
+html[data-motion="on"]
+  .public-page
+  :is(
+    .vss-button,
+    .vss-round-link,
+    .vss-choice,
+    .vss-filter,
+    .vss-menu-toggle span,
+    .vss-faq summary > span,
+    .vss-comparison summary > span
+  ) {
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    transform 300ms var(--vss-ease),
+    box-shadow 300ms ease;
+}
+html[data-motion="on"]
+  .public-page
+  :is(.vss-service-image img, .vss-work-image img) {
+  transition: transform 850ms var(--vss-ease);
+}
+html[data-motion="on"]
+  .public-page
+  :is(.vss-service-card, .vss-work-card, .vss-plan, .vss-person) {
+  transition:
+    border-color 300ms ease,
+    box-shadow 350ms ease;
+}
+html[data-motion="on"] .public-page .vss-text-link {
+  transition:
+    color 200ms ease,
+    border-color 200ms ease;
+}
+html[data-motion="on"] .public-page .vss-button span[aria-hidden] {
+  transition: transform 300ms var(--vss-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .vss-desktop-nav a:hover {
+    color: #f8f9fb;
+    background: #383c44;
+  }
+  html[data-motion="on"] .vss-service-strip:hover .vss-ticker-track {
+    animation-play-state: paused !important;
+  }
+  .vss-button:hover {
+    box-shadow: 0 8px 24px #10111622;
+  }
+  html[data-motion="on"] .public-page .vss-button:hover {
+    transform: translateY(-2px);
+  }
+  html[data-motion="on"] .public-page .vss-button:hover span[aria-hidden] {
+    transform: translate(3px, -2px);
+  }
+  .public-page .vss-button-primary:hover,
+  .public-page .vss-header-cta:hover {
+    background: #292d36;
+    color: #ffffff;
+  }
+  .public-page .vss-button-blue:hover {
+    background: #1944aa;
+  }
+  .public-page .vss-button-dark:hover {
+    background: #383c44;
+  }
+  .vss-choice:hover:not([aria-pressed="true"]) {
+    background: #f8f9fb;
+    border-color: #969ca7;
+  }
+  .vss-filter:hover:not([aria-pressed="true"]) {
+    background: #f8f9fb;
+    border-color: #969ca7;
+  }
+  html[data-motion="on"]
+    .public-page
+    :is(.vss-service-card, .vss-work-card):hover
+    img {
+    transform: scale(1.055);
+  }
+  .public-page :is(.vss-service-card, .vss-work-card, .vss-person):hover {
+    border-color: #b9bec8;
+    box-shadow: 0 22px 50px #20222814;
+  }
+  .public-page .vss-plan:hover {
+    border-color: #d7dbe2;
+    box-shadow: 0 20px 45px #10111629;
+  }
+  .vss-text-link:hover {
+    border-color: currentColor;
+  }
+  .vss-footer a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+}
+@media (max-width: 599px) {
+  .vss-ticker-group span {
+    font-size: 21px;
+  }
+  .vss-ticker-heading p {
+    max-width: 150px;
+    line-height: 1.8;
+  }
+  .vss-ticker-heading button {
+    font-size: 11px;
+    padding-inline: 12px;
+  }
+}
+/* The saved preference and operating-system setting both cancel decorative motion. */
+html[data-motion="off"] {
+  scroll-behavior: auto !important;
+}
+html[data-motion="off"] .public-page *,
+html[data-motion="off"] .public-page *::before,
+html[data-motion="off"] .public-page *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  .public-page *,
+  .public-page *::before,
+  .public-page *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .public-page .vss-ticker-track {
+    width: 100% !important;
+    transform: none !important;
+  }
+  .public-page .vss-ticker-group {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+  }
+  .public-page .vss-ticker-group[aria-hidden="true"] {
+    display: none !important;
+  }
+}
+html[data-motion="on"] .public-page :is(input, select, textarea) {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+html[data-motion="off"] .public-page .button:hover {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-page .button:hover {
+    transform: none;
+  }
+}
+
+/* Charcoal expertise band; blue stays a small brand accent. */
+.vss-service-strip {
+  background: #1d1f26;
+  color: #ffffff;
+  border-color: #353944;
+}
+.vss-ticker-heading p {
+  color: #c9ced8;
+}
+.vss-ticker-heading button {
+  color: #ffffff;
+  border-color: #7b8290;
+  background: #282b34;
+}
+.vss-ticker-group span {
+  color: #e5e8ef;
+  font: 650 18px/1.5 var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.vss-ticker-group span:nth-of-type(3n) {
+  color: #9ab9ff;
+}
+.vss-ticker-group i {
+  color: #9da4b1;
+  font-size: 20px;
+}
+.vss-desktop-nav a {
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .vss-desktop-nav a:hover {
+    color: #14161c;
+    background: #f2f3f6;
+  }
+  .vss-desktop-nav a[aria-current="page"]:hover {
+    color: #2457d6;
+    background: #edf2fc;
+  }
+  .public-page .vss-button-primary:hover,
+  .public-page .vss-header-cta:hover,
+  .public-page .vss-button-dark:hover {
+    color: #ffffff;
+    background: #292d36;
+  }
+  .public-page .vss-plan.is-featured .vss-button:hover {
+    background: #edf2fc;
+    color: #14161c;
+  }
+}

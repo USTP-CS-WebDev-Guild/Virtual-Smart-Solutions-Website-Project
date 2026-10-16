@@ -1,0 +1,53 @@
+{
+  "name": "vss-website",
+  "version": "1.4.2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "setup": "node devops/scripts/setup.mjs",
+    "doctor": "node --env-file-if-exists=.env devops/scripts/doctor.mjs",
+    "dev": "node devops/scripts/start.mjs",
+    "dev:frontend": "node devops/scripts/dev-frontend.mjs",
+    "dev:backend": "node --env-file-if-exists=.env --import tsx devops/scripts/dev-backend.ts",
+    "build": "node devops/scripts/build-preflight.mjs && astro build --force && node devops/scripts/verify-build.mjs",
+    "check": "astro check && tsc --noEmit",
+    "verify": "npm run check && npm test && npm run build",
+    "test": "vitest run",
+    "test:frontend": "vitest run tests/frontend",
+    "test:backend": "vitest run tests/backend",
+    "test:database": "vitest run tests/database",
+    "test:devops": "vitest run tests/devops",
+    "test:watch": "vitest",
+    "db:backup": "node --env-file-if-exists=.env devops/scripts/backup-database.mjs",
+    "db:restore": "node --env-file-if-exists=.env devops/scripts/restore-database.mjs",
+    "verify:deployment": "node --env-file-if-exists=.env devops/scripts/verify-deployment.mjs",
+    "test:browser": "node node_modules/playwright/cli.js test",
+    "dev:cloud": "node devops/scripts/start.mjs --cloud",
+    "accounts": "node devops/scripts/local-accounts.mjs",
+    "reset:local": "node devops/scripts/reset-local.mjs",
+    "test:classroom": "vitest run tests/classroom",
+    "doctor:cloud": "node --env-file-if-exists=.env devops/scripts/doctor.mjs --cloud",
+    "db:prepare": "node devops/scripts/prepare-database.mjs",
+    "test:browser:classroom": "node node_modules/playwright/cli.js test tests/e2e/classroom.spec.ts"
+  },
+  "dependencies": {
+    "@netlify/functions": "^6.0.2",
+    "@supabase/supabase-js": "2.117.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "@electric-sql/pglite": "0.5.9",
+    "@types/node": "^22.0.0",
+    "astro": "7.3.8",
+    "happy-dom": "21.0.1",
+    "playwright": "1.62.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.7.0",
+    "vitest": "5.0.4"
+  },
+  "license": "MIT"
+}

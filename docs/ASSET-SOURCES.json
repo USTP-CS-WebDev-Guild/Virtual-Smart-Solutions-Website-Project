@@ -1,0 +1,19 @@
+{
+  "images": {
+    "hero-team.webp": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=82&fm=webp&fit=crop",
+    "service-admin.webp": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1000&q=80&fm=webp&fit=crop",
+    "service-data.webp": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&q=80&fm=webp&fit=crop",
+    "service-social.webp": "https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=900&q=80&fm=webp&fit=crop",
+    "service-books.webp": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1000&q=80&fm=webp&fit=crop",
+    "service-calls.webp": "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=1000&q=80&fm=webp&fit=crop",
+    "collaboration.webp": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80&fm=webp&fit=crop",
+    "remote-work.webp": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=700&q=80&fm=webp&fit=crop",
+    "founder.jpg": "https://vss-website-sigma.vercel.app/team-ceo.jfif",
+    "marketing-lead.jpg": "https://vss-website-sigma.vercel.app/team-cmo.jfif"
+  },
+  "fonts": {
+    "bricolage.woff2": "https://vss-website-sigma.vercel.app/_next/static/media/017d9bea37084d9b-s.p.179.vsfvxa6t5.woff2",
+    "dm-sans.woff2": "https://vss-website-sigma.vercel.app/_next/static/media/5c285b27cdda1fe8-s.p.0yo6-5yoeeudq.woff2"
+  },
+  "note": "Photography from the supplied prototype; Unsplash scenes illustrate remote work. Portrait assets are from the client prototype. Confirm business permission before client handoff."
+}

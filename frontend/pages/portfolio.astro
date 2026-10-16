@@ -1,0 +1,27 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import WorkCards from "../components/WorkCards.astro";
+import { settings } from "../data/site";
+---
+
+<BaseLayout
+  title="Our work and service examples"
+  description="Explore VSS work examples across administration, social media, and bookkeeping. Illustrative engagements are distinguished from approved client case studies."
+  ><section
+    class="vss-page-hero vss-container vss-portfolio-hero"
+    data-motion-region
+  >
+    <p class="vss-pill">
+      <span class="vss-dot"></span>A CLOSER LOOK AT THE DETAILS
+    </p><h1>
+      Behind the work.<br /><em>Beyond the everyday.</em>
+    </h1><p data-site-content="portfolioLead">{settings.portfolioLead}</p>
+  </section><section class="vss-container vss-section vss-work-page">
+    <WorkCards /><div class="vss-note">
+      <span aria-hidden="true">↗</span><p>
+        Have something similar on your list? Tell us about your workflow and
+        we’ll discuss what support could look like for you.
+      </p><a class="vss-text-link" href="/contact/">Start a conversation ↗</a>
+    </div>
+  </section></BaseLayout
+>

@@ -1,0 +1,5 @@
+-- Create the matching user in Supabase Authentication -> Users first.
+-- Replace the email. Apply only to the intended project. No passwords in SQL.
+insert into public.staff_users(email, role, active, created_at)
+values (lower('owner@example.test'), 'owner', true, floor(extract(epoch from now()) * 1000)::bigint)
+on conflict (email) do update set role = 'owner', active = true, disabled_at = null;

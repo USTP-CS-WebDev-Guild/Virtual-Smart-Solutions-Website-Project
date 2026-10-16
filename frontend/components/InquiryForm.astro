@@ -1,0 +1,186 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+interface Props {
+  id?: string;
+}
+const { id } = Astro.props;
+---
+
+<form
+  id={id}
+  class="inquiry-form form-card"
+  data-form="inquiry"
+  method="post"
+  action="/api/inquiries"
+>
+  <noscript
+    ><p class="form-status is-error">
+      JavaScript is required to save an inquiry securely. You can also <a
+        href={"mailto:" + DEFAULT_SITE_CONTENT.settings.email}>email our team</a
+      >.
+    </p></noscript
+  >
+  <div class="form-row">
+    <label>
+      Your name <span aria-hidden="true">*</span>
+      <input
+        name="name"
+        autocomplete="name"
+        required
+        minlength="2"
+        maxlength="120"
+      />
+    </label>
+    <label>
+      Work email <span aria-hidden="true">*</span>
+      <input
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        maxlength="254"
+      />
+    </label>
+  </div>
+  <div class="form-row">
+    <label>
+      Business or organization
+      <input name="company" autocomplete="organization" maxlength="160" />
+    </label>
+    <label>
+      Phone, if you prefer
+      <input name="phone" type="tel" autocomplete="tel" maxlength="40" />
+    </label>
+  </div>
+  <label>
+    What would you like help with? <span aria-hidden="true">*</span>
+    <select name="service" required data-dynamic-services>
+      <option value="">Choose an area</option>
+      {
+        DEFAULT_SITE_CONTENT.services
+          .filter((x) => x.published)
+          .map((service) => (
+            <option value={service.title}>{service.title}</option>
+          ))
+      }
+      <option>Not sure yet</option>
+    </select>
+  </label>
+  <label>
+    Preferred package
+    <select name="requestedPlan" data-dynamic-plans
+      ><option value="">Not sure yet — help me choose</option>{
+        DEFAULT_SITE_CONTENT.plans
+          .filter((x) => x.published)
+          .map((plan) => (
+            <option value={plan.id}>
+              {plan.name} · {plan.price} {plan.period}
+            </option>
+          ))
+      }</select
+    >
+    <span class="vss-plan-help" data-plan-summary
+      >Optional. We confirm the scope and fees before any work begins.</span
+    >
+  </label>
+  <p class="vss-selection-alert" data-selection-alert role="status" hidden></p>
+  <label>
+    Tell us what is taking up your time <span aria-hidden="true">*</span>
+    <textarea
+      name="message"
+      rows="5"
+      required
+      minlength="10"
+      maxlength="5000"
+      placeholder="A little context is enough to start. Please do not include passwords, payment details, or sensitive personal information."
+    ></textarea>
+  </label>
+  <label class="check-label">
+    <input name="privacyAcknowledged" type="checkbox" required />
+    <span
+      >I have read the <a href="/privacy/">privacy notice</a> and understand how
+      my inquiry details will be used to respond.</span
+    >
+  </label>
+  <div class="honeypot" aria-hidden="true">
+    <label
+      >Leave this field empty<input
+        name="website"
+        tabindex="-1"
+        autocomplete="off"
+      /></label
+    >
+  </div>
+  <div class="form-actions">
+    <button class="button" type="submit" disabled
+      >Send inquiry <span aria-hidden="true">↗</span></button
+    >
+    <p class="form-status" role="status" aria-live="polite"></p>
+  </div>
+  <p class="form-note">
+    We use these details to assess and respond to this inquiry. This form does
+    not subscribe you to marketing email.
+  </p>
+</form>
+<script>
+  import {
+    submitPublicForm,
+    submissionKey,
+    forgetSubmissionKey,
+  } from "../scripts/submission";
+  const forms = document.querySelectorAll<HTMLFormElement>(
+    '[data-form="inquiry"]',
+  );
+  for (const form of forms) {
+    const button = form.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
+    const status = form.querySelector<HTMLElement>(".form-status");
+    const keyName = "vss-inquiry-idempotency-key";
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity() || !button || !status) return;
+      button.disabled = true;
+      form.setAttribute("aria-busy", "true");
+      status.textContent = "Sending securely…";
+      status.className = "form-status is-pending";
+      const values = new FormData(form);
+      const payload = {
+        idempotencyKey: submissionKey(keyName),
+        name: String(values.get("name") || ""),
+        email: String(values.get("email") || ""),
+        company: String(values.get("company") || ""),
+        phone: String(values.get("phone") || ""),
+        service: String(values.get("service") || ""),
+        message: String(values.get("message") || ""),
+        requestedPlan: String(values.get("requestedPlan") || ""),
+        privacyAcknowledged: values.get("privacyAcknowledged") === "on",
+        website: String(values.get("website") || ""),
+      };
+
+      try {
+        const result = await submitPublicForm(
+          "/api/inquiries",
+          payload,
+          "inquiryId",
+        );
+        const reference = result.id.slice(0, 8).toUpperCase();
+        status.textContent = `Thanks — your inquiry is safely in our inbox. Reference: ${reference}.`;
+        status.className = "form-status is-success";
+        forgetSubmissionKey(keyName);
+        form.reset();
+        if (result.repeated)
+          status.textContent = `Your inquiry was already received. Reference: ${reference}.`;
+      } catch (error) {
+        status.textContent =
+          error instanceof Error ? error.message : "Please try again.";
+        status.className = "form-status is-error";
+      } finally {
+        button.disabled = false;
+        form.setAttribute("aria-busy", "false");
+      }
+    });
+    if (button) button.disabled = false;
+  }
+</script>

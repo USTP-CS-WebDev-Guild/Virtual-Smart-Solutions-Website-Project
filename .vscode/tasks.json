@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup local file (safe to rerun)",
+      "type": "npm",
+      "script": "setup",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Check setup without exposing keys",
+      "type": "npm",
+      "script": "doctor",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Start COMPLETE classroom system (no cloud keys)",
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Start FRONTEND only",
+      "type": "npm",
+      "script": "dev:frontend",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Verify before pull request",
+      "type": "npm",
+      "script": "verify",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Test BACKEND",
+      "type": "npm",
+      "script": "test:backend",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Test DATABASE",
+      "type": "npm",
+      "script": "test:database",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Show local owner/staff logins",
+      "type": "npm",
+      "script": "accounts",
+      "problemMatcher": []
+    }
+  ]
+}

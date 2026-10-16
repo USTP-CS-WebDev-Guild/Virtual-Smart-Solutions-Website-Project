@@ -1,0 +1,33 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+---
+
+<div class="vss-team-grid" data-public-team>
+  {
+    DEFAULT_SITE_CONTENT.team
+      .filter((x) => x.published)
+      .map((person) => (
+        <article class="vss-person" data-member-id={person.id}>
+          <>
+            <div class="vss-person-image">
+              <img
+                class="vss-motion-loop"
+                src={person.image}
+                alt={person.name}
+                width="640"
+                height="720"
+                loading="lazy"
+              />
+            </div>
+            <div>
+              <>
+                <span class="vss-eyebrow">{person.role}</span>
+                <h3>{person.name}</h3>
+                <p>{person.bio}</p>
+              </>
+            </div>
+          </>
+        </article>
+      ))
+  }
+</div>

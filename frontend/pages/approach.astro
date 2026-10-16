@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { settings } from '../data/site';
+---
+
+<BaseLayout
+  title="How we work and onboard your support"
+  description="From first inquiry to written scope and onboarding: understand VSS task ownership, account access, updates, and working arrangements."
+  ><section class="vss-page-hero vss-container">
+    <p class="vss-pill">
+      <span class="vss-dot"></span><span data-site-content="approachEyebrow"
+        >{settings.approachEyebrow}</span>
+    </p><h1>
+      <span data-site-content="approachHeadline">{settings.approachHeadline}</span><br /><em
+        data-site-content="approachEmphasis">{settings.approachEmphasis}</em>
+    </h1><p data-site-content="approachLead">{settings.approachLead}</p>
+  </section><section class="vss-container vss-section vss-approach">
+    <article>
+      <span class="vss-step-number">01</span><div>
+        <p class="vss-eyebrow">UNDERSTAND THE WORK</p><h2>Start with your everyday.</h2><p>
+          Describe the recurring tasks, tools, deadlines, and decisions that take up your time. We
+          discuss volume, priorities, and what a useful handoff looks like.
+        </p><ul>
+          <li>Which tasks are recurring?</li><li>What needs your decision?</li><li>
+            Which tools and time zones are involved?
+          </li>
+        </ul>
+      </div>
+    </article><article>
+      <span class="vss-step-number">02</span><div>
+        <p class="vss-eyebrow">AGREE BEFORE ONBOARDING</p><h2>Put the arrangement in writing.</h2><p
+        >
+          We confirm responsibilities, hours, fees, availability, reporting, and any additional
+          charges before work begins. Sending an inquiry creates no payment obligation.
+        </p><ul>
+          <li>Written scope and expected outputs</li><li>
+            Working hours and response expectations
+          </li><li>Tools, access, confidentiality, and escalation</li>
+        </ul>
+      </div>
+    </article><article>
+      <span class="vss-step-number">03</span><div>
+        <p class="vss-eyebrow">BUILD A WORKING RHYTHM</p><h2>Keep the next step clear.</h2><p>
+          Onboard the agreed support, share instructions through approved channels, and review
+          progress. Changes to scope or commitments are discussed before being taken on.
+        </p><a class="vss-button vss-button-blue" href="/contact/"
+          >Start the conversation <span aria-hidden="true">↗</span></a>
+      </div>
+    </article>
+  </section></BaseLayout
+>

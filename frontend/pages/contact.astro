@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import InquiryForm from '../components/InquiryForm.astro';
+import { settings, site } from '../data/site';
+---
+
+<BaseLayout
+  title="Contact VSS and request virtual assistant support"
+  description="Send a secure inquiry to Virtual Smart Solutions. Share your service or package preference and receive a saved reference for your request."
+  ><section class="vss-contact-page vss-container">
+    <div class="vss-contact-copy">
+      <p class="vss-pill">
+        <span class="vss-dot"></span><span data-site-content="contactEyebrow"
+          >{settings.contactEyebrow}</span>
+      </p><h1>
+        <span data-site-content="contactHeadline">{settings.contactHeadline}</span><br /><em
+          data-site-content="contactEmphasis">{settings.contactEmphasis}</em>
+      </h1><p class="vss-contact-lead" data-site-content="contactLead">
+        {settings.contactLead}
+      </p><div class="vss-contact-details">
+        <div>
+          <span aria-hidden="true">↗</span><div>
+            <p class="vss-eyebrow">EMAIL US</p><a
+              data-site-email="business"
+              href={site.email ? 'mailto:' + site.email : undefined}
+              hidden={!site.email}>{site.email}</a
+            ><a data-site-email-fallback href="#inquiry-form" hidden={Boolean(site.email)}
+              >Use the inquiry form</a>
+          </div>
+        </div><div>
+          <span aria-hidden="true">◎</span><div>
+            <p class="vss-eyebrow">WHERE WE WORK</p><strong data-site-content="location"
+              >{site.location}</strong>
+          </div>
+        </div>
+      </div><div class="vss-contact-promise">
+        <span aria-hidden="true">✓</span><div>
+          <strong>A conversation, not a commitment.</strong><p>
+            We agree on the fit, scope, and fees before work starts. Please keep passwords, payment
+            details, and sensitive records out of this form.
+          </p>
+        </div>
+      </div>
+    </div><div class="vss-contact-form-wrap">
+      <div class="vss-form-heading">
+        <p class="vss-eyebrow">A LITTLE CONTEXT GOES A LONG WAY</p><h2>
+          Let’s start with your workload.
+        </h2><p>Required fields are marked with an asterisk.</p>
+      </div><InquiryForm id="inquiry-form" />
+    </div>
+  </section></BaseLayout
+>

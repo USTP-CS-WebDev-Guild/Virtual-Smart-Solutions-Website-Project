@@ -1,0 +1,27 @@
+{
+  "explorer.compactFolders": false,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.astro": true,
+    "**/.netlify": true,
+    "**/.e2e-dist": true,
+    "**/test-results": true,
+    "**/playwright-report": true,
+    ".local": true,
+    ".classroom-backups": true
+  },
+  "search.exclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.astro/**": true,
+    "**/.netlify/**": true,
+    "**/package-lock.json": true,
+    "**/.e2e-dist/**": true,
+    "**/test-results/**": true,
+    "**/playwright-report/**": true,
+    "**/.local/**": true,
+    "**/.classroom-backups/**": true
+  },
+  "files.eol": "\n"
+}

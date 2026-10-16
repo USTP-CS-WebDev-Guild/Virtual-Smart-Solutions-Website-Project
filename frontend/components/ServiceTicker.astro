@@ -1,0 +1,37 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+const services = DEFAULT_SITE_CONTENT.services.filter(
+  (service) => service.published,
+);
+---
+
+<section
+  class="vss-service-strip"
+  data-motion-region
+  aria-label="Our expertise"
+>
+  <div class="vss-container vss-ticker-heading">
+    <p>SMART SUPPORT. MORE POSSIBILITIES.</p>
+    <button type="button" data-motion-toggle aria-pressed="true" hidden
+      >Pause animations</button
+    >
+  </div>
+  <div class="vss-ticker-viewport">
+    <div class="vss-ticker-track vss-motion-loop" data-public-service-strip>
+      {
+        [false, true].map((copy) => (
+          <div class="vss-ticker-group" aria-hidden={copy ? "true" : undefined}>
+            {services.map((service) => (
+              <>
+                <span>{service.title}</span>
+                <i class="vss-motion-loop" aria-hidden="true">
+                  ·
+                </i>
+              </>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

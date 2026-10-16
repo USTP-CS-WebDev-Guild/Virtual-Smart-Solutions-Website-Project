@@ -1,0 +1,205 @@
+/* Owner workspace styling is intentionally separate from the public design. */
+/* Workspace identity shares the VSS palette; its authorization/layout is retained. */
+.admin-page .admin-sidebar {
+  background: #f0f3f9;
+  border-color: #dbe2ef;
+  color: #263249;
+}
+.admin-page .admin-sidebar .brand {
+  color: #1a56db;
+}
+.admin-page .admin-nav-item {
+  color: #4a586d;
+}
+.admin-page .admin-nav-item > span:first-child {
+  color: #456ba9;
+}
+.admin-page .admin-nav-item:hover {
+  color: #1a56db;
+  background: #e3eaff;
+}
+.admin-page .admin-nav-item.is-active {
+  background: #1a56db;
+  color: #fff;
+}
+.admin-page .admin-nav-item.is-active > span:first-child {
+  color: #fff;
+}
+.admin-page .admin-workspace,
+.admin-page .sidebar-help {
+  border-color: #d6deec;
+}
+.admin-page .admin-workspace small,
+.admin-page .sidebar-help p {
+  color: #5f6f85;
+}
+.admin-page .sidebar-help span,
+.admin-page .sidebar-site-link {
+  color: #1a56db;
+}
+.admin-page :focus-visible,
+.public-page :focus-visible {
+  outline-color: #1a56db;
+}
+.admin-page .workspace-avatar,
+.admin-page .user-pill {
+  color: #1a56db;
+  background: #dfe9ff;
+}
+.admin-page .admin-login-card {
+  border-radius: 20px;
+}
+.cms-image-preview {
+  display: block;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid #d8dde8;
+  margin-top: 14px;
+  max-width: 100%;
+}
+.cms-image-help {
+  display: block;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #657188;
+  margin-top: 7px;
+}
+/* The owner edits one section at a time and publishes all drafts together. */
+.admin-page .cms-editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 14px 0 4px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #dbe2ef;
+  background: #fdfcf9;
+}
+.cms-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.cms-section-nav button {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid #d6deeb;
+  border-radius: 999px;
+  background: #fff;
+  color: #4a586d;
+  font: 600 13px var(--sans);
+  cursor: pointer;
+}
+.cms-section-nav button[aria-pressed="true"] {
+  background: #1a56db;
+  color: #fff;
+  border-color: #1a56db;
+}
+.admin-page .cms-save-row {
+  padding: 0 0 12px;
+}
+.admin-page .cms-save-row p {
+  font-size: 12px;
+}
+.admin-page .cms-save-row .button {
+  min-height: 44px;
+  font-size: 13px;
+  border-radius: 8px;
+  background: #1a56db;
+  border-color: #1a56db;
+}
+.admin-page .cms-panel {
+  background: #fff;
+  border: 1px solid #dce2ed;
+  border-radius: 14px;
+  padding: 22px;
+}
+.admin-page .cms-panel-heading h3 {
+  font-size: 23px;
+}
+.admin-page .cms-panel-heading p:not(.eyebrow) {
+  font-size: 12px;
+  line-height: 1.7;
+  max-width: 600px;
+}
+.admin-page .cms-panel-heading .eyebrow {
+  font-size: 9px;
+}
+.admin-page .cms-item-card {
+  padding: 20px;
+  background: #f7f9fd;
+  border-radius: 10px;
+  border-color: #e0e6f0;
+}
+.admin-page .cms-field {
+  font-size: 12px;
+  color: #4a586d;
+  gap: 7px;
+}
+.admin-page .cms-input {
+  min-height: 44px;
+  font-size: 14px;
+  border-radius: 7px;
+  color: #263249;
+  border-color: #ced7e7;
+}
+.admin-page .cms-checkbox-label {
+  font-size: 12px;
+  color: #4a586d;
+  line-height: 1.6;
+}
+.admin-page .cms-checkbox-label input {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  accent-color: #1a56db;
+}
+.admin-page .cms-item-heading > strong {
+  font-size: 11px;
+  color: #405579;
+}
+.admin-page .cms-small-button,
+.admin-page .cms-remove-button,
+.admin-page .cms-add-button {
+  min-height: 40px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.admin-page .cms-small-button {
+  min-width: 40px;
+}
+.admin-page .cms-image-help,
+.admin-page .cms-image-preview {
+  grid-column: 1 / -1;
+}
+@media (max-width: 700px) {
+  .admin-page .cms-panel {
+    padding: 16px;
+  }
+  .admin-page .cms-item-card {
+    padding: 14px;
+  }
+  .admin-page .cms-panel-heading {
+    flex-wrap: wrap;
+  }
+  .admin-page .cms-input {
+    font-size: 16px;
+  }
+  .cms-section-nav {
+    gap: 6px;
+  }
+  .cms-section-nav button {
+    padding: 9px 12px;
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .admin-page .cms-editor-toolbar {
+    padding-top: 10px;
+  }
+  .admin-page .cms-save-row {
+    gap: 8px;
+  }
+  .admin-page .cms-save-row p {
+    font-size: 11px;
+  }
+}

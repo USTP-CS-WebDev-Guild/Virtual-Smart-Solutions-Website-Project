@@ -1,0 +1,204 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ServiceCards from "../components/ServiceCards.astro";
+import PlanCards from "../components/PlanCards.astro";
+import WorkCards from "../components/WorkCards.astro";
+import FaqList from "../components/FaqList.astro";
+import ServiceExplorer from "../components/ServiceExplorer.astro";
+import TeamCards from "../components/TeamCards.astro";
+import ServiceTicker from "../components/ServiceTicker.astro";
+import { site, settings } from "../data/site";
+---
+
+<BaseLayout
+  title={site.name}
+  description="Filipino virtual assistant support for administration, social media, bookkeeping, data entry, and appointment setting. Find your next working partnership with VSS."
+>
+  <div class="vss-hero-shell">
+    <section class="vss-hero vss-container">
+      <div class="vss-hero-copy">
+        <p class="vss-pill">
+          <span class="vss-dot"></span><span data-site-content="homeEyebrow"
+            >{settings.homeEyebrow}</span
+          >
+        </p><h1>
+          <span data-site-content="homeHeadline">{settings.homeHeadline}</span
+          ><br /><em data-site-content="homeEmphasis"
+            >{settings.homeEmphasis}</em
+          >
+        </h1><p class="vss-hero-lede" data-site-content="homeLede">
+          {settings.homeLede}
+        </p><div class="vss-actions">
+          <a class="vss-button vss-button-primary" href="/contact/"
+            ><span data-site-content="homePrimaryCta"
+              >{settings.homePrimaryCta}</span
+            ><span aria-hidden="true">↗</span></a
+          ><a class="vss-text-link" href="/services/"
+            ><span data-site-content="homeSecondaryCta"
+              >{settings.homeSecondaryCta}</span
+            ><span aria-hidden="true">→</span></a
+          >
+        </div><div class="vss-hero-assurance">
+          <span class="vss-mini-icon" aria-hidden="true">✓</span><p>
+            A clear scope. A real person.<br /><strong
+              >A little more breathing room.</strong
+            >
+          </p>
+        </div>
+      </div><div class="vss-hero-visual" data-motion-region>
+        <div class="vss-hero-image-frame">
+          <img
+            class="vss-hero-photo vss-motion-loop"
+            src="/images/hero-team.webp"
+            alt="An illustrative collaborative workspace"
+            width="1600"
+            height="1067"
+            fetchpriority="high"
+          /><div class="vss-photo-shade"></div>
+        </div><span class="vss-visual-label">CONNECTED BY GOOD WORK</span><div
+          class="vss-floating-card vss-card-one vss-motion-loop"
+        >
+          <span class="vss-small-icon" aria-hidden="true">▦</span><div>
+            <strong>Your day, coordinated.</strong><small
+              >Calendars · follow-ups · priorities</small
+            >
+          </div><span class="vss-check" aria-hidden="true">✓</span>
+        </div><div class="vss-floating-photo vss-motion-loop">
+          <img
+            src="/images/collaboration.webp"
+            alt="Illustrative collaboration between colleagues"
+            width="600"
+            height="400"
+          /><span>GREAT WORK STARTS TOGETHER</span>
+        </div><div class="vss-floating-card vss-card-two vss-motion-loop">
+          <span class="vss-status-dot" aria-hidden="true"></span><div>
+            <strong>Good people. Clear handoffs.</strong><small
+              >Philippines-based. Remote worldwide.</small
+            >
+          </div>
+        </div><div class="vss-photo-caption">
+          <span>THE TEAM BEHIND YOUR NEXT CHAPTER</span><p>
+            You take the lead.<br />We take care of the details.
+          </p>
+        </div><span class="vss-photo-corner" aria-hidden="true">↗</span>
+      </div>
+    </section>
+    <div class="vss-hero-foot vss-container">
+      <span>PHILIPPINE TALENT / WORLDWIDE SUPPORT</span><span
+        >THOUGHTFUL WORK. HUMAN CONNECTION.</span
+      ><a href="#services-overview">Explore what’s possible ↓</a>
+    </div>
+  </div>
+  <ServiceTicker />
+  <section class="vss-section vss-container" id="services-overview">
+    <div class="vss-section-heading">
+      <div>
+        <p class="vss-eyebrow">01 / WHAT WE TAKE CARE OF</p><h2>
+          Support for the everyday.<br /><em>Space for the bigger picture.</em>
+        </h2>
+      </div><p>
+        From the first email to the final follow-up, the details deserve a clear
+        owner. Find the support that fits your business.
+      </p>
+    </div><ServiceExplorer /><ServiceCards limit={4} /><div
+      class="vss-section-bottom"
+    >
+      <p>
+        One task, or a few connected responsibilities.<br />We’ll work out the
+        right fit together.
+      </p><a class="vss-text-link" href="/services/"
+        >Explore all services <span aria-hidden="true">↗</span></a
+      >
+    </div>
+  </section>
+  <section class="vss-process-band" data-motion-region>
+    <div class="vss-container vss-process-grid">
+      <div>
+        <p class="vss-eyebrow">02 / A BETTER WAY TO HAND THINGS OVER</p><h2>
+          Good support.<br /><em>Without the guesswork.</em>
+        </h2><p>
+          You know your business. We bring a practical way to support it, with
+          the tasks, tools, and communication agreed before work starts.
+        </p><a class="vss-text-link" href="/approach/"
+          >How we work <span aria-hidden="true">↗</span></a
+        >
+      </div><ol class="vss-steps">
+        <li>
+          <span>01</span><div>
+            <h3>Start with a conversation.</h3><p>
+              Tell us about the work, the bottlenecks, and what a useful outcome
+              looks like.
+            </p>
+          </div>
+        </li><li>
+          <span>02</span><div>
+            <h3>Agree the right support.</h3><p>
+              We confirm scope, hours, fees, access, and the people involved in
+              writing.
+            </p>
+          </div>
+        </li><li>
+          <span>03</span><div>
+            <h3>Get into a working rhythm.</h3><p>
+              Onboard, set priorities, and keep questions and progress visible.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+  <section class="vss-section vss-container">
+    <div class="vss-section-heading">
+      <div>
+        <p class="vss-eyebrow">03 / WHAT THE WORK CAN LOOK LIKE</p><h2>
+          Small details.<br /><em>Meaningful possibilities.</em>
+        </h2>
+      </div><a class="vss-text-link" href="/portfolio/"
+        >Explore our work <span aria-hidden="true">↗</span></a
+      >
+    </div><WorkCards limit={3} />
+  </section>
+  <section class="vss-section vss-package-section" id="packages">
+    <div class="vss-container">
+      <div class="vss-centered-heading">
+        <p class="vss-eyebrow">04 / FIND YOUR WORKING ARRANGEMENT</p><h2>
+          Room for your workload.<br /><em>A plan for your next step.</em>
+        </h2><p>
+          Start with a package, or start with a question. We confirm the right
+          scope together.
+        </p>
+      </div><PlanCards /><p
+        class="vss-pricing-note"
+        data-site-content="pricingNote"
+      >
+        {settings.pricingNote}
+      </p>
+    </div>
+  </section>
+  <section
+    class="vss-section vss-container vss-home-team vss-team-section"
+    data-motion-region
+  >
+    <div class="vss-section-heading">
+      <div>
+        <p class="vss-eyebrow">THE PEOPLE BEHIND THE PARTNERSHIP</p><h2>
+          Remote support.<br /><em>A real connection.</em>
+        </h2>
+      </div><a class="vss-text-link" href="/about/">Meet VSS ↗</a>
+    </div>
+    <TeamCards />
+  </section>
+  <section
+    class="vss-section vss-container vss-faq-layout"
+    data-public-faq-section
+  >
+    <div>
+      <p class="vss-eyebrow">A FEW THINGS WORTH KNOWING</p><h2>
+        Good questions.<br /><em>Clear answers.</em>
+      </h2><p>Something else on your mind?</p><a
+        class="vss-text-link"
+        href="/contact/">Let’s talk <span aria-hidden="true">↗</span></a
+      >
+    </div><FaqList />
+  </section>
+</BaseLayout>

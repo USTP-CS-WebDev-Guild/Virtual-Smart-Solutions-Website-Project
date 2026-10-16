@@ -1,0 +1,39 @@
+---
+import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
+const services = DEFAULT_SITE_CONTENT.services.filter((item) => item.published);
+---
+
+<section class="vss-service-explorer" aria-labelledby="explorer-heading" data-service-explorer data-reveal>
+  <div class="vss-explorer-intro">
+    <p class="vss-eyebrow">A GOOD PLACE TO START</p>
+    <h2 id="explorer-heading">What’s taking up<br /><em>your day?</em></h2>
+    <p>Choose an area to see the kind of work you can hand over.</p>
+    <div class="vss-choice-list" data-explorer-choices role="group" aria-label="Choose a service">
+      {services.map((service, index) => (
+        <button class="vss-choice" type="button" data-service-choice={service.id}
+          id={"service-choice-" + service.id} aria-pressed={index === 0 ? "true" : "false"}
+          aria-controls={"service-panel-" + service.id} disabled>
+          <span class="vss-choice-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+          <span class="vss-choice-name">{service.title}</span><span aria-hidden="true">↗</span>
+        </button>
+      ))}
+    </div>
+    <p class="vss-visually-hidden" data-explorer-status role="status" aria-live="polite"></p>
+    <noscript><p><a href="/services/">Explore all five services →</a></p></noscript>
+  </div>
+  <div class="vss-explorer-panel" data-explorer-panel>
+    {services.map((service, index) => (
+      <div class="vss-explorer-detail" data-explorer-item={service.id} data-active={String(index === 0)}
+        id={"service-panel-" + service.id} role="region" aria-labelledby={"service-choice-" + service.id}
+        aria-hidden={index === 0 ? "false" : "true"} inert={index !== 0}>
+        <img class="vss-explorer-image" src={service.image} alt="" width="1000" height="670" loading="lazy" />
+        <div class="vss-explorer-copy">
+          <span class="vss-eyebrow">YOUR NEXT HELPING HAND</span>
+          <h3>{service.title}</h3><p>{service.description}</p>
+          <ul>{service.examples.map((text) => <li>{text}</li>)}</ul>
+          <a class="vss-text-link" href={"/contact/?service=" + service.id}>Discuss this service ↗</a>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>

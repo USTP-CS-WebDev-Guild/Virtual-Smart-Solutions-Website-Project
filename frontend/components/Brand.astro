@@ -1,0 +1,19 @@
+---
+import { site } from '../data/site';
+interface Props {
+  inverse?: boolean;
+}
+const { inverse = false } = Astro.props;
+---
+
+<a
+  class:list={['brand', { 'brand-inverse': inverse }]}
+  href="/"
+  aria-label={site.name + ' home'}
+  data-site-aria="businessName"
+  ><span class="vss-brand-mark" aria-hidden="true"
+    ><svg viewBox="0 0 28 28" width="24" height="24"
+      ><path d="m5 7 9 15L23 7h-6l-3 6-3-6z" fill="currentColor"></path></svg
+    ></span
+  ><span class="brand-name" data-site-content="businessName">{site.name}</span></a
+>

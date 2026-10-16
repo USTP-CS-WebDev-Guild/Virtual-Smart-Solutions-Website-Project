@@ -1,0 +1,92 @@
+---
+import "../styles/global.css";
+import "../styles/brand.css";
+import "../styles/vss.css";
+import "../styles/experience.css";
+import "../styles/navigation.css";
+import "../styles/motion.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../data/site";
+import { APP_RELEASE } from "../../shared/release";
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+}
+const { title, description, image = "/images/hero-team.webp" } = Astro.props;
+const testEnvironment = import.meta.env.PUBLIC_TEST_ENVIRONMENT === "true";
+const pageHeading = title === site.name ? "" : title;
+const pageTitle = pageHeading
+  ? `${pageHeading} — ${site.name}`
+  : `${site.name} — Filipino Virtual Assistant Services`;
+const base = site.baseUrl || new URL(Astro.url).origin;
+const canonical = new URL(Astro.url.pathname, base).href;
+const socialImage = new URL(image, base).href;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: site.name,
+  url: base,
+  logo: new URL("/brand/mark.svg", base).href,
+  email: site.email,
+  areaServed: "Worldwide",
+  description,
+};
+const schema = JSON.stringify(structuredData).replace(/</g, "\\u003c");
+---
+
+<!doctype html>
+<html lang="en">
+  <head
+    ><script is:inline defer src="/motion-init.js"></script><meta
+      charset="UTF-8"
+    /><meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    /><meta name="app-release" content={APP_RELEASE} /><meta
+      name="theme-color"
+      content="#ffffff"
+    /><meta name="description" content={description} />{
+      testEnvironment && <meta name="robots" content="noindex,nofollow" />
+    }<title data-site-page-title={pageHeading}>{pageTitle}</title><link
+      rel="canonical"
+      href={canonical}
+    /><link rel="icon" type="image/svg+xml" href="/brand/mark.svg" /><link
+      rel="preload"
+      href="/fonts/bricolage.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    /><link rel="preload" href="/fonts/dm-sans.woff2" as="font" type="font/woff2" crossorigin /><meta
+      property="og:title"
+      content={pageTitle}
+      data-site-page-title={pageHeading}
+    /><meta property="og:description" content={description} /><meta
+      property="og:site_name"
+      content={site.name}
+    /><meta property="og:type" content="website" /><meta
+      property="og:url"
+      content={canonical}
+    /><meta property="og:image" content={socialImage} /><meta
+      name="twitter:card"
+      content="summary_large_image"
+    /><meta name="twitter:title" content={pageTitle} /><meta
+      name="twitter:description"
+      content={description}
+    /><meta name="twitter:image" content={socialImage} /><script
+      type="application/ld+json"
+      set:html={schema}
+    /></head
+  ><body class="public-page"
+    ><a class="skip-link" href="#main">Skip to content</a><Header /><main
+      id="main"
+      tabindex="-1"
+    >
+      <slot />
+    </main><Footer /><script>
+      import "../scripts/experience";
+      import "../scripts/site-content";
+    </script></body
+  >
+</html>

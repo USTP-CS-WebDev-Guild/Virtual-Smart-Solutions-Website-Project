@@ -1,0 +1,107 @@
+---
+import { settings } from '../data/site';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PrivacyRequestForm from '../components/PrivacyRequestForm.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout
+  title="Privacy notice"
+  description={`How ${settings.businessName} handles website inquiries and privacy requests. This draft requires owner review before public launch.`}
+>
+  <section class="vss-page-hero vss-container privacy-hero">
+    <p class="eyebrow">
+      <span class="eyebrow-dot"></span>PRIVACY NOTICE · OWNER APPROVAL REQUIRED BEFORE LAUNCH
+    </p>
+    <h1>Your information<br />deserves <em>care.</em></h1>
+    <p class="page-lede">
+      This notice describes the information collected through this website, why it is used, and how
+      to submit a privacy request.
+    </p>
+  </section>
+  <section class="privacy-content vss-container">
+    <aside class="privacy-index">
+      <span>ON THIS PAGE</span><a href="#controller">Who is responsible</a><a href="#collected"
+        >What we collect</a
+      ><a href="#use">How we use it</a><a href="#retention">Retention</a><a href="#requests"
+        >Your requests</a>
+    </aside>
+    <div class="privacy-copy">
+      <div class="draft-callout">
+        <strong>Owner review required:</strong> Before accepting real inquiries, confirm the legal business
+        identity, privacy contact, service providers, approved retention period, and rules that apply
+        in the regions served. This draft is not legal advice or a substitute for an owner-approved notice.
+      </div>
+      <section id="controller">
+        <p class="eyebrow">01 / RESPONSIBILITY</p><h2>Who is responsible?</h2><p>
+          The business operating as <strong data-site-content="businessName">{site.name}</strong> is
+          responsible for the information submitted through this website. Submit a privacy request using
+          the form below or through the <a href="/contact/">contact form</a>.
+        </p><p
+          class="privacy-email-note"
+          data-site-email-group="privacy"
+          hidden={!site.privacyEmail}
+        >
+          You may also email the privacy contact at <a
+            data-site-email="privacy"
+            href={site.privacyEmail ? 'mailto:' + site.privacyEmail : undefined}
+            hidden={!site.privacyEmail}>{site.privacyEmail}</a
+          >.
+        </p>
+      </section>
+      <section id="collected">
+        <p class="eyebrow">02 / INFORMATION</p><h2>What may we collect?</h2><p>
+          If you submit an inquiry, we collect your name, email address, optional business and phone
+          details, the service and optional package you select, and your message. If you send a privacy request, we
+          collect your name, email, request type, and details needed to respond.
+        </p><p>
+          Please do not include passwords, payment details, or sensitive personal information in a
+          message.
+        </p>
+      </section>
+      <section id="use">
+        <p class="eyebrow">03 / PURPOSE</p><h2>How is it used?</h2><p>
+          Inquiry details are used to understand and respond to your request, manage the inquiry,
+          and record follow-up. Privacy request details are used to verify, process, and document
+          the request. The website uses a hidden honeypot field and request limits to reduce
+          automated submissions.
+        </p><p>
+          This form is not a marketing signup. Inquiry contacts are not added to a mailing list
+          through this form.
+        </p>
+      </section>
+      <section>
+        <p class="eyebrow">04 / SERVICE PROVIDERS</p><h2>Where is it processed?</h2><p>
+          The current implementation uses Netlify to serve the website and API functions, Supabase
+          to store inquiry and staff records and manage staff sign-in, and Resend for owner email
+          notices if enabled. The business owner must confirm the active providers, account
+          settings, and processing locations before launch.
+        </p>
+      </section>
+      <section id="retention">
+        <p class="eyebrow">05 / RETENTION</p><h2>How long is it kept?</h2><p>
+          The implementation is configured to anonymize unconverted inquiries after 12 months
+          without activity. Converted client records follow the business’s separate contractual and
+          legal retention needs. The owner must approve these periods before launch.
+        </p><p>
+          Encrypted backups have a separate expiry schedule. If a backup is restored, completed
+          deletion and correction requests must be reapplied before the system returns to service.
+        </p>
+      </section>
+      <section id="requests">
+        <p class="eyebrow">06 / YOUR REQUESTS</p><h2>Ask about your information.</h2><p>
+          You can request access, correction, export, or deletion using the form below. The business
+          verifies identity before acting. Some business records may need to be retained where a
+          legal or contractual requirement applies; if so, the business should explain that
+          decision.
+        </p>
+      </section>
+      <div class="privacy-request-area"><PrivacyRequestForm /></div>
+      <p class="privacy-date">
+        Draft notice version <span data-site-content="privacyNoticeVersion"
+          >{site.noticeVersion}</span
+        >. Replace with the owner-approved effective date before public launch.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

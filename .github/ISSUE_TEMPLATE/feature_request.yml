@@ -1,0 +1,48 @@
+name: Feature or improvement
+description: Propose a scoped change to the website or inquiry system.
+title: "[Role] "
+labels: ["needs-triage"]
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Primary role
+      options:
+        - Project management
+        - UI/UX
+        - Frontend
+        - Backend
+        - DevOps
+        - Cross-role
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: Need
+      description: What user or business need does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Describe observable results that can be checked.
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true
+  - type: input
+    id: area
+    attributes:
+      label: Affected page or folder
+      placeholder: frontend/pages/contact.astro
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Tests, viewport widths, screenshots, or review needed.
+    validations:
+      required: true
