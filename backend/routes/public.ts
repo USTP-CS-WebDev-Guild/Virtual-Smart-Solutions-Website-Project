@@ -1,11 +1,12 @@
 import { json, parseBody, sameOrigin } from '../http/responses';
-import { allowSubmission } from '../security/rate-limit';
+import { allowSubmission, allowSubmissionBudget } from '../security/rate-limit';
 import { inquirySchema, privacyRequestSchema } from '../validation/forms';
 import { normalizeEmail } from '../domain/rules';
 import { readSiteContent, publicContent } from '../services/site-content';
 import type { RouteContext } from '../http/context';
 import { APP_RELEASE } from '../../shared/release';
 import { isPublishableKey } from '../lib/public-config';
+import { verifyCaptcha } from '../security/captcha';
 
 export async function publicRoutes(route: RouteContext): Promise<Response | null> {
   const { request, path, method, requestId, ip } = route;
@@ -59,6 +60,9 @@ export async function publicRoutes(route: RouteContext): Promise<Response | null
       if (body.website) return json({ ok: true }, 202, requestId);
       const allowed = await allowSubmission(ip, db, 'inquiry');
       if (!allowed) return rateLimited(requestId);
+      const captcha = await verifyCaptcha(body.captchaToken, ip);
+      if (captcha) return captcha;
+      if (!(await allowSubmissionBudget(db, 'inquiry', body.email))) return budgetLimited(requestId);
       // A retry must still recover its saved receipt if the catalog changed
       // after a response was lost. Never create a second row for the same key.
       const existing = await db
@@ -138,6 +142,9 @@ export async function publicRoutes(route: RouteContext): Promise<Response | null
     if (body.website) return json({ ok: true }, 202, requestId);
     const allowed = await allowSubmission(ip, db, 'privacy');
     if (!allowed) return rateLimited(requestId);
+    const captcha = await verifyCaptcha(body.captchaToken, ip);
+    if (captcha) return captcha;
+    if (!(await allowSubmissionBudget(db, 'privacy', body.email))) return budgetLimited(requestId);
     const { data, error } = await db.rpc('submit_privacy_request', {
       p_payload: { ...body, email: normalizeEmail(body.email) },
       p_now: Date.now(),
@@ -147,6 +154,13 @@ export async function publicRoutes(route: RouteContext): Promise<Response | null
     return json({ ...data, privacyRequestId: body.idempotencyKey }, 202, requestId);
   }
   return null;
+}
+
+function budgetLimited(requestId: string) {
+  const response = json({ error: 'submission_budget_reached',
+    message: 'The form has reached a submission limit. Please contact the company directly.' }, 429, requestId);
+  response.headers.set('Retry-After', '3600');
+  return response;
 }
 
 function rateLimited(requestId: string) {

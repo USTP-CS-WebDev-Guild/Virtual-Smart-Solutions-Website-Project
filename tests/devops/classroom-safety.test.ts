@@ -83,6 +83,7 @@ it("hosting build preflight rejects classroom mode and private keys in browser c
       env: {
         ...process.env,
         NETLIFY: "true",
+        APP_ENV: "staging",
         PUBLIC_TEST_ENVIRONMENT: "true",
         PUBLIC_SITE_URL: "https://synthetic.example",
         PUBLIC_SUPABASE_URL: "https://synthetic.supabase.co",
@@ -103,4 +104,10 @@ it("hosting build preflight rejects classroom mode and private keys in browser c
     check({ PUBLIC_SITE_URL: "https://synthetic.example/wrong-path" }).status,
   ).not.toBe(0);
   expect(check({ PUBLIC_TEST_ENVIRONMENT: "yes" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "production" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_HCAPTCHA_SITE_KEY: "10000000-ffff-ffff-ffff-000000000001" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_HCAPTCHA_SITE_KEY: "10000000-0000-4000-8000-000000000001" }).status).toBe(0);
+  expect(check({ PUBLIC_UNEXPECTED_SETTING: "sb_secret_SYNTHETIC_NOT_A_KEY" }).status).not.toBe(0);
 });

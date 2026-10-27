@@ -24,6 +24,7 @@ export async function startClassroomServer(
   const { db, settings } = opened;
   Object.assign(process.env, {
     APP_ORIGIN: appOrigin,
+    APP_ENV: 'development',
     CONTEXT: 'dev',
     TEST_EMAIL_MODE: 'capture',
     PUBLIC_TEST_ENVIRONMENT: 'true',

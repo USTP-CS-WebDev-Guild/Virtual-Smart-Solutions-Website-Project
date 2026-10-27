@@ -17,12 +17,13 @@ describe('workspace search across stored records', () => {
     );
   beforeAll(async () => {
     db = await createTestDatabase();
+    await db.exec("insert into auth.users(id,email) values('10000000-0000-4000-8000-000000000001','owner@example.test'),('10000000-0000-4000-8000-000000000002','staff@example.test')");
     await db.exec(
       "insert into staff_users(email,role,active,created_at) values('owner@example.test','owner',true,0),('staff@example.test','staff',true,0)",
     );
     const adapter = localPostgres(db, async (token) => ({
       data: {
-        user: ['owner', 'staff'].includes(token) ? { email: token + '@example.test' } : null,
+        user: ['owner', 'staff'].includes(token) ? { id: token === 'owner' ? '10000000-0000-4000-8000-000000000001' : '10000000-0000-4000-8000-000000000002', email_confirmed_at: '2026-01-01T00:00:00Z', email: token + '@example.test' } : null,
       },
       error: null,
     }));

@@ -1,5 +1,8 @@
 // Owner workspace entrypoint: sign-in, navigation, and feature wiring.
 import { supabase } from './session';
+import { classroomMode } from '../../lib/supabase';
+import { createMfaFlow } from './mfa';
+import { attachCaptcha, captchaToken, resetCaptcha } from '../../lib/captcha';
 import { api } from './api';
 import { byId, make, setAlert, showWorkspaceLogin, setWorkspaceRole } from './ui';
 import { loadInquiries, openInquiry, loadSummary, hasInquiryDraft } from './inquiries';
@@ -46,6 +49,20 @@ function showView(view: WorkspaceView, refresh = true, push = true) {
 
 let dashboardStarted = false;
 let sessionCheckVersion = 0;
+const mfa = supabase && !classroomMode ? createMfaFlow(supabase, checkStaffSession) : null;
+window.addEventListener('vss-mfa-required', () => { void checkStaffSession(); });
+let idleTimer: ReturnType<typeof setTimeout> | undefined;
+const touchSession = () => {
+  if (byId<HTMLElement>('admin-app').hidden) return;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    ++sessionCheckVersion;
+    showWorkspaceLogin('Your workspace locked after inactivity. Sign in again.');
+    void supabase?.auth.signOut();
+  }, 15 * 60 * 1000);
+};
+for (const event of ['pointerdown', 'keydown', 'touchstart'])
+  window.addEventListener(event, touchSession, { passive: true });
 
 function startDashboard() {
   if (!dashboardStarted) {
@@ -374,10 +391,17 @@ async function checkStaffSession() {
     }
     const response = await api<{
       authenticated: boolean;
+      eligible?: boolean;
+      mfaRequired?: boolean;
       user: { role: 'owner' | 'staff'; email?: string } | null;
     }>('/api/auth/session');
     // A sign-out in another tab must invalidate an in-flight staff check.
     if (checkVersion !== sessionCheckVersion) return;
+    if (!response.authenticated && response.eligible && response.mfaRequired && mfa) {
+      showWorkspaceLogin();
+      await mfa.show();
+      return;
+    }
     if (!response.authenticated) {
       await supabase.auth.signOut();
       showWorkspaceLogin(
@@ -393,6 +417,7 @@ async function checkStaffSession() {
     byId<HTMLElement>('admin-login').hidden = true;
     byId<HTMLElement>('admin-app').hidden = false;
     startDashboard();
+    touchSession();
   } catch (error) {
     showWorkspaceLogin(
       error instanceof Error ? error.message : 'Could not verify your staff account.',
@@ -414,6 +439,7 @@ byId<HTMLInputElement>('staff-password').addEventListener('keyup', (event) => {
 });
 
 const loginForm = byId<HTMLFormElement>('staff-login-form');
+void attachCaptcha(loginForm);
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = byId<HTMLElement>('staff-login-status');
@@ -429,6 +455,7 @@ loginForm.addEventListener('submit', async (event) => {
     const { error } = await supabase.auth.signInWithPassword({
       email: byId<HTMLInputElement>('staff-email').value.trim(),
       password: byId<HTMLInputElement>('staff-password').value,
+      options: { captchaToken: captchaToken(loginForm) || undefined },
     });
     if (error) {
       status.textContent = loginErrorMessage(error);
@@ -439,6 +466,7 @@ loginForm.addEventListener('submit', async (event) => {
   } catch (error) {
     status.textContent = loginErrorMessage(error);
   } finally {
+    resetCaptcha(loginForm);
     button.disabled = false;
   }
 });
@@ -466,6 +494,8 @@ byId<HTMLButtonElement>('sign-out').addEventListener('click', async () => {
 // Keep the UI closed when Supabase expires the session or another tab signs out.
 supabase?.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
+    clearTimeout(idleTimer);
+    mfa?.hide();
     ++sessionCheckVersion;
     showWorkspaceLogin('You have signed out. Sign in again to continue.');
   }

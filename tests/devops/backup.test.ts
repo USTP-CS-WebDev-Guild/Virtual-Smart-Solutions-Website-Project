@@ -10,6 +10,8 @@ describe('recoverable application exports', () => {
     try {
       const run = (_command: string, args: string[]) => {
         expect(args[args.indexOf('--schema') + 1]).toBe('public,app_private');
+        if (args.includes('--data-only'))
+          expect(args[args.indexOf('--exclude') + 1]).toBe('app_private.staff_sessions,public.staff_users');
         const output = args[args.indexOf('--file') + 1];
         const sql = args.includes('--data-only')
           ? "INSERT INTO public.inquiries(id, name) VALUES ('synthetic-1', 'Test Contact');"

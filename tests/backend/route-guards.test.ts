@@ -8,7 +8,7 @@ function databaseFor(role: "owner" | "staff" = "staff") {
   return {
     auth: {
       getUser: vi.fn(async () => ({
-        data: { user: { email: "member@example.test" } },
+        data: { user: { id: "10000000-0000-4000-8000-000000000001", email_confirmed_at: "2026-01-01T00:00:00Z", email: "member@example.test" } },
         error: null,
       })),
     },
@@ -16,7 +16,7 @@ function databaseFor(role: "owner" | "staff" = "staff") {
       select: () => ({
         eq: () => ({
           maybeSingle: async () => ({
-            data: { email: "member@example.test", role, active: true },
+            data: { email: "member@example.test", role, active: true, auth_user_id: "10000000-0000-4000-8000-000000000001" },
             error: null,
           }),
         }),
@@ -47,7 +47,7 @@ const ownerRoutes = [
 ] as const;
 
 describe("security gates after the route split", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv('APP_ORIGIN', 'https://site.example'); });
   afterEach(() => vi.unstubAllEnvs());
 
   it.each([
@@ -153,6 +153,7 @@ describe("security gates after the route split", () => {
 
   it("runs the shared jobs only after owner and origin checks pass", async () => {
     vi.stubEnv("TEST_EMAIL_MODE", "capture");
+    vi.stubEnv("PUBLIC_TEST_ENVIRONMENT", "true");
     const db = databaseFor("owner");
     vi.mocked(createDatabase).mockReturnValue(db as any);
     const response = await app(
@@ -178,5 +179,18 @@ describe("security gates after the route split", () => {
       "anonymize_expired_data",
       expect.any(Object),
     );
+  });
+  it.each([
+    ['false', 'capture'],
+    ['true', 'send'],
+  ])('does not expose test jobs outside isolated capture testing (%s, %s)', async (flag, mode) => {
+    vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', flag); vi.stubEnv('TEST_EMAIL_MODE', mode);
+    const db = databaseFor('owner');
+    vi.mocked(createDatabase).mockReturnValue(db as any);
+    const response = await app(new Request('https://site.example/api/admin/test/run-jobs', {
+      method: 'POST', headers: { Authorization: 'Bearer synthetic-token',
+        Origin: 'https://site.example', 'X-Requested-With': 'VSSDashboard' },
+    }));
+    expect(response.status).toBe(404); expect(db.rpc).not.toHaveBeenCalled();
   });
 });

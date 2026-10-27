@@ -54,6 +54,10 @@ export async function submitPublicForm(
   const suffix =
     reference && /^[a-z0-9-]{1,80}$/i.test(reference) ? ` Reference: ${reference}.` : '';
   if (!response.ok) {
+    if (body?.error === 'submission_budget_reached')
+      throw new Error('The form has reached a submission limit. Your details are still here. Please contact the company by email.');
+    if (body?.error === 'verification_required' || body?.error === 'verification_unavailable')
+      throw new Error(`Please complete verification again and retry. Your details are still here.${suffix}`);
     if (response.status === 429) {
       const seconds = Number(response.headers.get('Retry-After') || body?.retryAfter || 600);
       const minutes = Number.isFinite(seconds) ? Math.max(1, Math.ceil(seconds / 60)) : 10;

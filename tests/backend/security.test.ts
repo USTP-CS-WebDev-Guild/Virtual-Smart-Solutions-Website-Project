@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+beforeEach(() => vi.stubEnv('APP_ORIGIN', 'https://site.example'));
+afterEach(() => vi.unstubAllEnvs());
 import { sameOrigin, readJson } from '../../backend/http/responses';
 
 describe('request boundaries', () => {

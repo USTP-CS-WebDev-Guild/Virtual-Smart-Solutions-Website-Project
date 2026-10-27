@@ -51,3 +51,9 @@ The owner application has an independent stylesheet so public design changes can
 | Reusable confirmation, search, image choices | `confirm.ts`, `search.ts`, `image-picker.ts` |
 
 Start with a small issue in one feature. Read [OWNER-GUIDE.md](../OWNER-GUIDE.md), then trace an interaction through the API. Never replace server authorization with hidden UI buttons.
+
+## Production authentication (1.6.0)
+
+`scripts/owner/mfa.ts` handles authenticator enrollment/challenge; `lib/auth-storage.ts` scopes hosted tokens to this browser tab. `components/Captcha.astro` and `lib/captcha.ts` add the configured verification widget to contact/privacy/login forms. The backend and database still make every authorization decision. Local classroom startup remains independent of external CAPTCHA/MFA accounts.
+
+Never store a server secret here, inject arbitrary CMS HTML, or open private screens merely because a client SDK reports a user. The API must accept the approved identity/MFA/session first. See `../SECURITY-UPGRADE-1.6.0.md` and the new frontend security regressions.

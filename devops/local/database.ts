@@ -37,6 +37,12 @@ export async function openClassroomDatabase(root: string) {
       end $$;
       create schema if not exists auth;
       create table if not exists auth.users(id uuid primary key,email text);
+    alter table auth.users add column if not exists email_confirmed_at timestamptz default now();
+    alter table auth.users add column if not exists is_anonymous boolean default false;
+    create table if not exists auth.sessions(id uuid primary key,user_id uuid references auth.users(id) on delete cascade,
+      created_at timestamptz default now(),not_after timestamptz);
+    create or replace function auth.jwt() returns jsonb language sql stable as
+      $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
       create or replace function auth.uid() returns uuid language sql stable as
         $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
       grant usage on schema auth to anon,authenticated,service_role;

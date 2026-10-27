@@ -2,6 +2,10 @@
 
 Open your website and choose **Owner sign-in** in the footer. Use the website account created for you by your team. Your Google, GitHub, Netlify, and local classroom passwords are separate accounts.
 
+Production sign-in also asks you to complete verification and use an authenticator. On first setup, scan the QR code (or enter the manual key) in your trusted authenticator app, then enter its six-digit code. Later sign-ins use a fresh code. Never send your password, QR/manual key or codes to someone asking in chat. If your authenticator is lost, contact the company's appointed maintainer for verified recovery.
+
+The production workspace locks after fifteen minutes without private API activity, and sessions have an eight-hour maximum. Save long edits regularly and sign in again when asked. Public visitors can still open the website normally.
+
 The workspace works with a mouse, keyboard, or phone. On a phone, the menu button beside the page title opens navigation. **View website** opens the public website in another tab.
 
 | Area | Use it for |

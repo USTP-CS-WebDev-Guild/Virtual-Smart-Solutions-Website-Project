@@ -2,9 +2,13 @@ import { json, parseBody } from '../http/responses';
 import { LEAD_RETENTION_MS } from '../domain/rules';
 import { drainOutbox } from '../services/notifications';
 import type { StaffRouteContext } from '../http/context';
+import { productionMode } from '../security/environment';
 
 export async function notificationRoutes(route: StaffRouteContext): Promise<Response | null> {
   const { request, path, method, requestId, db, actor } = route;
+  if (path.startsWith('/api/admin/test/') &&
+      (productionMode() || process.env.PUBLIC_TEST_ENVIRONMENT !== 'true' || process.env.TEST_EMAIL_MODE !== 'capture'))
+    return json({ error: 'test_environment_required' }, 404, requestId);
   if (method === 'POST' && path === '/api/admin/test/live-check') {
     if (process.env.PUBLIC_TEST_ENVIRONMENT !== 'true' || process.env.TEST_EMAIL_MODE !== 'capture')
       return json({ error: 'test_environment_required' }, 404, requestId);

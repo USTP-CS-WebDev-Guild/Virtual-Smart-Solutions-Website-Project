@@ -40,6 +40,7 @@ describe('form → API → PostgreSQL → owner inbox', () => {
   let transport: ReturnType<typeof postgresTransport>;
   beforeAll(async () => {
     database = await createTestDatabase();
+    await database.exec("insert into auth.users(id,email) values('10000000-0000-4000-8000-000000000001','owner@example.test')");
     await database.query(
       "insert into public.staff_users(email,role,active,created_at) values('owner@example.test','owner',true,0)",
     );
@@ -155,6 +156,9 @@ describe('form → API → PostgreSQL → owner inbox', () => {
       (await database.query<{ count: number }>('select count(*)::int as count from inquiry_notes'))
         .rows[0]!.count,
     ).toBe(1);
+    // Manual maintenance is an isolated capture-only staging tool. Production
+    // invokes the same service handlers through Netlify's scheduler instead.
+    vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', 'true');
     const maintenance = await app(
       new Request(base + '/api/admin/test/run-jobs', {
         method: 'POST',
