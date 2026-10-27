@@ -2,6 +2,8 @@
 
 Browsers call `/api/*` on the same site origin. `backend/app.ts` applies authorization before staff routes. Responses include `X-Request-ID`. Private responses are never public-cacheable. Keep personal data and tokens out of logs.
 
+**1.6.0 production boundary:** Supabase validates the exact bearer token before its session metadata is used. Membership uses the approved verified Auth UUID, never browser metadata or just an email match. Private calls require MFA and a current server-checked session (15-minute private-API inactivity limit; 8-hour absolute limit). A staff role does not grant owner publishing/privacy powers. Direct private signals apply the same armed database policy.
+
 | Method     | Path                                               | Access / behavior                                             | Source in `routes/` |
 | ---------- | -------------------------------------------------- | ------------------------------------------------------------- | ------------------- |
 | GET        | `/api/health/live`                                 | Public; no database required                                  | `system.ts`         |
@@ -12,7 +14,7 @@ Browsers call `/api/*` on the same site origin. `backend/app.ts` applies authori
 | POST       | `/api/inquiries`                                   | Public; same origin, validation, honeypot, rate limit         | `public.ts`         |
 | POST       | `/api/privacy-requests`                            | Public; same guards                                           | `public.ts`         |
 | POST       | `/api/webhooks/resend`                             | Verified provider signature                                   | `email-webhook.ts`  |
-| GET        | `/api/auth/session`                                | Bearer token; active role                                     | `system.ts`         |
+| GET        | `/api/auth/session`                                | Bearer token; role or eligible MFA-pending state; no private records | `system.ts`         |
 | GET        | `/api/admin/summary`                               | Active staff/owner; counts                                    | `inquiries.ts`      |
 | GET        | `/api/admin/inquiries?status=new&cursor=…`         | Active staff/owner; 50 per page                               | `inquiries.ts`      |
 | GET        | `/api/admin/inquiries/:id`                         | Active staff/owner; detail and notification                   | `inquiries.ts`      |
@@ -30,7 +32,7 @@ Browsers call `/api/*` on the same site origin. `backend/app.ts` applies authori
 | GET        | `/api/admin/submission-checks`                     | Owner; non-secret server/database/realtime diagnostics        | `system.ts`         |
 | GET        | `/api/admin/realtime-status`                       | Active staff/owner; metadata readiness                        | `system.ts`         |
 | POST       | `/api/admin/test/live-check`                       | Owner, test+capture only; harmless metadata revision probe    | `notifications.ts`  |
-| POST       | `/api/admin/test/run-jobs`                         | Owner; execute due notification/retention handlers            | `notifications.ts`  |
+| POST       | `/api/admin/test/run-jobs`                         | Owner, staging+capture only; due notification/retention handlers | `notifications.ts`  |
 | POST       | `/api/admin/outbox/retry`                          | Owner; requeue one dead notice                                | `notifications.ts`  |
 
 Paginated lists return `{inquiries|clients|requests, nextCursor}`. Send the opaque returned cursor unchanged. `null` means the last page. Ordering is stable by `created_at DESC, id DESC`; invalid cursors return 422. Notes/events are bounded recent-history views, not complete exports.
@@ -61,6 +63,10 @@ Create one UUID per submission attempt and reuse it on retry. First saved inquir
 A note POST sends `{idempotencyKey,body}` (2–2000 characters). Client status PATCH sends `{status}`. Staff calls send `Authorization: Bearer <Supabase access token>`. Mutations also send JSON, the same-site Origin, and `X-Requested-With: VSSDashboard`; use `frontend/scripts/owner/api.ts`.
 
 Typical errors: 401 unsigned/inactive staff, 403 forbidden role/origin, 409 stale revision/locked record, 422 invalid fields/cursor, 429 real rate limit with `Retry-After`, 503 unavailable service/setup. Missing submission protection fails closed with 503.
+
+Production form bodies also include the widget's single-use `captchaToken` (maximum 4096 characters). Missing/failed verification returns 403 `verification_required`; provider outage returns 503 `verification_unavailable`. Tokens are verified server-side against the configured hCaptcha site key. After each attempt get a new token but retain the draft/idempotency key. Production additionally caps each normalized address at three attempts/hour/form type and all public forms at 200 attempts/day. Budget rejection is 429 `submission_budget_reached`; IP rejection is 429 `too_many_requests`.
+
+`GET /api/auth/session` can return `eligible:true`, `mfaRequired:true`, `authenticated:false` while an approved user enrolls/verifies TOTP. Private endpoints return 403 `mfa_required` until the provider issues a validated `aal2` session. UI entry alone never grants access. Production `/api/admin/test/*` routes return 404; the hosting scheduler runs maintenance. Duplicate query keys, unsafe paths/methods, wrong production target origin, cross-site request metadata and ambiguous/compressed HTTP framing are rejected before feature routing.
 
 ## Live connection contract
 

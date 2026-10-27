@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { APP_RELEASE } from '../../shared/release';
 import { inspectPublicDeployment } from '../../devops/scripts/verify-deployment.mjs';
 
 describe('public deployment verification', () => {
@@ -22,15 +23,15 @@ describe('public deployment verification', () => {
         return Response.json({ content: { services: [] } });
       if (url.pathname === '/api/public/runtime')
         return Response.json({
-          release: '1.5.0',
+          release: APP_RELEASE,
           supabaseUrl: 'https://test.supabase.co',
           publishableKey: 'sb_publishable_synthetic_fixture',
           testEnvironment: true,
         });
       if (url.pathname === '/about/')
         return new Response(null, { status: 301, headers: { location: '/about' } });
-      return new Response('<meta name="app-release" content="1.5.0">', {
-        headers: { 'Content-Security-Policy': "connect-src 'self' wss://*.supabase.co" },
+      return new Response(`<meta name="app-release" content="${APP_RELEASE}">`, {
+        headers: { 'Content-Security-Policy': "connect-src 'self' https://test.supabase.co wss://test.supabase.co" },
       });
     };
     expect(await inspectPublicDeployment('https://site.example', fetcher)).toMatchObject({
@@ -44,5 +45,11 @@ describe('public deployment verification', () => {
           : fetcher(input, init),
       ),
     ).rejects.toThrow('expected HTTP 401');
+    await expect(inspectPublicDeployment('https://site.example', async(input,init)=>{
+      const response=await fetcher(input,init);
+      if(new URL(input instanceof Request?input.url:input).pathname==='/')
+        response.headers.set('Content-Security-Policy',"connect-src 'self' https://*.supabase.co wss://*.supabase.co");
+      return response;
+    })).rejects.toThrow('not a wildcard');
   });
 });

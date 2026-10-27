@@ -58,7 +58,7 @@ export function localSessions(accounts: Account[]) {
     getUser: async (token: string) => {
       const user = lookup(token);
       return {
-        data: { user: user ? { id: user.id, email: user.email } : null },
+        data: { user: user ? { id: user.id, email: user.email, email_confirmed_at: '2026-01-01T00:00:00Z', is_anonymous: false } : null },
         error: user ? null : new Error('invalid_token'),
       };
     },

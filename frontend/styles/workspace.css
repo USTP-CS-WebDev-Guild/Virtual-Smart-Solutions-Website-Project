@@ -424,6 +424,14 @@ label {
   color: var(--muted);
   line-height: 1.8;
 }
+#staff-mfa { display: grid; gap: 16px; }
+#staff-mfa-setup { display: grid; gap: 12px; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+#staff-mfa-qr { width: 200px; height: 200px; max-width: 100%; background: #fff; }
+#staff-mfa-secret { font-family: var(--mono); font-size: 16px; }
+#staff-mfa-status { min-height: 24px; font-size: 14px; }
+#staff-mfa-cancel { background: #fff; color: var(--ink); border-color: var(--line); }
+.captcha-field { max-width: 100%; margin-block: 10px; }
+.captcha-field p { margin-top: 8px; color: var(--muted); font-size: 14px; }
 /* Sidebar + stable document navigation. No transform/entry animations on page content. */
 .admin-shell {
   display: grid;

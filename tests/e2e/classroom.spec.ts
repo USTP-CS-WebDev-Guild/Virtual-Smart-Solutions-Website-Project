@@ -6,10 +6,15 @@ import { join, dirname, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { startClassroomServer } from '../../devops/local/server';
+import { installNavigationObserver, type NavigationSnapshot } from './navigation-observer';
 
-// A real browser against the full classroom runtime. No intercepted network,
-// mocked Auth provider or replacement event transport is used in this suite.
-test.describe.configure({ mode: 'serial' });
+// A real browser against the full classroom runtime. Auth, persistence and
+// event delivery are real. One navigation test delays a document request to
+// inspect the old page; it does not replace the destination or its content.
+// Each scenario creates its own records/contexts and also runs against a fresh
+// database when selected alone. Keep one worker (config), but don't skip the
+// rest of the file on failure: default mode restarts the worker/runtime instead.
+test.describe.configure({ mode: 'default' });
 let root: string;
 let runtime: Awaited<ReturnType<typeof startClassroomServer>>;
 let astro: ChildProcess;
@@ -515,7 +520,7 @@ test('hero, expertise ticker and team have real ongoing animation with a shared 
     .poll(() => hero.evaluate((node) => getComputedStyle(node).animationName))
     .toBe('vss-float-left');
   const ticker = page.locator('.vss-ticker-track');
-  await ticker.scrollIntoViewIfNeeded();
+  await page.locator('.vss-ticker-viewport').scrollIntoViewIfNeeded();
   await expect
     .poll(() => ticker.evaluate((node) => getComputedStyle(node).animationPlayState))
     .toBe('running');
@@ -531,7 +536,7 @@ test('hero, expertise ticker and team have real ongoing animation with a shared 
   await page.locator('.vss-ticker-heading [data-motion-toggle]').click();
   await page.goto(base + '/about/');
   const portrait = page.locator('.vss-person-image img').first();
-  await portrait.scrollIntoViewIfNeeded();
+  await page.locator('.vss-person-image').first().scrollIntoViewIfNeeded();
   await expect
     .poll(() => portrait.evaluate((node) => getComputedStyle(node).animationName))
     .toBe('vss-team-drift');
@@ -559,11 +564,24 @@ test('redesigned navigation, service preview and FAQ motion retain real links an
   expect(
     await page.locator('.vss-header').evaluate((node) => getComputedStyle(node).backgroundColor),
   ).toBe('rgb(255, 255, 255)');
-  expect(await page.locator('h1').evaluate((node) => node.getAnimations().length)).toBe(0);
+  // Astro's dev toolbar has headings in its shadow DOM. Check the actual
+  // application title instead of selecting toolbar/debug-panel headings too.
+  const pageTitle = page.locator('#main .vss-hero h1');
+  await expect(pageTitle).toHaveCount(1);
+  expect(await pageTitle.evaluate((node) => node.getAnimations().length)).toBe(0);
 
   await expect(page.locator('[data-service-choice="data-entry"]')).toBeVisible();
   await page.locator('[data-service-choice="data-entry"]').click();
-  await expect(page.locator('.vss-explorer-image')).toHaveAttribute(
+  await expect(page.locator('[data-service-choice="data-entry"]')).toHaveAttribute('aria-pressed', 'true');
+  // All service panels stay in the DOM to reserve stable layout space. Check
+  // the one active panel and its image, rather than all five retained images.
+  const selectedService = page.locator('#main [data-service-explorer] [data-explorer-item][data-active="true"]');
+  await expect(selectedService).toHaveCount(1);
+  await expect(selectedService).toHaveAttribute('data-explorer-item', 'data-entry');
+  await expect(selectedService).toHaveAttribute('aria-hidden', 'false');
+  await expect(selectedService).toBeVisible();
+  await expect(selectedService.locator('.vss-explorer-image')).toHaveCount(1);
+  await expect(selectedService.locator('.vss-explorer-image')).toHaveAttribute(
     'src',
     '/images/service-data.webp',
   );
@@ -608,6 +626,9 @@ test('compact mobile navigation overlays stable content and stays put while the 
   const menu = page.locator('#mobile-menu');
   await expect(menu).toBeVisible();
   await expect(menu.locator('a[aria-current="page"]')).toHaveText(/Home/);
+  await menu.evaluate(async (node) => {
+    await Promise.all(node.getAnimations().map((animation) => animation.finished.catch(() => {})));
+  });
   const bounds = (await menu.boundingBox())!;
   expect(bounds.width).toBeLessThanOrEqual(420);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(811);
@@ -615,22 +636,55 @@ test('compact mobile navigation overlays stable content and stays put while the 
   expect(after?.x).toBeCloseTo(before!.x, 1);
   expect(after?.y).toBeCloseTo(before!.y, 1);
   expect(after?.width).toBeCloseTo(before!.width, 1);
+  const observations: NavigationSnapshot[] = [];
+  await page.exposeBinding('__vssRecordNavigation', (_source, snapshot: NavigationSnapshot) => {
+    observations.push(snapshot);
+  });
+  // Arm before the click: a held navigation can suspend page-side evaluation
+  // and animation frames. The observer sends snapshots during native lifecycle
+  // events, after app handlers, without requiring another page query later.
+  await page.evaluate(installNavigationObserver);
   let release!: () => void;
   const hold = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let navigationHeld = false;
   await page.route('**/portfolio/', async (route) => {
-    if (route.request().isNavigationRequest()) await hold;
+    if (route.request().isNavigationRequest()) {
+      navigationHeld = true;
+      await hold;
+    }
     await route.continue();
   });
   try {
     await menu.getByRole('link', { name: 'Our work', exact: true }).click({ noWaitAfter: true });
-    await expect(menu).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-navigation-open', 'true');
+    await expect.poll(() => navigationHeld, {
+      message: 'The actual destination document request must pass through the test gate.',
+    }).toBe(true);
   } finally {
     release();
   }
   await expect(page).toHaveURL(base + '/portfolio/');
+  // Assert the old document's captured lifecycle states only after releasing
+  // navigation. Do not assume when Chromium schedules beforeunload relative to
+  // its document request, or wait for page/binding work while that request stalls.
+  await expect.poll(() => observations.map((snapshot) => snapshot.phase)).toEqual([
+    'click', 'beforeunload',
+  ]);
+  for (const pending of observations) {
+    expect(pending.path).toBe('/');
+    expect(pending.defaultPrevented).toBe(false);
+    expect(pending.visible).toBe(true);
+    expect(pending.inert).toBe(false);
+    expect(pending.navigationOpen).toBe('true');
+    expect(pending.expanded).toBe('true');
+    expect(pending.menu?.x).toBeCloseTo(bounds.x, 1);
+    expect(pending.menu?.y).toBeCloseTo(bounds.y, 1);
+    expect(pending.menu?.width).toBeCloseTo(bounds.width, 1);
+    expect(pending.main?.x).toBeCloseTo(before!.x, 1);
+    expect(pending.main?.y).toBeCloseTo(before!.y, 1);
+    expect(pending.main?.width).toBeCloseTo(before!.width, 1);
+  }
   await expect(page.locator('#mobile-menu')).toBeHidden();
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await expect(page.locator('#mobile-menu a[aria-current="page"]')).toHaveText(/Our work/);
@@ -714,4 +768,28 @@ test('owner workspace has a monochrome mobile drawer and preserves an unpublishe
   await expect(page.locator('#admin-app')).toBeHidden();
   await expect(page.locator('#cms-settings-fields')).toBeEmpty();
   await context.close();
+});
+
+test('hostile stored inquiry text remains literal in the owner inbox', async ({ browser }) => {
+  const ownerContext = await browser.newContext();
+  const visitorContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const ownerPage = await ownerContext.newPage();
+  const visitor = await visitorContext.newPage();
+  const hostile = '<img src="x" onerror="window.__vss_xss=true"> SQL text: DROP TABLE staff_users;';
+  await signIn(ownerPage);
+  await visitor.goto(base + '/contact/');
+  await visitor.locator('[name="name"]').fill('Security text regression');
+  await visitor.locator('[name="email"]').fill('security-text@example.test');
+  await visitor.locator('[name="service"]').selectOption('Not sure yet');
+  await visitor.locator('[name="message"]').fill(hostile);
+  await visitor.locator('[name="privacyAcknowledged"]').check();
+  await visitor.getByRole('button', { name: 'Send inquiry' }).click();
+  await expect(visitor.locator('.form-status')).toContainText('Reference:');
+  await expect(ownerPage.locator('#inquiry-list')).toContainText('Security text regression');
+  await ownerPage.getByRole('button', { name: /Security text regression/ }).click();
+  await expect(ownerPage.locator('.detail-message p')).toHaveText(hostile);
+  await expect(ownerPage.locator('#inquiry-detail img[src="x"]')).toHaveCount(0);
+  expect(await ownerPage.evaluate(() => Boolean((window as any).__vss_xss))).toBe(false);
+  await ownerContext.close();
+  await visitorContext.close();
 });

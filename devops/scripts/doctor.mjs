@@ -35,7 +35,7 @@ function privateKey(key) {
   }
 }
 const [major, minor] = process.versions.node.split('.').map(Number);
-check(major > 22 || (major === 22 && minor >= 12), 'Node.js 22.12+ is required.');
+check(major > 22 || (major === 22 && minor >= 19), 'Node.js 22.19+ is required; Node 24 LTS is recommended.');
 check(
   existsSync('node_modules/astro/package.json'),
   'Project dependencies are installed (npm ci).',

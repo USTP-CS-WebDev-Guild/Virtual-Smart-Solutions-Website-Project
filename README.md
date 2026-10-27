@@ -1,4 +1,4 @@
-# Virtual Smart Solutions — complete website, release 1.5.0
+# Virtual Smart Solutions — complete website, release 1.6.4
 
 Astro + TypeScript frontend, Netlify Functions backend, and Supabase PostgreSQL/Auth/Realtime. The same application also runs locally with persistent embedded PostgreSQL, random local accounts, pushed updates and captured email. Students need no cloud keys, Docker, or separate database installation to begin.
 
@@ -11,7 +11,9 @@ npm run dev
 
 Open **http://127.0.0.1:4321/**. The terminal prints your generated local logins; use **Owner sign-in** in the footer. `npm run accounts` shows them again. Leave the dev terminal running; stop with **Ctrl+C**.
 
-**Updating your current 1.4.2 project? Read [UPDATE-1.5.0.md](UPDATE-1.5.0.md).** This release rebuilds the owner workspace with an independent black-and-white design, Overview, mobile navigation, stored-record searches, safer privacy handling, preserved drafts, and grouped website editing. It uses your existing database, owner accounts, and hosting settings. No database migration is needed from 1.4.2.
+**Updating 1.6.0–1.6.3? Read [UPDATE-1.6.4.md](UPDATE-1.6.4.md).** The navigation acceptance test records native click/departure state before the browser suspends the old document. Independent classroom scenarios no longer skip after one failure. Production code, dependencies and migrations are unchanged; earlier acceptance fixes remain included.
+
+**Existing hosted project: start with [SECURITY-UPGRADE-1.6.0.md](SECURITY-UPGRADE-1.6.0.md).** This release retains the client-approved design and adds immutable staff identities, production MFA/session enforcement, anti-bot verification, bounded requests, exact-project CSP, patched dependencies and release controls. Existing databases apply the new additive migration; production also needs the explicit policy/settings steps. No records are reset. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for checks actually executed and [SECURITY.md](SECURITY.md) for the security map.
 
 The public site opens normally for visitors. The owner signs in through its footer. Read [OWNER-GUIDE.md](OWNER-GUIDE.md) for the client-facing walkthrough. Operational tools are under **Settings & help**, rather than repeated on every business screen.
 
@@ -83,8 +85,8 @@ git config --global user.email "Your GitHub email"
 Clone the students' team repository below and contribute with your own GitHub identity.
 
 ```powershell
-git clone https://github.com/ustpcswebdevguildbatch1-afk/Virtual-Smart-Solutions-Website.git
-cd Virtual-Smart-Solutions-Website
+git clone https://github.com/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project.git
+cd Virtual-Smart-Solutions-Website-Project
 ```
 
 VS Code → File → Open Folder → select that clone. Confirm `package.json` is directly inside it.
@@ -136,7 +138,7 @@ Make and verify the change, commit, push the branch and open a pull request. The
 1. Create the team's isolated Supabase Free test project.
 2. SQL Editor → run `backend/database/INSTALL-FRESH.sql` **once on the empty project**. Existing projects apply only missing migrations in order.
 3. Authentication → Users → create the hosted owner user with a real email and a unique password. Confirm the account using the dashboard/email flow offered for that project.
-4. Edit `backend/database/owner-setup.sql.example` with that exact email and run it in SQL Editor. Auth identity and an active owner row are both required.
+4. Edit `backend/database/owner-setup.sql.example` with that exact verified Auth UUID and email and run it in SQL Editor. Auth identity and an active bound owner row are both required.
 5. Disable public signups. Staff accounts are owner-managed.
 6. Obtain project URL, publishable key and secret key. Browser configuration gets the publishable key; **server configuration only** gets the secret key.
 
@@ -160,6 +162,7 @@ After Netlify assigns an HTTPS address, configure:
 | Variable | Value |
 | --- | --- |
 | `NODE_VERSION` | `24` |
+| `APP_ENV` | `staging` for this shared synthetic-data site |
 | `PUBLIC_SUPABASE_URL` | Test Supabase project URL |
 | `PUBLIC_SUPABASE_ANON_KEY` | Publishable key starting `sb_publishable_` |
 | `SUPABASE_URL` | Same project URL |
@@ -194,7 +197,7 @@ Check a phone and an incognito window: no hosting login for public pages; hosted
 
 ## Client approval, domain and maintenance
 
-Use [devops/DOMAIN-LAUNCH.md](devops/DOMAIN-LAUNCH.md), [devops/MAINTENANCE-HANDOVER.md](devops/MAINTENANCE-HANDOVER.md) and [devops/RELEASE_CHECKLIST.md](devops/RELEASE_CHECKLIST.md). A `.com` is purchased/renewed by the client; no code rewrite is needed. Test and production must use separate records and secrets.
+Use [SECURITY-UPGRADE-1.6.0.md](SECURITY-UPGRADE-1.6.0.md), [devops/DOMAIN-LAUNCH.md](devops/DOMAIN-LAUNCH.md), [devops/SECURITY-OPERATIONS.md](devops/SECURITY-OPERATIONS.md) and [devops/RELEASE_CHECKLIST.md](devops/RELEASE_CHECKLIST.md). Production requires `APP_ENV=production`, database policy activation, TOTP and real hCaptcha keys/provider setup. A `.com` is purchased/renewed by the client; no code rewrite is needed. Test and production must use separate records and secrets.
 
 This project adds no required paid software. Free hosting/database plans have limits and may pause. Check repository/contributor eligibility before connecting hosting; publish client source/assets only with the client's approval. See [devops/COSTS.md](devops/COSTS.md).
 

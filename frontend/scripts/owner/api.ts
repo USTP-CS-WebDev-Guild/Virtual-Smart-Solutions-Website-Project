@@ -11,11 +11,14 @@ export class ContentValidationError extends Error {
 }
 
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  if (!path.startsWith('/api/') || path.includes('\\') || /[\r\n]/.test(path))
+    throw new Error('Invalid workspace request.');
   const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
   const token = data.session?.access_token;
   const response = await fetch(path, {
     ...options,
     cache: 'no-store',
+    redirect: 'error',
     signal: options?.signal || AbortSignal.timeout(30_000),
     headers: {
       ...(options?.headers || {}),
@@ -30,6 +33,11 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     fields?: Array<{ path: Array<string | number>; message: string }>;
   };
   if (!response.ok) {
+    if (response.status === 403 && body.error === 'mfa_required') {
+      showWorkspaceLogin('Complete your authenticator check to continue.');
+      window.dispatchEvent(new Event('vss-mfa-required'));
+      throw new Error('Complete your authenticator check to continue.');
+    }
     if (response.status === 401) {
       showWorkspaceLogin('Your session expired. Sign in again to continue.');
       throw new Error(

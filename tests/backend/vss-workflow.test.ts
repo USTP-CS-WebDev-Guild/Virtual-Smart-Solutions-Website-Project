@@ -39,6 +39,7 @@ describe('VSS package and catalog workflows', () => {
   let firstPayload: ReturnType<typeof inquiry>;
   beforeAll(async () => {
     db = await createTestDatabase();
+    await db.exec("insert into auth.users(id,email) values('10000000-0000-4000-8000-000000000001','owner@example.test')");
     await db.query(
       "insert into public.staff_users(email,role,active,created_at) values('owner@example.test','owner',true,0)",
     );

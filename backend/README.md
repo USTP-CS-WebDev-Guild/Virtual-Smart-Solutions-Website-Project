@@ -2,6 +2,8 @@
 
 **Your first task:** trace a saved contact inquiry from `routes/public.ts` to PostgreSQL. Use [lesson 2](../docs/learning/02-request-to-database.md); no cloud project needed.
 
+Production security: `security/` owns request/origin/CAPTCHA/abuse boundaries; `lib/auth.ts` validates immutable identity, MFA and live sessions. `database/migrations/20261027110215_harden_identity_and_sessions.sql` adds the persistent policy/session rules. Apply the steps in `../SECURITY-UPGRADE-1.6.0.md`; hiding a UI control never grants or revokes a role.
+
 | Need                                   | Open                              |
 | -------------------------------------- | --------------------------------- |
 | All request entry points and role gate | `app.ts`                          |

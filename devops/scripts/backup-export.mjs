@@ -9,7 +9,9 @@ export function exportApplicationSql(connection, work, run = spawnSync) {
   const data = join(work, 'data.sql');
   for (const [label, file, extra] of [
     ['schema', schema, []],
-    ['data', data, ['--data-only', '--use-copy']],
+    // Sessions and staff approvals are deliberately re-established after a
+    // restore. Auth user IDs from another Supabase project are not portable.
+    ['data', data, ['--data-only', '--use-copy', '--exclude', 'app_private.staff_sessions,public.staff_users']],
   ]) {
     const result = run(
       'supabase',
@@ -35,6 +37,7 @@ export function exportApplicationSql(connection, work, run = spawnSync) {
   // New target projects can otherwise inherit broader Supabase default grants.
   const preamble = [
     '-- Application schema/data backup; restore into EMPTY Supabase staging first.',
+    '-- No live sessions or staff approvals: recreate verified Auth accounts and explicitly bind their new IDs after restore.',
     'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;',
     'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM public, anon, authenticated;',
   ].join('\n');

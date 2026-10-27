@@ -1,5 +1,7 @@
 # Team maintenance and handover
 
+For release 1.6.0, also follow [SECURITY-OPERATIONS.md](SECURITY-OPERATIONS.md) for MFA/recovery, incident handling and the private backup-workflow requirements.
+
 Fill in the actual names/URLs in a **restricted team operations record**. Do not add passwords or keys to this repository.
 
 | Responsibility | Primary | Deputy | Evidence |
@@ -42,7 +44,7 @@ A local hosted export requires Supabase CLI plus Docker (the CLI runs pg_dump in
 - Run `npm run db:backup -- vss-YYYY-MM-DD.sql.enc` after setting those values in the terminal environment through your password manager. The optional weekly GitHub backup workflow stays disabled in the student source repo; enable it only in a restricted team/client operations repo and verify its first run. Manual weekly exports remain the baseline until automation is proven.
 - Store the encrypted artifact outside the database provider, with separate access to its encryption passphrase. Keep the agreed retention (starting proposal: four weekly and three month-end copies, subject to the business policy). Do not commit or email raw SQL.
 - Restore only into an empty isolated Supabase test project using `RESTORE_DATABASE_URL` and `npm run db:restore -- vss-YYYY-MM-DD.sql.enc`. Its confirmation phrase is deliberate; verify the destination first.
-- The application export includes schema/data/RLS/functions, **not managed Auth identities, provider keys, DNS or a working mailbox**. Recreate accounts/relink identities as required. Confirm email-based staff allowlisting and test current RLS after recovery.
+- The application export includes schema/business data/RLS/functions, **not managed Auth identities, live session activity, staff approvals, provider keys, DNS or a working mailbox**. Create/verify Auth accounts and explicitly approve their exact new UUIDs; an email match does not transfer access. Test MFA, current RLS and revocation after recovery.
 - Replay completed deletion requests before restored records return to live service. Keep the separate authorized deletion ledger needed to do this; document who controls it and its retention. Never reopen erased records just because a backup predates deletion.
 - Record export/restore time, backup age, counts and verification result. Agree a recovery objective with the client; this repository does not claim a guaranteed RPO/RTO.
 
@@ -52,7 +54,7 @@ A local hosted export requires Supabase CLI plus Docker (the CLI runs pg_dump in
 | --- | --- |
 | Public site asks for Netlify login | Live site's visitor access and whether this is the production URL |
 | Public form fails | Owner Check contact form; exact APP_ORIGIN; API logs by X-Request-ID; database readiness; no fake success message |
-| Owner cannot sign in | Correct environment's Auth user/password and active `staff_users` row; public signup is intentionally disabled |
+| Owner cannot sign in | Correct project's verified Auth account, active UUID-bound staff row, authenticator, session policy and CAPTCHA configuration; public signup is intentionally disabled |
 | Save works but another tab is stale | Connection indicator; Verify live delivery; Realtime publication/RLS/migrations; reconnect after returning online |
 | Inquiry exists but email does not arrive | Capture mode versus send mode; outbox accepted/delivered/bounced state; verified sender and signed webhook; provider quota |
 | Changed repository text does not appear | Published owner content takes precedence; use Website editor or coordinate a reviewed content update |

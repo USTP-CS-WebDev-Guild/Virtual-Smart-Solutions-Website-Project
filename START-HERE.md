@@ -1,4 +1,4 @@
-**Release 1.5.0:** existing projects start with [UPDATE-1.5.0.md](UPDATE-1.5.0.md). Client owners use [OWNER-GUIDE.md](OWNER-GUIDE.md).
+**Release 1.6.4:** for the browser-test patch read [UPDATE-1.6.4.md](UPDATE-1.6.4.md); existing hosted projects start with [SECURITY-UPGRADE-1.6.0.md](SECURITY-UPGRADE-1.6.0.md). Local learning still needs no cloud keys or MFA setup. Client owners use [OWNER-GUIDE.md](OWNER-GUIDE.md).
 
 # Your first working system
 

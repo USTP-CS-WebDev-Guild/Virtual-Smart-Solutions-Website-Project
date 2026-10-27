@@ -10,6 +10,7 @@ import { privacyRoutes } from './routes/privacy';
 import { contentRoutes } from './routes/content';
 import { notificationRoutes } from './routes/notifications';
 import { clientRoutes } from './routes/clients';
+import { requestGuard } from './security/request-guard';
 
 export type AppContext = { ip?: string };
 
@@ -23,6 +24,9 @@ async function dispatch(route: RouteContext): Promise<Response> {
   if (webhook) return webhook;
 
   if (!route.path.startsWith('/api/admin/')) return json({ error: 'not_found' }, 404);
+
+  if (!/^Bearer\s+\S{1,8192}$/i.test(route.request.headers.get('Authorization') || ''))
+    return json({ error: 'staff_access_required' }, 401);
 
   // This is the one shared security gate for every owner/staff endpoint.
   const db = route.database();
@@ -70,6 +74,11 @@ export function createApplication(database: () => Database = createDatabase) {
     const requestId = crypto.randomUUID();
     try {
       const url = new URL(request.url);
+      const rejected = requestGuard(request, url);
+      if (rejected) {
+        rejected.headers.set('X-Request-ID', requestId);
+        return rejected;
+      }
       const response = await dispatch({
         request,
         url,

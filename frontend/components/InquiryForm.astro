@@ -1,4 +1,5 @@
 ---
+import Captcha from "./Captcha.astro";
 import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
 interface Props {
   id?: string;
@@ -111,6 +112,7 @@ const { id } = Astro.props;
       /></label
     >
   </div>
+  <Captcha />
   <div class="form-actions">
     <button class="button" type="submit" disabled
       >Send inquiry <span aria-hidden="true">↗</span></button
@@ -123,6 +125,7 @@ const { id } = Astro.props;
   </p>
 </form>
 <script>
+  import { attachCaptcha, captchaToken, resetCaptcha } from "../lib/captcha";
   import {
     submitPublicForm,
     submissionKey,
@@ -160,9 +163,10 @@ const { id } = Astro.props;
       };
 
       try {
+        const verifiedPayload = { ...payload, captchaToken: captchaToken(form) };
         const result = await submitPublicForm(
           "/api/inquiries",
-          payload,
+          verifiedPayload,
           "inquiryId",
         );
         const reference = result.id.slice(0, 8).toUpperCase();
@@ -177,10 +181,12 @@ const { id } = Astro.props;
           error instanceof Error ? error.message : "Please try again.";
         status.className = "form-status is-error";
       } finally {
+        resetCaptcha(form);
         button.disabled = false;
         form.setAttribute("aria-busy", "false");
       }
     });
+    void attachCaptcha(form);
     if (button) button.disabled = false;
   }
 </script>

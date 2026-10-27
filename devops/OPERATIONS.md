@@ -1,5 +1,7 @@
 # Operating the test and production system
 
+Release 1.6.0 production activation and incident procedures are in `../SECURITY-UPGRADE-1.6.0.md` and `SECURITY-OPERATIONS.md`.
+
 ## Classroom operation
 
 Default `npm run dev` uses the local-only infrastructure in `devops/local/`. It uses the same feature routes and SQL functions; mail is forced to capture mode. A local timer runs maintenance while dev is open, or the test owner can run it on demand. API commits send metadata events over SSE. Arbitrary direct SQL edits are not a supported local event source; use the API/editor for live workflow tests. Hosted Realtime also observes database commits through its publication.
@@ -16,7 +18,7 @@ Test and deploy-preview environments set `TEST_EMAIL_MODE=capture`; test notices
 
 ## Staff access and audit
 
-Supabase Auth authenticates email/password. Every private API request validates its bearer token with Supabase Auth, then checks that the matching normalized email is active in `staff_users`. `staff` can manage inquiries; `owner` can edit site content, handle privacy requests, run maintenance, and retry notifications. Browser roles can SELECT only permitted metadata rows in `change_signals`; all business tables and mutation RPCs remain server-only. The Realtime RLS helper checks the real Auth UID and active staff role.
+Every private API request validates its exact bearer token with Supabase Auth, then checks an active, verified, non-anonymous Auth UUID binding in `staff_users`. Production also requires TOTP and checks the actual session, eight-hour lifetime and fifteen-minute private-API activity window. `staff` can manage the shared inquiry/client inbox; `owner` can publish content, handle privacy requests and retry notifications. Manual test jobs are staging/capture-only; production uses the scheduler. Browser roles can SELECT only permitted metadata rows in `change_signals`; business tables and mutation RPCs remain server-only. Private signal RLS checks the real UID, role and armed MFA/session policy.
 
 To offboard someone, disable the Supabase Auth account, set `staff_users.active=false` and `disabled_at`, revoke sessions in Supabase Auth, review their recent audit history, and rotate any test secret they were allowed to use. Only the authorized tech lead/DevOps maintainers hold production service-role credentials; ordinary contributors use local/test data.
 
@@ -34,9 +36,9 @@ The system minimizes logs: do not log inquiry bodies, access tokens, email conte
 
 ## Backups and recovery
 
-Supabase Free has no automatic backups. The weekly GitHub Actions workflow exports the `public` and `app_private` Postgres schemas and their data, encrypts it with AES-256-GCM, and stores the encrypted file as a private Actions artifact for 90 days. The SQL export does **not** back up Supabase Auth users, provider settings, or project configuration. Keep a separate owner-only record of staff emails and recreate/verify Auth users and settings during recovery. Keep `SUPABASE_DB_URL` and `BACKUP_ENCRYPTION_KEY` as repository secrets in the restricted team/client operations repository. Never add either to repository variables, `.env.example`, issues, or student branches.
+Check the selected provider plan's recovery facilities; do not rely on an untested provider backup alone. The optional weekly GitHub Actions workflow exports application schema/business data from `public` and `app_private`, encrypts it with AES-256-GCM, and stores the encrypted file for **14 days in a restricted private operations repository**. Define an additional client recovery copy and retention policy within approved storage limits. The SQL dump does **not** back up Supabase Auth users, live session activity, staff approvals, provider settings or project configuration. Recreate verified Auth accounts and explicitly approve their exact new UUIDs during recovery. Keep `SUPABASE_DB_URL` and `BACKUP_ENCRYPTION_KEY` as private operations repository secrets, not variables, `.env.example`, issues or student branches.
 
-Keep the backup workflow disabled in the shared source repo. Enable it only in that restricted operations repo by setting the repository variable `ENABLE_PRODUCTION_BACKUP=true`. Student repos keep it unset. This avoids relying on paid private-repository environment protection. Check Actions minute/artifact allowances and complete a manual run before relying on the schedule.
+Keep the backup workflow disabled in the shared source repo. Enable it only in the selected private operations repo with `ENABLE_PRODUCTION_BACKUP=true` and `PRODUCTION_BACKUP_REPOSITORY=OWNER/REPO`. It refuses to run in a public repository. Restrict that repo to operators; repository secrets are accessible to code that those operators authorize. Check Actions minute/artifact allowances and complete a manual run before relying on the schedule.
 
 The exporter explicitly creates BOTH a schema dump (`public,app_private`) and a data-only dump of those schemas, combines them, encrypts the result, and deletes temporary plaintext. Pause schema migrations during backup. A schema-only export does not recover inquiries. The Supabase CLI runs pg_dump in Docker; the GitHub Ubuntu runner supplies it. Only the operator needs Supabase CLI + Docker for a local export; everyday student development does not.
 
