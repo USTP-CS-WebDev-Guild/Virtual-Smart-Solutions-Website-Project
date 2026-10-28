@@ -6,3 +6,18 @@
 # /devops/ @your-devops-lead @your-tech-lead
 # /ui-ux/ @your-design-lead
 # /project-management/ @your-project-manager
+
+# Initial production reviewer from this project's existing maintainer context.
+# Confirm this account has repository Write access before enabling the ruleset.
+# The organization owner can replace it with the appointed production reviewer.
+/.github/ @franku69
+/backend/ @franku69
+/devops/ @franku69
+/shared/ @franku69
+/frontend/lib/ @franku69
+/frontend/scripts/owner/ @franku69
+/frontend/pages/admin/ @franku69
+/frontend/public/_headers @franku69
+/package.json @franku69
+/package-lock.json @franku69
+/netlify.toml @franku69

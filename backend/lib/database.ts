@@ -8,5 +8,13 @@ export function createDatabase(): Database {
   if (!url || !key) throw new Error('server_database_not_configured');
   return createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+    global: {
+      // Bound provider/network stalls for every Auth and database call.
+      fetch: (input, init = {}) => fetch(input, {
+        ...init, redirect: 'error',
+        signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(10_000)]) :
+          AbortSignal.timeout(10_000),
+      }),
+    },
   });
 }

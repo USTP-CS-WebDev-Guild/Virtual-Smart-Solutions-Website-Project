@@ -1,0 +1,8 @@
+---
+const sitekey = import.meta.env.PUBLIC_HCAPTCHA_SITE_KEY || '';
+const classroom = import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE === 'true';
+---
+{sitekey && !classroom && <div class="captcha-field" data-captcha data-sitekey={sitekey}>
+  <div data-captcha-widget></div>
+  <p data-captcha-status role="status" aria-live="polite">Loading verification…</p>
+</div>}

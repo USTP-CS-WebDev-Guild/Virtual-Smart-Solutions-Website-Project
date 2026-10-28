@@ -83,6 +83,7 @@ export async function drainOutbox(
     try {
       const response = await fetch('https://api.resend.com/emails', {
         signal: AbortSignal.timeout(8_000),
+        redirect: 'error',
         method: 'POST',
         headers: {
           Authorization: `Bearer ${process.env.RESEND_API_KEY}`,

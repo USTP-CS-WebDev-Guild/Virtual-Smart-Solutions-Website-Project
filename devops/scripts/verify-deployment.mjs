@@ -60,6 +60,7 @@ export async function inspectPublicDeployment(siteUrl, fetcher = fetch) {
     '/privacy/',
     '/admin/',
   ];
+  let homePolicy = '';
   const outcomes = await Promise.allSettled(
     pages.map(async (path) => {
       const result = await get(path);
@@ -67,11 +68,7 @@ export async function inspectPublicDeployment(siteUrl, fetcher = fetch) {
         throw new Error(`${path} returned ${result.response.status}.`);
       if (!result.text.includes(`name="app-release" content="${release}"`))
         throw new Error(`${path} is not the expected release ${release}. Publish the new commit.`);
-      if (
-        path === '/' &&
-        !result.response.headers.get('content-security-policy')?.includes('wss://*.supabase.co')
-      )
-        throw new Error('The deployed CSP does not allow the Supabase WebSocket connection.');
+      if (path === '/') homePolicy = result.response.headers.get('content-security-policy') || '';
       return path;
     }),
   );
@@ -111,6 +108,11 @@ export async function inspectPublicDeployment(siteUrl, fetcher = fetch) {
     runtime.publishableKey.startsWith('sb_secret_')
   )
     throw new Error('Public runtime configuration is invalid.');
+  const project = new URL(runtime.supabaseUrl);
+  const connect = homePolicy.split(';').map(value => value.trim()).find(value => value.startsWith('connect-src '))?.split(/\s+/).slice(1) || [];
+  if (!connect.includes(project.origin) || !connect.includes('wss://' + project.hostname) ||
+      connect.some(value => /\*\.supabase\.co/.test(value)))
+    throw new Error('The deployed CSP must allow only the configured Supabase HTTPS/WebSocket project, not a wildcard.');
   return {
     origin,
     runtime,

@@ -1,5 +1,13 @@
 -- Create the matching user in Supabase Authentication -> Users first.
 -- Replace the email. Apply only to the intended project. No passwords in SQL.
-insert into public.staff_users(email, role, active, created_at)
-values (lower('owner@example.test'), 'owner', true, floor(extract(epoch from now()) * 1000)::bigint)
-on conflict (email) do update set role = 'owner', active = true, disabled_at = null;
+-- Confirm the exact Auth user UUID in the dashboard, not just the email.
+insert into public.staff_users(email, auth_user_id, role, active, created_at)
+select lower(u.email), u.id, 'owner', true, floor(extract(epoch from now()) * 1000)::bigint
+from auth.users u
+where u.id = '00000000-0000-0000-0000-000000000000'::uuid
+  and lower(u.email) = lower('owner@example.test')
+  and u.email_confirmed_at is not null and not coalesce(u.is_anonymous,false)
+on conflict (email) do update set auth_user_id=excluded.auth_user_id,
+  role = 'owner', active = true, disabled_at = null;
+-- Must return the intended verified owner before enabling production security.
+select email, auth_user_id, role, active from public.staff_users;

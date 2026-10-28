@@ -10,7 +10,7 @@ Use one **team-owned repository**, two fixed Netlify sites, and two isolated Sup
 
 ## Set it up once
 
-DevOps creates `staging` from the reviewed `main` and imports the repository as the staging site, using `staging` as that site's production branch. A staging **site's production deploy** is still the team's test environment; set `PUBLIC_TEST_ENVIRONMENT=true` and `TEST_EMAIL_MODE=capture`. This allows its scheduled Function to run on that fixed address.
+DevOps creates `staging` from the reviewed `main` and imports the repository as the staging site, using `staging` as that site's production branch. A staging **site's production deploy** is still the team's test environment; set `APP_ENV=staging`, `PUBLIC_TEST_ENVIRONMENT=true` and `TEST_EMAIL_MODE=capture`. This allows its scheduled Function to run on that fixed address. Client production uses `APP_ENV=production` and the mandatory activation/provider/MFA steps in `../SECURITY-UPGRADE-1.6.0.md`.
 
 When the client approves, configure the second site from `main` with the live project's keys and domain. Until then keep the shared test site public with synthetic data. Never point staging at the live database, share their secrets, or copy the test inbox into production.
 

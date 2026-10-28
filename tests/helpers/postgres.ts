@@ -76,7 +76,7 @@ export function postgresTransport(database: PGlite) {
     auth: {
       getUser: async (token: string) =>
         token === 'synthetic-owner-token'
-          ? { data: { user: { email: 'owner@example.test' } }, error: null }
+          ? { data: { user: { id: '10000000-0000-4000-8000-000000000001', email: 'owner@example.test', email_confirmed_at: '2026-01-01T00:00:00Z' } }, error: null }
           : { data: { user: null }, error: new Error('invalid_token') },
     },
     async rpc(name: string, values: Record<string, unknown> = {}) {

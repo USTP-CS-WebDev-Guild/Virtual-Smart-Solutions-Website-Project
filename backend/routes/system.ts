@@ -1,6 +1,7 @@
-import { findActor } from '../lib/auth';
+import { staffAuthentication } from '../lib/auth';
 import { json } from '../http/responses';
 import type { RouteContext, StaffRouteContext } from '../http/context';
+import { productionMode, productionConfigurationReady, captchaConfigurationReady, canonicalOrigin } from '../security/environment';
 
 export async function systemRoutes(route: RouteContext): Promise<Response | null> {
   const { request, path, method, requestId } = route;
@@ -9,17 +10,25 @@ export async function systemRoutes(route: RouteContext): Promise<Response | null
   if (method === 'GET' && path === '/api/health/ready') {
     const db = route.database();
     const { error } = await db.from('site_content').select('id').limit(1);
+    if (productionMode()) {
+      const security = await db.rpc('get_security_readiness');
+      if (!productionConfigurationReady() || security.error || security.data?.enforceMfa !== true)
+        return json({ status: 'not_ready' }, 503, requestId);
+    }
     return error
       ? json({ status: 'not_ready' }, 503, requestId)
       : json({ status: 'ready' }, 200, requestId);
   }
   if (method === 'GET' && path === '/api/auth/session') {
     const db = route.database();
-    const actor = await findActor(request, db);
+    const authentication = await staffAuthentication(request, db);
+    const actor = authentication.actor;
     return json(
       {
         enabled: true,
         authenticated: Boolean(actor),
+        eligible: authentication.eligible,
+        mfaRequired: authentication.mfaRequired && !actor,
         user: actor ? { email: actor.email, role: actor.role } : null,
       },
       200,
@@ -40,13 +49,9 @@ export async function systemRoutes(route: RouteContext): Promise<Response | null
 // Owner-only diagnostics expose pass/fail and setting names, never key values.
 export async function submissionChecks(route: StaffRouteContext): Promise<Response | null> {
   if (route.method !== 'GET' || route.path !== '/api/admin/submission-checks') return null;
-  const secretReady = (process.env.RATE_LIMIT_SECRET || '').trim().length >= 24;
-  let originReady = false;
-  try {
-    originReady = new URL(process.env.APP_ORIGIN || '').origin === route.url.origin;
-  } catch {
-    /* A missing or malformed value is a failed setup check. */
-  }
+  const secretMinimum = productionMode() ? 32 : 24;
+  const secretReady = (process.env.RATE_LIMIT_SECRET || '').trim().length >= secretMinimum;
+  const originReady = canonicalOrigin() === route.url.origin;
   const { error } = await route.db.rpc('get_dashboard_counts');
   const checks = [
     {
@@ -54,7 +59,7 @@ export async function submissionChecks(route: StaffRouteContext): Promise<Respon
       ok: secretReady,
       message: secretReady
         ? 'Configured.'
-        : 'Set RATE_LIMIT_SECRET to a private random value of at least 24 characters in Netlify environment variables, then redeploy. Include the Functions scope if scope selection is available.',
+        : `Set RATE_LIMIT_SECRET to a private random value of at least ${secretMinimum} characters in Netlify environment variables, then redeploy. Include the Functions scope if scope selection is available.`,
     },
     {
       name: 'Website address',
@@ -71,6 +76,18 @@ export async function submissionChecks(route: StaffRouteContext): Promise<Respon
         : 'The server can call the database functions.',
     },
   ];
+  if (productionMode()) {
+    const policy = await route.db.rpc('get_security_readiness');
+    checks.push({ name: 'Staff security policy',
+      ok: !policy.error && policy.data?.enforceMfa === true,
+      message: policy.data?.enforceMfa === true
+        ? 'Production MFA, active-session checks and idle limits are enabled.'
+        : 'Apply the identity/session migration and SECURE-PRODUCTION.sql to this production project.' });
+    const captchaReady = captchaConfigurationReady();
+    checks.push({ name: 'Form verification', ok: captchaReady,
+      message: captchaReady ? 'Verification keys are configured; test a real form submission before handoff.' :
+        'Set the client hCaptcha site key and private secret, then redeploy. Enable hCaptcha in Supabase Auth too.' });
+  }
   const realtime = await route.db.rpc('get_realtime_setup');
   const liveReady =
     !realtime.error &&

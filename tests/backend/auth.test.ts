@@ -5,7 +5,7 @@ function fakeDatabase(role: string, active = true) {
   return {
     auth: {
       getUser: vi.fn(async () => ({
-        data: { user: { email: 'owner@example.test' } },
+        data: { user: { id: "10000000-0000-4000-8000-000000000001", email_confirmed_at: "2026-01-01T00:00:00Z", email: 'owner@example.test' } },
         error: null,
       })),
     },
@@ -13,7 +13,7 @@ function fakeDatabase(role: string, active = true) {
       select: () => ({
         eq: () => ({
           maybeSingle: async () => ({
-            data: { email: 'owner@example.test', role, active },
+            data: { email: 'owner@example.test', role, active, auth_user_id: "10000000-0000-4000-8000-000000000001" },
             error: null,
           }),
         }),

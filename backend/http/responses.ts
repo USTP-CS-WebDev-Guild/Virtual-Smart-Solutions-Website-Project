@@ -1,4 +1,5 @@
 import { readBodyText } from "./body";
+import { canonicalOrigin } from '../security/environment';
 
 export function json(
   value: unknown,
@@ -8,9 +9,14 @@ export function json(
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
+    "CDN-Cache-Control": "no-store",
+    "Netlify-CDN-Cache-Control": "no-store",
+    "Pragma": "no-cache",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Frame-Options": "DENY",
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    "Cross-Origin-Resource-Policy": "same-origin",
   });
   if (requestId) headers.set("X-Request-ID", requestId);
   return new Response(JSON.stringify(value), { status, headers });
@@ -31,17 +37,19 @@ export async function readJson(
 
 export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get("Origin");
-  if (!origin) return process.env.CONTEXT === "dev";
+  if (!origin) return process.env.CONTEXT === "dev" &&
+    request.headers.get('Sec-Fetch-Site') !== 'cross-site';
   try {
     const requestOrigin = new URL(request.url).origin;
-    const suppliedOrigin = new URL(origin).origin;
+    const parsedOrigin = new URL(origin);
+    // Origin is one serialized origin, not a URL with a path or credentials.
+    if (origin !== parsedOrigin.origin) return false;
+    const suppliedOrigin = parsedOrigin.origin;
     if (suppliedOrigin !== requestOrigin) return false;
-    const configuredOrigin = process.env.APP_ORIGIN;
-    return (
-      process.env.CONTEXT !== "production" ||
-      !configuredOrigin ||
-      suppliedOrigin === new URL(configuredOrigin).origin
-    );
+    const configuredOrigin = canonicalOrigin();
+    return process.env.CONTEXT === 'dev'
+      ? !configuredOrigin || suppliedOrigin === configuredOrigin
+      : Boolean(configuredOrigin && suppliedOrigin === configuredOrigin);
   } catch {
     return false;
   }

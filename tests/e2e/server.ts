@@ -4,10 +4,10 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, extname } from 'node:path';
-import { build } from 'astro';
 import app from '../../backend/app';
 import { createTestDatabase } from '../helpers/database';
 import { postgresTransport } from '../helpers/postgres';
+import { staticAssetPath } from '../helpers/static-asset-path';
 
 export const users = [
   { id: '20000000-0000-4000-8000-000000000001', email: 'owner@example.test', role: 'owner' },
@@ -26,6 +26,7 @@ export function identity(token: string) {
 function userResponse(user: (typeof users)[number]) {
   return {
     id: user.id,
+    email_confirmed_at: '2026-01-01T00:00:00Z',
     email: user.email,
     aud: 'authenticated',
     role: 'authenticated',
@@ -57,7 +58,8 @@ function session(user: (typeof users)[number]) {
     user: userResponse(user),
   };
 }
-export async function startTestServer() {
+export async function startTestServer(options: { buildAssets?: boolean } = {}) {
+  const environment = { ...process.env };
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const output = resolve(root, '.e2e-dist');
   const db = await createTestDatabase();
@@ -174,11 +176,7 @@ export async function startTestServer() {
           { ip: '192.0.2.90' },
         );
       } else {
-        const path = resolve(
-          output,
-          '.' + (url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname),
-        );
-        if (!path.startsWith(output + '/')) throw new Error('invalid path');
+        const path = staticAssetPath(output, url.pathname);
         const mime: Record<string, string> = {
           '.html': 'text/html',
           '.js': 'text/javascript',
@@ -214,6 +212,9 @@ export async function startTestServer() {
   if (!address || typeof address === 'string') throw new Error('test address missing');
   base = 'http://127.0.0.1:' + address.port;
   Object.assign(process.env, {
+    APP_ENV: 'staging',
+    NETLIFY: 'false',
+    PUBLIC_CLASSROOM_MODE: 'false',
     SUPABASE_URL: base + '/supabase',
     PUBLIC_SUPABASE_URL: base + '/supabase',
     PUBLIC_SUPABASE_ANON_KEY: browserKey,
@@ -222,10 +223,34 @@ export async function startTestServer() {
     RATE_LIMIT_SECRET: 'synthetic-e2e-rate-limit-secret-32-characters',
     TEST_EMAIL_MODE: 'capture',
     PUBLIC_TEST_ENVIRONMENT: 'true',
-    CONTEXT: 'production',
+    PUBLIC_HCAPTCHA_SITE_KEY: '',
+    HCAPTCHA_SECRET_KEY: '',
+    // This adapter serves HTTP on loopback, so it must use the existing dev
+    // origin rules. Real production still requires its configured HTTPS origin.
+    CONTEXT: 'dev',
   });
-  await changed();
-  await build({ root, outDir: output, logLevel: 'error' });
+  const close = async () => {
+    try {
+      server.closeAllConnections();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await db.close();
+    } finally {
+      for (const key of Object.keys(process.env)) if (!(key in environment)) delete process.env[key];
+      Object.assign(process.env, environment);
+    }
+  };
+  try {
+    await changed();
+    // Browser acceptance uses the real built UI. HTTP-only guard regressions
+    // do not need to run the frontend bundler or compete for its output files.
+    if (options.buildAssets !== false) {
+      const { build } = await import('astro');
+      await build({ root, outDir: output, logLevel: 'error' });
+    }
+  } catch (error) {
+    await close();
+    throw error;
+  }
   return {
     base,
     db,
@@ -234,10 +259,6 @@ export async function startTestServer() {
       listeners.add(callback);
       return () => listeners.delete(callback);
     },
-    close: async () => {
-      server.closeAllConnections();
-      await new Promise<void>((resolve) => server.close(() => resolve()));
-      await db.close();
-    },
+    close,
   };
 }

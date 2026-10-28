@@ -23,6 +23,19 @@ if (key && !publicKey(key))
     "PUBLIC_SUPABASE_ANON_KEY must be a publishable/anon key. Build stopped before a private key could enter browser files.",
   );
 if (process.env.NETLIFY === "true") {
+  if (!['staging', 'production'].includes(process.env.APP_ENV || ''))
+    throw new Error('Set APP_ENV to staging or production in Netlify. Never connect student previews to production credentials.');
+  if (process.env.APP_ENV === 'production') {
+    if (process.env.PUBLIC_TEST_ENVIRONMENT !== 'false')
+      throw new Error('Production requires PUBLIC_TEST_ENVIRONMENT=false.');
+    const captcha = process.env.PUBLIC_HCAPTCHA_SITE_KEY || '';
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(captcha) || /-ffff-ffff-ffff-/i.test(captcha))
+      throw new Error('Set a real PUBLIC_HCAPTCHA_SITE_KEY before the client production build.');
+  }
+  for (const [name, value] of Object.entries(process.env)) {
+    if (name.startsWith('PUBLIC_') && /sb_secret_|service_role/.test(value || ''))
+      throw new Error(`Private credentials cannot be embedded in ${name}.`);
+  }
   for (const name of [
     "PUBLIC_SUPABASE_URL",
     "PUBLIC_SUPABASE_ANON_KEY",

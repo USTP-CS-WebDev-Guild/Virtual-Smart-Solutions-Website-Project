@@ -1,4 +1,5 @@
 ---
+import Captcha from "./Captcha.astro";
 import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
 ---
 
@@ -74,6 +75,7 @@ import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
       /></label
     >
   </div>
+  <Captcha />
   <div class="form-actions">
     <button class="button button-dark" type="submit" disabled
       >Submit request <span aria-hidden="true">↗</span></button
@@ -82,6 +84,7 @@ import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
   </div>
 </form>
 <script>
+  import { attachCaptcha, captchaToken, resetCaptcha } from "../lib/captcha";
   import {
     submitPublicForm,
     submissionKey,
@@ -113,9 +116,10 @@ import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
         website: String(values.get("website") || ""),
       };
       try {
+        const verifiedPayload = { ...payload, captchaToken: captchaToken(form) };
         const result = await submitPublicForm(
           "/api/privacy-requests",
-          payload,
+          verifiedPayload,
           "privacyRequestId",
         );
         status.textContent = `Your privacy request has been received. Reference: ${result.id.slice(0, 8).toUpperCase()}.`;
@@ -127,10 +131,12 @@ import { DEFAULT_SITE_CONTENT } from "../../shared/site-content/defaults";
           error instanceof Error ? error.message : "Please try again.";
         status.className = "form-status is-error";
       } finally {
+        resetCaptcha(form);
         button.disabled = false;
         form.setAttribute("aria-busy", "false");
       }
     });
+    void attachCaptcha(form);
     if (button) button.disabled = false;
   }
 </script>
