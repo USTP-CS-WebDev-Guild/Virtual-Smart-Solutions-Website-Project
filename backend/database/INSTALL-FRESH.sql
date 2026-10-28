@@ -938,4 +938,9 @@ alter default privileges in schema public revoke execute on functions from publi
 alter default privileges in schema app_private revoke execute on functions from public;
 
 
+-- Migration: 20261028160746_pin_audit_search_path.sql
+-- Fix the audit trigger's mutable search path.
+alter function public.reject_audit_mutation()
+  set search_path = '';
+
 commit;
