@@ -4,6 +4,9 @@ import { defineConfig } from 'astro/config';
 // backend/functions and share the same site origin under /api/*.
 export default defineConfig({
   output: 'static',
+  // The deployment CSP allows self-hosted styles, not inline <style> blocks.
+  // Keep small component styles (including CAPTCHA sizing) in CSS assets too.
+  build: { inlineStylesheets: 'never' },
   publicDir: './frontend/public',
   srcDir: './frontend',
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },

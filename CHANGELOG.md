@@ -1,3 +1,12 @@
+# 1.6.7 — Responsive Turnstile layout — 2026-10-30
+
+- CSS/CSP follow-up: emit all project styles as self-hosted assets so the existing `style-src 'self'` policy permits small CAPTCHA/brand component styles. Reject inline stylesheet blocks during security build checks; retain the strict policy and all browser layout assertions.
+- CI follow-up: collect CAPTCHA geometry in one synchronous browser snapshot and poll for the requested viewport/layout, preserving all overflow/overlap checks, active motion and all 37 browser scenarios. Add observer acceptance/serialization regressions; application code and dependency versions are unchanged by this follow-up.
+- Use the provider's horizontal flexible layout where the form has at least 300px available, with the complete compact widget in narrower containers.
+- Prevent the widget's minimum width from stretching parent forms. Switch layouts when the container crosses the size boundary, preserving visitor drafts and requiring fresh verification.
+- Ignore callbacks from replaced widgets and retain the asynchronous loader, expiry/reset guards and server validation.
+- Add width-boundary/token-lifecycle regressions and browser coverage for all three forms at phone, tablet and desktop widths. See UPDATE-1.6.7.md. No database migration, key change or dependency-version change.
+
 # 1.6.6 — Turnstile asynchronous loader correction — 2026-10-30
 
 - Render after the provider script's load event, or reuse its already-loaded API. Remove the `ready()` call that Cloudflare rejects for async/defer scripts (error 3857).

@@ -13,6 +13,17 @@ function fixture() {
   return {root,run};
 }
 describe('deployment-specific browser policy',()=>{
+  it('accepts self-hosted CSS and rejects inline styles blocked by the deployment policy',()=>{
+    const f=fixture(); try{
+      writeFileSync(join(f.root,'dist/widget.css'),'.captcha-field { contain: inline-size; }');
+      writeFileSync(join(f.root,'dist/index.html'),'<link rel="stylesheet" href="/widget.css"><form></form>');
+      expect(f.run().status).toBe(0);
+      writeFileSync(join(f.root,'dist/index.html'),'<style>.captcha-field { contain: inline-size; }</style><form></form>');
+      const result=f.run();
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain('Inline stylesheet conflicts with style-src');
+    }finally{rmSync(f.root,{recursive:true,force:true});}
+  });
   it('allows one project and the explicitly enabled verification provider without unsafe script execution',()=>{
     const f=fixture(); try{
       expect(f.run({PUBLIC_TURNSTILE_SITE_KEY:'synthetic-sitekey'}).status).toBe(0);

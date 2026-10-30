@@ -3,6 +3,7 @@ type Turnstile = {
   getResponse(id: string): string | undefined;
   isExpired(id: string): boolean;
   reset(id: string): void;
+  remove(id: string): void;
 };
 declare global { interface Window { turnstile?: Turnstile; } }
 let loading: Promise<Turnstile> | undefined;
@@ -55,21 +56,58 @@ export async function attachCaptcha(form: HTMLFormElement) {
     const service = await load();
     if (!form.isConnected) return;
     const widget = { id: '', verified: false };
-    const invalid = (message: string) => { widget.verified = false; status.textContent = message; };
-    const id = service.render(target, {
-      sitekey: container.dataset.sitekey,
-      action: container.dataset.captchaAction,
-      size: 'compact', theme: 'light', 'response-field': false,
-      'refresh-expired': 'auto', 'refresh-timeout': 'auto',
-      callback: () => { widget.verified = true; status.textContent = 'Verification complete.'; },
-      'expired-callback': () => invalid('Verification expired. Refreshing verification…'),
-      'timeout-callback': () => invalid('Verification timed out. Please try the check again.'),
-      'error-callback': () => invalid('Verification is unavailable. Reload this page to try again.'),
-      'unsupported-callback': () => invalid('Please use an up-to-date browser to complete verification.'),
-    });
-    if (!id) throw new Error('verification_unavailable');
-    widget.id = id;
+    let renderedSize: 'compact' | 'flexible' | undefined;
+    let generation = 0;
+    const render = (width: number) => {
+      // Flexible Turnstile is at least 300px wide. Measure the actual form
+      // space, including narrow cards inside otherwise wide viewports.
+      const size = width >= 300 ? 'flexible' : 'compact';
+      if (size === renderedSize) return;
+      const current = ++generation;
+      widget.verified = false;
+      status.textContent = 'Verifying your browser…';
+      if (widget.id) {
+        const previous = widget.id; widget.id = '';
+        service.remove(previous);
+      }
+      target.dataset.captchaSize = size;
+      // Removed widgets must not verify or invalidate their replacement.
+      const active = () => current === generation && form.isConnected;
+      const invalid = (message: string) => { if (active()) { widget.verified = false; status.textContent = message; } };
+      const id = service.render(target, {
+        sitekey: container.dataset.sitekey,
+        action: container.dataset.captchaAction,
+        size, theme: 'light', 'response-field': false,
+        'refresh-expired': 'auto', 'refresh-timeout': 'auto',
+        callback: () => { if (active()) { widget.verified = true; status.textContent = 'Verification complete.'; } },
+        'expired-callback': () => invalid('Verification expired. Refreshing verification…'),
+        'timeout-callback': () => invalid('Verification timed out. Please try the check again.'),
+        'error-callback': () => invalid('Verification is unavailable. Reload this page to try again.'),
+        'unsupported-callback': () => invalid('Please use an up-to-date browser to complete verification.'),
+      });
+      if (!id) throw new Error('verification_unavailable');
+      widget.id = id; renderedSize = size;
+    };
+    render(container.getBoundingClientRect().width);
     widgets.set(form, widget);
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => {
+        if (!form.isConnected) {
+          observer.disconnect(); ++generation; widget.verified = false;
+          try { service.remove(widget.id); } catch { /* The form has already left the page. */ }
+          widgets.delete(form); return;
+        }
+        const width = container.getBoundingClientRect().width;
+        // Hiding the login form after sign-in must not start another challenge.
+        if (width <= 0) return;
+        try { render(width); }
+        catch {
+          observer.disconnect(); ++generation; widget.verified = false;
+          status.textContent = 'Verification could not load. Reload this page to try again.';
+        }
+      });
+      observer.observe(container);
+    }
   } catch { status.textContent = 'Verification could not load. Reload this page to try again.'; }
   finally { attaching.delete(form); }
 }

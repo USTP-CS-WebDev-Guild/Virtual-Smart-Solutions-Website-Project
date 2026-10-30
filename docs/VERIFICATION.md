@@ -1,3 +1,46 @@
+# Verification — VSS 1.6.7 — 2026-10-30
+
+## 1.6.7 CSS/CSP correction after the first CI patch
+
+The user applied the first CI patch: **291 tests/types/build passed**, but all three responsive browser cases still failed at 320px with only `insideViewport` and `pageFits` false. The other three Turnstile cases passed. This exposed a real stylesheet delivery problem; the timing correction alone was insufficient.
+
+- Built HTML inspection found the scoped CAPTCHA rules inside inline `<style>` blocks on contact, privacy and sign-in. The generated deployment policy was `style-src 'self'`. Earlier static preview checks did not enforce that policy and therefore did not verify deployed CSS delivery.
+- Native reproduction enforced the deployment's style directive through a preview meta policy. Before the build fix, contact resized from desktop back to 320px with a **300px container and flexible widget ending at x=341**, reproducing exactly the two failing flags. The CSS rule that prevents intrinsic-width inflation was blocked.
+- Astro now emits all project styles as separate, self-hosted assets. The security policy is unchanged. A new build regression first failed against the previous checker, then passed after the checker rejected blocked inline stylesheet output while accepting an external stylesheet. The actual build emits **zero inline style blocks across all eight routes**.
+- `npm run verify`: **52 test files / 292 tests passed**; Astro/TypeScript checked 188 files with 0 errors/warnings/hints. Build/output/security checks passed for 8 routes and **101 local asset references**. Footer contrast remains 266 checks, minimum 13.58:1.
+- The corrected build passed the same native geometry sequence with the style policy enforced: contact, privacy and sign-in at **320 → 390 → 768 → 1440 → 320px**. Contact/privacy draft retention passed. No sign-in credentials were entered or submission sent. At the final 320px contact size, its container was **223px**, its compact widget was **150px**, and its right edge was **x=191**.
+- This preview uses the actual serialized snapshot observer and a synthetic provider boundary. Only the production style directive is enforced in its meta policy; it is not a substitute for the real HTTP CSP or the full Playwright run. **The user's updated 37-scenario browser suite and Ubuntu/Windows CI remain pending.** No browser assertion is removed, tolerance widened, motion disabled or timeout increased.
+- Numeric geometry is now printed on a browser assertion failure because partial-object matcher output omitted those extra diagnostic fields. Tokens, draft contents and credentials are not logged.
+
+Apply `vss-turnstile-csp-css-1.6.7.patch` on top of the first CI patch, as documented at the beginning of `../UPDATE-1.6.7.md`. The application remains release 1.6.7 on the same feature branch; no secret or database changes.
+
+## 1.6.7 CI follow-up — atomic CAPTCHA geometry observation
+
+Targets the user's feature commit `e98951b` in PR #14. This follow-up changes only test instrumentation, regression tests, release notes and source checksums. Frontend/backend application code, dependencies, keys and release number compare unchanged with that feature commit.
+
+- User-supplied CI logs: **34/37 browser scenarios passed on both Ubuntu and Windows**. Failures were confined to the new contact/privacy/sign-in responsive checks, which mixed separately collected rectangles across viewport/reflow/motion updates. The logged failures are retained as evidence; no full CI pass is inferred from local Node/DOM tests.
+- The corrected observer is read-only and closure-free. It collects all rectangles, the current viewport/size, verification status and draft in one page task. Playwright polls that whole snapshot with its normal assertion deadline. Initial fonts are awaited. No global timeout increase, disabled motion, weakened geometric tolerance, skipped scenario or new dependency.
+- `npm run verify`: **52 test files / 291 tests passed**, including seven observer regressions and the existing 18 CAPTCHA lifecycle cases. Astro/TypeScript checked 188 files with 0 errors/warnings/hints. All eight built routes and the existing output, header, contrast and initial-state checks passed.
+- Native browser QA used the supported managed preview, the unchanged built 1.6.7 UI, the same synthetic provider dimensions/removal behavior and the actual serialized snapshot helper. Geometry passed for all three forms through **320 → 390 → 768 → 1440 → 320px**. Contact/privacy drafts were preserved. No sign-in credentials were entered or form submitted in this preview.
+- Native negative checks: an intentionally overflowing 500px fixture iframe failed the width/container/viewport checks; an intentionally translated status failed the overlap check. Restoring the ordinary fixture restored passing snapshots. The DOM regressions additionally reject obsolete viewport/size state, duplicate widgets and lost drafts, and run the helper without its module closure.
+- **The updated Playwright suite itself and the corrected Ubuntu/Windows CI runs remain pending.** Native preview checks are separate from executing those 37 scenarios. Apply the small follow-up on the same feature branch and rerun its six Turnstile cases plus the full CI suite before merging into staging.
+
+Apply instructions are at the beginning of `../UPDATE-1.6.7.md`.
+
+## 1.6.7 responsive Turnstile layout
+
+Prepared against published staging commit `7b0e718`, the merge of PR #13. No hosted account, key, database, GitHub branch or deployment was changed by this work.
+
+- `npm run verify`: **51 test files / 284 tests passed**; Astro/TypeScript 186 files, 0 errors/warnings/hints; all eight routes and the built output/header/contrast checks passed.
+- CAPTCHA lifecycle coverage: **18 cases passed**, including the 299/300px boundary, replacement only across the size boundary, draft retention, rejection of stale callbacks/tokens, hidden/detached forms and provider replacement failure.
+- Native browser QA used the supported managed preview and the real Cloudflare script with its official always-pass public test site key. Contact, privacy and sign-in were checked at **320, 390, 768 and 1440px**, then returned to 320px. Each settled layout completed verification and had no horizontal document overflow. A filled privacy draft survived resizing. Actual inner container widths determine the mode; padding and scrollbars can leave a 390px page with less than 300px for its widget.
+- Native QA exposed and corrected a minimum-content sizing problem: an already horizontal widget could otherwise stretch the 320px contact form and prevent compact selection. Inline size containment fixes that feedback. The narrow and wide layouts were visually inspected with the provider's full branding visible.
+- The Playwright provider fixture now models flexible/compact dimensions and removal. Three new responsive cases exercise all three forms across four widths and back to phone size; the existing contact receipt, privacy retry and Supabase login-token cases remain. **Browser-suite execution on Ubuntu/Windows CI and live 1.6.7 staging acceptance remain pending.** Local preview checks do not count as executing that suite or validating the user's real provider keys.
+- No new npm dependency, CSP relaxation, backend change or database migration. The committed application has no synthetic-key fallback. The isolated preview and its testing banner are excluded from the patch.
+- Source credential check passed for **308 tracked files**; staged whitespace check passed. All **six Turnstile browser scenarios** were discovered; discovery is not execution.
+
+Apply and hosted acceptance instructions: `../UPDATE-1.6.7.md`. Earlier verification records follow.
+
 # Verification — VSS 1.6.6 — 2026-10-30
 
 ## 1.6.6 asynchronous Turnstile loader correction

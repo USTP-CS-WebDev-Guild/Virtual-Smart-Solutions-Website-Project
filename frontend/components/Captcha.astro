@@ -10,7 +10,8 @@ const classroom = import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE =
 </div>}
 
 <style>
-  .captcha-field { max-width: 100%; margin-block: 12px; }
-  .captcha-widget { width: 150px; min-height: 140px; }
+  .captcha-field { contain: inline-size; min-width: 0; max-width: 100%; margin-block: 12px; }
+  .captcha-widget { width: 100%; min-height: 65px; }
+  .captcha-widget[data-captcha-size="compact"] { width: 150px; min-height: 140px; }
   .captcha-field p { margin-top: 8px; font-size: 14px; line-height: 1.5; }
 </style>
