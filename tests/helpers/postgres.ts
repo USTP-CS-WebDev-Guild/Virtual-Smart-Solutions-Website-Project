@@ -19,6 +19,13 @@ export function postgresTransport(database: PGlite) {
       ['p_now', 'bigint'],
     ],
     get_dashboard_counts: [],
+    get_security_readiness: [],
+    verify_staff_session: [
+      ['p_user_id', 'uuid'],
+      ['p_session_id', 'uuid'],
+      ['p_aal', 'text'],
+      ['p_now', 'bigint'],
+    ],
     get_realtime_setup: [],
     probe_realtime: [],
     publish_site_content: [

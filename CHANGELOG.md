@@ -1,3 +1,9 @@
+# 1.6.8 — Enforce database MFA without build metadata — 2026-10-30
+
+- Read the server-owned MFA/session policy in every non-production runtime, including Netlify Functions where the build-only NETLIFY/CONTEXT variables are absent. An armed staging database now requires authenticator enrollment/verification before workspace APIs return business records.
+- Register verified MFA sessions before private Realtime access; retain owner/staff restrictions, revocation and production fail-closed behavior. Add the real policy RPC to the isolated classroom adapter without bypassing the database setting.
+- Add absent/false hosting-flag regressions and an API/PostgreSQL workflow covering enrollment responses, password-only read/write rejection, successful MFA, private-signal RLS, revocation and unavailable policies. See UPDATE-1.6.8.md; no database migration or dependency-version change.
+
 # 1.6.7 — Responsive Turnstile layout — 2026-10-30
 
 - CSS/CSP follow-up: emit all project styles as self-hosted assets so the existing `style-src 'self'` policy permits small CAPTCHA/brand component styles. Reject inline stylesheet blocks during security build checks; retain the strict policy and all browser layout assertions.

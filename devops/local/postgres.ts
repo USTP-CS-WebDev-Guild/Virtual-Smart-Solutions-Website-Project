@@ -25,6 +25,7 @@ export function localPostgres(database: PGlite, getUser: (token: string) => Prom
       ['p_now', 'bigint'],
     ],
     get_dashboard_counts: [],
+    get_security_readiness: [],
     get_realtime_setup: [],
     probe_realtime: [],
     publish_site_content: [

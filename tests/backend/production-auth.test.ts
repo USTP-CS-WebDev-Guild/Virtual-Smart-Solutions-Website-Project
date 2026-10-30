@@ -10,7 +10,8 @@ function fixture(aal = 'aal2') {
   const jwt = token(aal);
   const user = { id, email: 'owner@example.test', email_confirmed_at: '2026-01-01', is_anonymous: false };
   const row = { auth_user_id: id, email: user.email, role: 'staff', active: true };
-  const rpc = vi.fn(async () => ({ data: { ok: true } as { ok?: boolean; error?: string }, error: null }));
+  const rpc = vi.fn(async (_name: string, _values?: Record<string, unknown>) =>
+    ({ data: { ok: true } as { ok?: boolean; error?: string }, error: null }));
   const getUser = vi.fn(async (value) => ({ data: { user: value === jwt ? user : null }, error: null }));
   const db = { auth: { getUser }, from: () => ({ select: () => ({ eq: (key: string, value: string) => {
     expect(key).toBe('auth_user_id'); expect(value).toBe(id);
@@ -62,19 +63,42 @@ describe('production staff identity and MFA', () => {
     const f = fixture(); f.rpc.mockResolvedValue({ data: { error: 'security_configuration_required' }, error: null });
     await expect(requireActor(f.request, f.db)).rejects.toThrow('security_configuration_required');
   });
-  it('keeps a production database protected even if hosting is mislabeled as staging', async () => {
-    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', 'true');
-    vi.stubEnv('CONTEXT', 'production'); vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', 'true');
+  it.each([undefined, 'false', 'true'])('honors mandatory database MFA in staging with NETLIFY=%s', async (netlify) => {
+    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', netlify);
+    vi.stubEnv('CONTEXT', undefined); vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', 'true');
     const f = fixture('aal1');
     f.rpc.mockResolvedValue({ data: { enforceMfa: true } as any, error: null });
     expect(await staffAuthentication(f.request, f.db)).toMatchObject({ actor: null, eligible: true, mfaRequired: true });
     expect(f.rpc).toHaveBeenCalledWith('get_security_readiness');
   });
   it('fails closed when the hosted database policy cannot be read', async () => {
-    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', 'true');
-    vi.stubEnv('CONTEXT', 'production'); vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', 'true');
+    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', undefined);
+    vi.stubEnv('CONTEXT', undefined); vi.stubEnv('PUBLIC_TEST_ENVIRONMENT', 'true');
     const f = fixture();
     f.rpc.mockResolvedValue({ data: null as any, error: { message: 'unavailable' } as any });
     await expect(staffAuthentication(f.request, f.db)).rejects.toThrow('staff_security_policy_unavailable');
+  });
+  it.each([null, {}, { enforceMfa: 'true' }])('fails closed for malformed database policy %j', async (data) => {
+    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', undefined);
+    const f = fixture();
+    f.rpc.mockResolvedValue({ data: data as any, error: null });
+    await expect(staffAuthentication(f.request, f.db)).rejects.toThrow('staff_security_policy_unavailable');
+  });
+  it('verifies the active MFA session after reading an armed staging policy without build metadata', async () => {
+    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', undefined);
+    const f = fixture();
+    f.rpc.mockImplementation(async (name?: string) => ({
+      data: (name === 'get_security_readiness' ? { enforceMfa: true } : { ok: true }) as any,
+      error: null,
+    }));
+    expect(await requireActor(f.request, f.db)).toEqual({ email: f.user.email, role: 'staff' });
+    expect(f.rpc.mock.calls.map(([name]) => name)).toEqual(['get_security_readiness', 'verify_staff_session']);
+  });
+  it('continues requiring MFA for an enrolled user when staging enrollment is otherwise optional', async () => {
+    vi.stubEnv('APP_ENV', 'staging'); vi.stubEnv('NETLIFY', undefined);
+    const f = fixture('aal1');
+    Object.assign(f.user, { factors: [{ status: 'verified' }] });
+    f.rpc.mockResolvedValue({ data: { enforceMfa: false } as any, error: null });
+    expect(await staffAuthentication(f.request, f.db)).toMatchObject({ actor: null, eligible: true, mfaRequired: true });
   });
 });

@@ -24,7 +24,9 @@ function databaseFor(role: "owner" | "staff" = "staff") {
     })),
     rpc: vi.fn(async (name: string) => ({
       data:
-        name === "claim_outbox_batch"
+        name === "get_security_readiness"
+          ? { enforceMfa: false }
+          : name === "claim_outbox_batch"
           ? []
           : name === "get_dashboard_counts"
             ? { inquiries: { new: 2 }, notifications: { pending: 0, dead: 0 } }
@@ -91,7 +93,7 @@ describe("security gates after the route split", () => {
         }),
       );
       expect(response.status).toBe(403);
-      expect(db.rpc).not.toHaveBeenCalled();
+      expect(db.rpc.mock.calls.map(([name]) => name)).toEqual(['get_security_readiness']);
     },
   );
 
@@ -130,7 +132,7 @@ describe("security gates after the route split", () => {
         }),
       );
       expect(response.status).toBe(400);
-      expect(db.rpc).not.toHaveBeenCalled();
+      expect(db.rpc.mock.calls.map(([name]) => name)).toEqual(['get_security_readiness']);
     },
   );
 
@@ -148,7 +150,7 @@ describe("security gates after the route split", () => {
       }),
     );
     expect(response.status).toBe(403);
-    expect(db.rpc).not.toHaveBeenCalled();
+    expect(db.rpc.mock.calls.map(([name]) => name)).toEqual(['get_security_readiness']);
   });
 
   it("runs the shared jobs only after owner and origin checks pass", async () => {
@@ -191,6 +193,7 @@ describe("security gates after the route split", () => {
       method: 'POST', headers: { Authorization: 'Bearer synthetic-token',
         Origin: 'https://site.example', 'X-Requested-With': 'VSSDashboard' },
     }));
-    expect(response.status).toBe(404); expect(db.rpc).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(db.rpc.mock.calls.map(([name]) => name)).toEqual(['get_security_readiness']);
   });
 });

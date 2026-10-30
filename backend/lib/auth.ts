@@ -25,8 +25,9 @@ export async function staffAuthentication(
   if (error || !data || !data.active || data.auth_user_id !== user.id ||
       !["owner", "staff"].includes(data.role)) return denied;
   let enforceSessions = productionMode();
-  // A hosted staging label must never weaken a production database's policy.
-  if (!enforceSessions && process.env.NETLIFY === 'true') {
+  // Read the database policy in every non-production runtime too. NETLIFY is
+  // build metadata, not a reliable Functions runtime flag or an auth boundary.
+  if (!enforceSessions) {
     const policy = await db.rpc('get_security_readiness');
     if (policy.error || typeof policy.data?.enforceMfa !== 'boolean')
       throw new Error('staff_security_policy_unavailable');
