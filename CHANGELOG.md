@@ -1,3 +1,10 @@
+# 1.6.6 — Turnstile asynchronous loader correction — 2026-10-30
+
+- Render after the provider script's load event, or reuse its already-loaded API. Remove the `ready()` call that Cloudflare rejects for async/defer scripts (error 3857).
+- Replace the misleading connection instruction with a neutral retry message. Verification remains required and server-side token, hostname/action and session checks are retained.
+- Add two readiness regressions and make the Chromium provider fixture enforce the real asynchronous-script restriction.
+- See UPDATE-1.6.6.md. No database migration or dependency-version change.
+
 # 1.6.4 — Native navigation lifecycle observations — 2026-10-27
 
 ## 1.6.5
