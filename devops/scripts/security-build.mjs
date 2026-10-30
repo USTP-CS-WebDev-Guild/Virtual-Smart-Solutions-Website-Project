@@ -21,6 +21,8 @@ async function inspect(directory) {
     if(entry.isDirectory()) { await inspect(file); continue; }
     if(!/\.(?:js|html|json|css|txt)$/.test(entry.name)) continue;
     const text=await readFile(file,'utf8');
+    if(entry.name.endsWith('.html') && /<style(?:\s|>)/i.test(text))
+      throw new Error(`Inline stylesheet conflicts with style-src 'self' in ${file}. Set Astro build.inlineStylesheets to never.`);
     for(const name of ['SUPABASE_SERVICE_ROLE_KEY','RESEND_API_KEY','RESEND_WEBHOOK_SECRET','TURNSTILE_SECRET_KEY','HCAPTCHA_SECRET_KEY','RATE_LIMIT_SECRET','BACKUP_ENCRYPTION_KEY']) {
       const secret=process.env[name];
       if(secret && secret.length>=16 && text.includes(secret))

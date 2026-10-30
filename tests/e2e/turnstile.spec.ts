@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { startTestServer } from './server';
+import { readCaptchaLayout } from './captcha-layout';
 let provider: Awaited<ReturnType<typeof startTestServer>>;
 const key = '0x4SYNTHETIC_SITEKEY_123456';
 test.beforeAll(async () => {
@@ -61,26 +62,31 @@ for (const scenario of [
   test(`${scenario.path} verification fits the form at phone, tablet and desktop widths without losing a draft`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 }); await verification(page);
     await page.goto(provider.base + scenario.path);
+    await page.evaluate(() => document.fonts.ready);
     const form = page.locator(scenario.form);
     await form.locator(scenario.draft).fill('visitor@example.test');
     for (const width of [320, 390, 768, 1440, 320]) {
       await page.setViewportSize({ width, height: 800 });
-      const container = form.locator('[data-captcha]');
-      const compact = (await container.boundingBox())!.width < 300;
-      await expect(form.locator('[data-captcha-widget]')).toHaveAttribute('data-captcha-size', compact ? 'compact' : 'flexible');
-      await expect(form.locator('[data-captcha-status]')).toHaveText('Verification complete.');
-      const frame = form.locator('[data-captcha-widget] iframe'); await expect(frame).toHaveCount(1);
-      const bounds = (await container.boundingBox())!; const box = (await frame.boundingBox())!;
-      expect(box.width).toBeCloseTo(compact ? 150 : bounds.width, 0);
-      expect(box.height).toBe(compact ? 140 : 65);
-      expect(box.x).toBeGreaterThanOrEqual(bounds.x);
-      expect(box.x + box.width).toBeLessThanOrEqual(Math.min(bounds.x + bounds.width, width) + 1);
-      const status = (await form.locator('[data-captcha-status]').boundingBox())!;
-      const button = (await form.locator('button[type="submit"]').boundingBox())!;
-      expect(status.y).toBeGreaterThanOrEqual(box.y + box.height);
-      expect(button.y).toBeGreaterThanOrEqual(status.y + status.height);
-      await expect(form.locator(scenario.draft)).toHaveValue('visitor@example.test');
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      // ResizeObserver and entrance motion run after the viewport command.
+      // Poll a single page snapshot; separate boundingBox calls can compare
+      // positions from different layout states and report a false overlap.
+      let snapshot: ReturnType<typeof readCaptchaLayout> | undefined;
+      try {
+        await expect.poll(async () => {
+          snapshot = await form.evaluate(readCaptchaLayout, { viewport: width, draftSelector: scenario.draft });
+          return snapshot;
+        }, { message: `${scenario.path} CAPTCHA geometry at ${width}px` }).toMatchObject({
+          ready: true, viewportReady: true, complete: true, oneWidget: true,
+          sizeMatches: true, widthMatches: true, heightMatches: true,
+          insideContainer: true, insideViewport: true, statusBelowWidget: true,
+          buttonBelowStatus: true, draftPreserved: true, pageFits: true,
+        });
+      } catch (error) {
+        // Partial-object matcher diffs omit the extra numeric measurements.
+        // Print only this read-only geometry snapshot, never tokens or drafts.
+        console.error('Last CAPTCHA layout snapshot:', JSON.stringify(snapshot));
+        throw error;
+      }
     }
   });
 }
