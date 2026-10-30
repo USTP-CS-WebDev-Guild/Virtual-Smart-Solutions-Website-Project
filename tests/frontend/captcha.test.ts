@@ -51,6 +51,24 @@ describe('Turnstile form lifecycle', () => {
     expect(() => captcha.resetCaptcha(element)).not.toThrow();
     expect(element.textContent).toContain('could not refresh'); expect(element.textContent).not.toContain('private provider detail');
   });
+  it('renders an async/defer-loaded provider without calling its blocking-script ready method', async () => {
+    let script!: HTMLScriptElement;
+    vi.spyOn(document.head, 'append').mockImplementation((node) => { script = node as HTMLScriptElement; });
+    const element = form(); const attempt = captcha.attachCaptcha(element);
+    expect(script.async).toBe(true); expect(script.defer).toBe(true);
+    const { api, options } = provider();
+    // Cloudflare's real api.js rejects ready() after an async/defer load (3857).
+    const ready = vi.spyOn(api, 'ready').mockImplementation(() => { throw new Error('TurnstileError 3857: async/defer ready is unsupported'); });
+    script.dispatchEvent(new Event('load')); await attempt;
+    expect(ready).not.toHaveBeenCalled(); expect(api.render).toHaveBeenCalledTimes(1);
+    options[0].callback(); expect(captcha.captchaToken(element)).toBe('synthetic-one-use-token');
+  });
+  it('reuses an already-loaded async provider without calling ready', async () => {
+    const { api } = provider();
+    const ready = vi.spyOn(api, 'ready').mockImplementation(() => { throw new Error('TurnstileError 3857'); });
+    await captcha.attachCaptcha(form());
+    expect(ready).not.toHaveBeenCalled(); expect(api.render).toHaveBeenCalledTimes(1);
+  });
   it('can retry loading after a network failure without attaching a duplicate widget', async () => {
     let script!: HTMLScriptElement;
     vi.spyOn(document.head, 'append').mockImplementation((node) => { script = node as HTMLScriptElement; });

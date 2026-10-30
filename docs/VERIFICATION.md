@@ -1,4 +1,18 @@
-# Verification — VSS 1.6.4 — 2026-10-27
+# Verification — VSS 1.6.6 — 2026-10-30
+
+## 1.6.6 asynchronous Turnstile loader correction
+
+Prepared against the user's published staging commit `3511d63`, after PR #12. No hosted account, secret, database or deployment was changed by this local verification.
+
+- Confirmed in the actual Cloudflare api.js fetched on 2026-10-30 that `ready()` rejects scripts loaded with async/defer (error 3857). The previous loader combined both mechanisms and caught the failure as a connection error.
+- Two new readiness regressions failed against 1.6.5 before the fix and passed afterward. The existing token expiry/reset, loading deadline and retry checks remain active: **12 CAPTCHA lifecycle cases passed**.
+- `npm run verify`: **51 test files / 278 tests passed**; Astro/TypeScript 186 files, 0 errors/warnings/hints; all eight routes and the emitted-output/header/contrast/UI checks passed.
+- Targeted Chromium integration: **3 / 3 passed**, covering contact submission under the generated CSP at 320px, privacy retry/draft/idempotency behavior and the real Supabase client forwarding the owner login token. The fixture now enforces Cloudflare's actual async/defer `ready()` restriction.
+- A separate Chromium before/after diagnostic ran the downloaded, unmodified Cloudflare api.js with the official public testing site key. Version 1.6.5 reproduced the same connection message, provider warning and no widget. The correction created a widget container without that warning. Challenge iframe transport was isolated, so this proves provider-script initialization rather than live challenge issuance.
+- Browser execution used Chromium Headless Shell **141.0.7390.37** via the repository's existing `TEST_CHROMIUM` setting; project Playwright remains pinned at 1.62.1. The default Chromium download was unavailable in this environment. Normal Ubuntu/Windows CI and a live staging phone/incognito acceptance remain required.
+- `npm audit`: **0 reported vulnerabilities**. Dependency versions, SQL migrations/installers, server authentication, required token verification and CSP permissions are unchanged. Only application release metadata advances to 1.6.6.
+
+The complete browser suite was not rerun locally for this focused correction. No live hosted owner login, real email delivery, external penetration test or guarantee of complete security is claimed. Complete UPDATE-1.6.6.md before production promotion.
 
 
 ## 1.6.5 Turnstile migration — checked 2026-10-29

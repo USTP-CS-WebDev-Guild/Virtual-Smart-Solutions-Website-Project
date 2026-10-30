@@ -1,5 +1,4 @@
 type Turnstile = {
-  ready(callback: () => void): void;
   render(element: HTMLElement, options: Record<string, unknown>): string | undefined;
   getResponse(id: string): string | undefined;
   isExpired(id: string): boolean;
@@ -23,23 +22,21 @@ function load(): Promise<Turnstile> {
       reject(new Error('verification_unavailable'));
     };
     const timeout = window.setTimeout(fail, 12000);
-    const ready = () => {
+    const loaded = () => {
       if (settled) return;
       const service = window.turnstile;
-      if (!service) return fail();
-      try {
-        service.ready(() => {
-          if (settled) return;
-          settled = true; window.clearTimeout(timeout); resolve(service);
-        });
-      } catch { fail(); }
+      if (!service || typeof service.render !== 'function') return fail();
+      // The load event runs after api.js has initialized its public API.
+      // ready() is only supported for blocking scripts: Cloudflare throws
+      // error 3857 when it is called after an async/defer load.
+      settled = true; window.clearTimeout(timeout); resolve(service);
     };
-    if (window.turnstile) ready();
+    if (window.turnstile) loaded();
     else {
       script = document.createElement('script');
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
       script.async = true; script.defer = true;
-      script.onload = ready;
+      script.onload = loaded;
       script.onerror = fail;
       document.head.append(script);
     }
@@ -67,13 +64,13 @@ export async function attachCaptcha(form: HTMLFormElement) {
       callback: () => { widget.verified = true; status.textContent = 'Verification complete.'; },
       'expired-callback': () => invalid('Verification expired. Refreshing verification…'),
       'timeout-callback': () => invalid('Verification timed out. Please try the check again.'),
-      'error-callback': () => invalid('Verification is unavailable. Check your connection or reload.'),
+      'error-callback': () => invalid('Verification is unavailable. Reload this page to try again.'),
       'unsupported-callback': () => invalid('Please use an up-to-date browser to complete verification.'),
     });
     if (!id) throw new Error('verification_unavailable');
     widget.id = id;
     widgets.set(form, widget);
-  } catch { status.textContent = 'Verification could not load. Check your connection and reload.'; }
+  } catch { status.textContent = 'Verification could not load. Reload this page to try again.'; }
   finally { attaching.delete(form); }
 }
 

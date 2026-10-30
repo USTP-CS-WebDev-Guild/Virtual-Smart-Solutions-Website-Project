@@ -26,10 +26,13 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => { await provider?.close(); });
 const fakeProvider = `(() => {
+  const loadedAsync = document.currentScript && (document.currentScript.async || document.currentScript.defer);
   const widgets = new Map(); let serial = 0;
   const issue = (widget) => { widget.token = 'synthetic-' + widget.options.action + '-token-' + (++widget.generation); widget.options.callback(widget.token); };
   window.turnstile = {
-    ready(callback) { callback(); },
+    // Preserve the real provider's async/defer ready() restriction. A permissive
+    // readiness mock used to hide the production initialization failure.
+    ready(callback) { if (loadedAsync) throw new Error('TurnstileError 3857: async/defer ready is unsupported'); callback(); },
     render(element, options) {
       const id = 'widget-' + (++serial); const iframe = document.createElement('iframe');
       iframe.src = 'https://challenges.cloudflare.com/test-widget'; iframe.title = 'Synthetic verification';
