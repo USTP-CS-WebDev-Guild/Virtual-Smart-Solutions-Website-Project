@@ -1,3 +1,18 @@
+# Verification — VSS 1.6.9 — 2026-10-31
+
+## 1.6.9 provider-sized authenticator setup SVG
+
+Prepared against published staging commit `ba845cd`, the merge of PR #15. The supplied screenshot shows the MFA gate with setup hidden and HTTP 200 user/cleanup/enrollment responses. The actual enrollment response and its secrets were not requested or read.
+
+- Reviewed the published JavaScript and Supabase Auth/goqrsvg source. The application rejected SVG data URIs over 150,000 characters; the provider emits a rectangle per matrix module, including white modules. A synthetic 57x57 matrix in that format is about 248,000 characters before compression.
+- Reproduced the failure using the real pinned Supabase JavaScript client against a synthetic fetch transport. The new large-image regression failed against 1.6.8 while the six other MFA tests passed. After increasing the bound to 1,000,000 characters, all seven MFA tests passed, including the existing unsafe-URL, rejected-code, existing-factor and cancellation/secret-clearing checks plus a new excessive-size rejection.
+- Application change: only the image-size bound and explanatory comments. Required provider verification, API/database MFA enforcement, private-workspace gating, factor cleanup and CSP remain unchanged. No migration or dependency graph change.
+- `npm run verify` passed: **53 files / 313 tests**, Astro/TypeScript **189 files with zero errors/warnings/hints**, and all static/security build checks. The build produced **8 routes / 101 local asset references**; all **266 footer contrast checks** passed, minimum **13.58:1**. `npm run security:audit` reported **0 vulnerabilities**. The lockfile dependency graph compares unchanged against 1.6.8; only release metadata changes.
+- Source credential check passed for **313 tracked files** and staged whitespace checks passed. The source checksum manifest is regenerated from canonical Git index contents; private/local files and the patch itself are excluded.
+- Updated browser-suite/Ubuntu/Windows CI and actual hosted QR enrollment/challenge remain pending. The user completed 311 tests, 37 browser tests, both CI jobs and publication for 1.6.8 before this screenshot. Those prior passes are not new 1.6.9 results. A synthetic SDK regression is not a real provider enrollment or a completed security assessment. No hosted account, secret, database, GitHub PR or deployment was changed by this work.
+
+Apply instructions and hosted acceptance: `../UPDATE-1.6.9.md`.
+
 # Verification — VSS 1.6.8 — 2026-10-30
 
 ## 1.6.8 database MFA enforcement without build metadata
