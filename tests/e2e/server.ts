@@ -58,7 +58,9 @@ function session(user: (typeof users)[number]) {
     user: userResponse(user),
   };
 }
-export async function startTestServer(options: { buildAssets?: boolean } = {}) {
+export async function startTestServer(options: {
+  buildAssets?: boolean; captchaSiteKey?: string; contentSecurityPolicy?: string;
+} = {}) {
   const environment = { ...process.env };
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const output = resolve(root, '.e2e-dist');
@@ -95,7 +97,7 @@ export async function startTestServer(options: { buildAssets?: boolean } = {}) {
     });
   let base = '';
   const headersFile = await readFile(resolve(root, 'frontend/public/_headers'), 'utf8');
-  const csp = headersFile.match(/Content-Security-Policy: (.+)/)![1]!;
+  const csp = options.contentSecurityPolicy || headersFile.match(/Content-Security-Policy: (.+)/)![1]!;
   const server = createServer(async (incoming, outgoing) => {
     try {
       const url = new URL(incoming.url || '/', base);
@@ -223,8 +225,8 @@ export async function startTestServer(options: { buildAssets?: boolean } = {}) {
     RATE_LIMIT_SECRET: 'synthetic-e2e-rate-limit-secret-32-characters',
     TEST_EMAIL_MODE: 'capture',
     PUBLIC_TEST_ENVIRONMENT: 'true',
-    PUBLIC_HCAPTCHA_SITE_KEY: '',
-    HCAPTCHA_SECRET_KEY: '',
+    PUBLIC_TURNSTILE_SITE_KEY: options.captchaSiteKey || '',
+    TURNSTILE_SECRET_KEY: '',
     // This adapter serves HTTP on loopback, so it must use the existing dev
     // origin rules. Real production still requires its configured HTTPS origin.
     CONTEXT: 'dev',

@@ -1,3 +1,5 @@
+import { isRealTurnstileSiteKey, isRealTurnstileSecretKey } from '../../shared/turnstile-config.mjs';
+
 // APP_ENV is a server setting, never a browser flag or request parameter.
 export function productionMode(): boolean {
   return process.env.APP_ENV === 'production' ||
@@ -18,10 +20,9 @@ export function canonicalOrigin(value = process.env.APP_ORIGIN): string | null {
 }
 
 export function captchaConfigurationReady(): boolean {
-  const sitekey = process.env.PUBLIC_HCAPTCHA_SITE_KEY || '';
-  const secret = process.env.HCAPTCHA_SECRET_KEY || '';
-  return Boolean(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sitekey) && !/-ffff-ffff-ffff-/i.test(sitekey) &&
-    secret.length >= 16 && !/^0x0+$/.test(secret));
+  return Boolean(canonicalOrigin() &&
+    isRealTurnstileSiteKey(process.env.PUBLIC_TURNSTILE_SITE_KEY) &&
+    isRealTurnstileSecretKey(process.env.TURNSTILE_SECRET_KEY));
 }
 
 export function productionConfigurationReady(): boolean {

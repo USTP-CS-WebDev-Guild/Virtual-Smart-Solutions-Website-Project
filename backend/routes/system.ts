@@ -86,7 +86,7 @@ export async function submissionChecks(route: StaffRouteContext): Promise<Respon
     const captchaReady = captchaConfigurationReady();
     checks.push({ name: 'Form verification', ok: captchaReady,
       message: captchaReady ? 'Verification keys are configured; test a real form submission before handoff.' :
-        'Set the client hCaptcha site key and private secret, then redeploy. Enable hCaptcha in Supabase Auth too.' });
+        'Set the Turnstile site key and private secret, then redeploy. Select Turnstile in Supabase Auth too.' });
   }
   const realtime = await route.db.rpc('get_realtime_setup');
   const liveReady =

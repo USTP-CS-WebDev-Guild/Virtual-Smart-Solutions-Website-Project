@@ -9,18 +9,18 @@ function fixture() {
   const root=mkdtempSync(join(tmpdir(),'vss-policy-'));
   mkdirSync(join(root,'frontend/public'),{recursive:true}); mkdirSync(join(root,'dist'));
   writeFileSync(join(root,'frontend/public/_headers'),"/*\n  Content-Security-Policy: default-src 'self'\n/admin/*\n  Cache-Control: no-store\n");
-  const run=(extra:Record<string,string>={})=>spawnSync(process.execPath,[script],{cwd:root,encoding:'utf8',env:{...process.env,PUBLIC_SUPABASE_URL:'https://example.supabase.co',PUBLIC_HCAPTCHA_SITE_KEY:'',...extra}});
+  const run=(extra:Record<string,string>={})=>spawnSync(process.execPath,[script],{cwd:root,encoding:'utf8',env:{...process.env,PUBLIC_SUPABASE_URL:'https://example.supabase.co',PUBLIC_TURNSTILE_SITE_KEY:'',...extra}});
   return {root,run};
 }
 describe('deployment-specific browser policy',()=>{
   it('allows one project and the explicitly enabled verification provider without unsafe script execution',()=>{
     const f=fixture(); try{
-      expect(f.run({PUBLIC_HCAPTCHA_SITE_KEY:'synthetic-sitekey'}).status).toBe(0);
+      expect(f.run({PUBLIC_TURNSTILE_SITE_KEY:'synthetic-sitekey'}).status).toBe(0);
       const headers=readFileSync(join(f.root,'dist/_headers'),'utf8');
       expect(headers).toContain('https://example.supabase.co wss://example.supabase.co');
       expect(headers).not.toContain('*.supabase.co');
       expect(headers).not.toMatch(/unsafe-inline|unsafe-eval/);
-      expect(headers).toContain('https://*.hcaptcha.com');
+      expect(headers).toContain('https://challenges.cloudflare.com');
       expect(headers).toContain('Cache-Control: no-store');
     }finally{rmSync(f.root,{recursive:true,force:true});}
   });

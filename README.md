@@ -1,4 +1,6 @@
-# Virtual Smart Solutions — complete website, release 1.6.4
+# Virtual Smart Solutions — complete website, release 1.6.5
+
+**Upgrading from 1.6.4? Read [UPDATE-1.6.5.md](UPDATE-1.6.5.md).** This release migrates CAPTCHA to Cloudflare Turnstile. Update the hosting variables and Supabase Auth provider together; no database migration or paid subscription is required.
 
 Astro + TypeScript frontend, Netlify Functions backend, and Supabase PostgreSQL/Auth/Realtime. The same application also runs locally with persistent embedded PostgreSQL, random local accounts, pushed updates and captured email. Students need no cloud keys, Docker, or separate database installation to begin.
 
@@ -197,7 +199,7 @@ Check a phone and an incognito window: no hosting login for public pages; hosted
 
 ## Client approval, domain and maintenance
 
-Use [SECURITY-UPGRADE-1.6.0.md](SECURITY-UPGRADE-1.6.0.md), [devops/DOMAIN-LAUNCH.md](devops/DOMAIN-LAUNCH.md), [devops/SECURITY-OPERATIONS.md](devops/SECURITY-OPERATIONS.md) and [devops/RELEASE_CHECKLIST.md](devops/RELEASE_CHECKLIST.md). Production requires `APP_ENV=production`, database policy activation, TOTP and real hCaptcha keys/provider setup. A `.com` is purchased/renewed by the client; no code rewrite is needed. Test and production must use separate records and secrets.
+Use [SECURITY-UPGRADE-1.6.0.md](SECURITY-UPGRADE-1.6.0.md), [devops/DOMAIN-LAUNCH.md](devops/DOMAIN-LAUNCH.md), [devops/SECURITY-OPERATIONS.md](devops/SECURITY-OPERATIONS.md) and [devops/RELEASE_CHECKLIST.md](devops/RELEASE_CHECKLIST.md). Production requires `APP_ENV=production`, database policy activation, TOTP and real Turnstile keys/provider setup. A `.com` is purchased/renewed by the client; no code rewrite is needed. Test and production must use separate records and secrets.
 
 This project adds no required paid software. Free hosting/database plans have limits and may pause. Check repository/contributor eligibility before connecting hosting; publish client source/assets only with the client's approval. See [devops/COSTS.md](devops/COSTS.md).
 

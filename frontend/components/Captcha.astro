@@ -1,8 +1,16 @@
 ---
-const sitekey = import.meta.env.PUBLIC_HCAPTCHA_SITE_KEY || '';
+interface Props { action: 'inquiry' | 'privacy_request' | 'owner_login'; }
+const { action } = Astro.props;
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
 const classroom = import.meta.env.DEV && import.meta.env.PUBLIC_CLASSROOM_MODE === 'true';
 ---
-{sitekey && !classroom && <div class="captcha-field" data-captcha data-sitekey={sitekey}>
-  <div data-captcha-widget></div>
+{sitekey && !classroom && <div class="captcha-field" data-captcha data-sitekey={sitekey} data-captcha-action={action}>
+  <div class="captcha-widget" data-captcha-widget></div>
   <p data-captcha-status role="status" aria-live="polite">Loading verification…</p>
 </div>}
+
+<style>
+  .captcha-field { max-width: 100%; margin-block: 12px; }
+  .captcha-widget { width: 150px; min-height: 140px; }
+  .captcha-field p { margin-top: 8px; font-size: 14px; line-height: 1.5; }
+</style>

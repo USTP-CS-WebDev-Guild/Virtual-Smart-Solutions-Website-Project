@@ -10,13 +10,13 @@ This review maps the supplied attack-family list to the actual application. It i
 - Supabase validates Auth tokens. Approved staff are bound to immutable Auth UUIDs. Production adds TOTP, live-session checks, eight-hour absolute expiry and fifteen-minute idle expiry; direct private signal access also uses the production policy.
 - PostgreSQL controls transactions, constraints, grants and RLS. Only service-role RPCs can write business records. SQL definer helpers stay private with fixed search paths and explicit execution grants.
 - The classroom runtime is loopback-only, separate from hosted accounts, and rejected by hosted build preflight. It is never a production server.
-- Registrar, GitHub, Netlify, Supabase, hCaptcha, email and operator devices remain external trust dependencies. Their compromise cannot be repaired by a CSS change or an API filter.
+- Registrar, GitHub, Netlify, Supabase, Turnstile, email and operator devices remain external trust dependencies. Their compromise cannot be repaired by a CSS change or an API filter.
 
 ## Attack coverage
 
 | Attack family from the supplied list | Implemented boundary | Evidence and remaining operation |
 | --- | --- | --- |
-| Brute force, spraying, credential stuffing, bot login | Production requires TOTP; owner login sends a CAPTCHA token to Supabase. Public signup/anonymous login must be disabled in the provider. | Production-auth and MFA-flow regressions. Enable hCaptcha in Supabase Auth itself and check its rate settings; a widget alone does not protect direct Auth requests. |
+| Brute force, spraying, credential stuffing, bot login | Production requires TOTP; owner login sends a CAPTCHA token to Supabase. Public signup/anonymous login must be disabled in the provider. | Production-auth and MFA-flow regressions. Enable Turnstile in Supabase Auth itself and check its rate settings; a widget alone does not protect direct Auth requests. |
 | Phishing, recovery abuse, stolen OTP | No public account creation or custom recovery API. Recovery is a verified operator procedure. | TOTP is not phishing-resistant and a stolen authenticator/device remains a risk. Use platform passkeys/security keys where available and individual administrator accounts. |
 | JWT forgery, fixation, hijacking, stale tokens | Exact bearer validated by Auth before claims are read. UUID membership, verified email, no anonymous identity. Production verifies the underlying Auth session and last activity. | Real PostgreSQL revocation/expiry/recreation tests and altered-token API tests. Browser tokens remain JavaScript-readable in tab storage; strict CSP and safe text rendering reduce that exposure. |
 | IDOR, privilege escalation, forced browsing, mass assignment | All `/api/admin/*` routes require staff; owner-only operations recheck owner role. Closed schemas, fixed allowed columns/statuses, SQL grants and service-only RPCs. | Route-guard, workflow and RLS suites. Changing a record UUID never changes the caller's role. A staff member is intentionally allowed the company's whole shared inbox. |

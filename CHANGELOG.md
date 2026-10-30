@@ -1,5 +1,12 @@
 # 1.6.4 — Native navigation lifecycle observations — 2026-10-27
 
+## 1.6.5
+
+- Replaced hCaptcha with Cloudflare Turnstile across public forms, staff login, server verification, build guards, browser policy and operating guides.
+- Bound accepted public tokens to the configured hostname and form action, rejected production testing keys and partial configuration, and retained bounded provider requests.
+- Added CAPTCHA lifecycle, PostgreSQL rejection/commit and Chromium provider-boundary regressions. Classroom mode and existing database/session/MFA protections are preserved.
+- See UPDATE-1.6.5.md for the coordinated Netlify variables and Supabase Auth provider change. No database migration or new npm dependency.
+
 - Replaced the failed in-flight animation-frame sampler. The browser check now installs a read-only observer before the real link click and records state after application click handlers and during native `beforeunload`. The real destination request still passes through a gate, but that gate is released before waiting for lifecycle records or inspecting them. No page evaluation, animation-frame wait or locator assertion runs against the stalled document.
 - Retained real navigation, held-request verification, visible/non-inert menu and expanded state, stable geometry, request release in `finally`, destination/selected-link checks and Escape focus. No forced click, skipped scenario or longer timeout.
 - Classroom scenarios now use default ordered mode with one worker. They each create their own records and also run on fresh data; after a failure Playwright can restart the runtime and attempt the other scenarios instead of skipping them as a serial group.

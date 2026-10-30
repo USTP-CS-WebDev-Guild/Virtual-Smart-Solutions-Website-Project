@@ -1,6 +1,6 @@
 {
   "name": "vss-website",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "private": true,
   "type": "module",
   "engines": {
@@ -49,6 +49,7 @@
     "playwright": "1.62.1",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
+    "vite": "6.4.5",
     "vitest": "5.0.4"
   },
   "license": "MIT"

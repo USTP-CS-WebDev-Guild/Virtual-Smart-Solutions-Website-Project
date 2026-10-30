@@ -1,3 +1,5 @@
+import { isRealTurnstileSiteKey } from '../../shared/turnstile-config.mjs';
+
 if (
   process.env.NETLIFY === "true" &&
   process.env.PUBLIC_CLASSROOM_MODE === "true"
@@ -23,14 +25,15 @@ if (key && !publicKey(key))
     "PUBLIC_SUPABASE_ANON_KEY must be a publishable/anon key. Build stopped before a private key could enter browser files.",
   );
 if (process.env.NETLIFY === "true") {
+  if (process.env.PUBLIC_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SECRET_KEY)
+    throw new Error('Remove the old hCaptcha variables. This release uses PUBLIC_TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY; also select Turnstile in Supabase Auth.');
   if (!['staging', 'production'].includes(process.env.APP_ENV || ''))
     throw new Error('Set APP_ENV to staging or production in Netlify. Never connect student previews to production credentials.');
   if (process.env.APP_ENV === 'production') {
     if (process.env.PUBLIC_TEST_ENVIRONMENT !== 'false')
       throw new Error('Production requires PUBLIC_TEST_ENVIRONMENT=false.');
-    const captcha = process.env.PUBLIC_HCAPTCHA_SITE_KEY || '';
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(captcha) || /-ffff-ffff-ffff-/i.test(captcha))
-      throw new Error('Set a real PUBLIC_HCAPTCHA_SITE_KEY before the client production build.');
+    if (!isRealTurnstileSiteKey(process.env.PUBLIC_TURNSTILE_SITE_KEY))
+      throw new Error('Set a real PUBLIC_TURNSTILE_SITE_KEY before the client production build. Turnstile test keys cannot protect production.');
   }
   for (const [name, value] of Object.entries(process.env)) {
     if (name.startsWith('PUBLIC_') && /sb_secret_|service_role/.test(value || ''))

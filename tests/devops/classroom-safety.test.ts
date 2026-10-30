@@ -107,7 +107,7 @@ it("hosting build preflight rejects classroom mode and private keys in browser c
   expect(check({ APP_ENV: "" }).status).not.toBe(0);
   expect(check({ APP_ENV: "production" }).status).not.toBe(0);
   expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false" }).status).not.toBe(0);
-  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_HCAPTCHA_SITE_KEY: "10000000-ffff-ffff-ffff-000000000001" }).status).not.toBe(0);
-  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_HCAPTCHA_SITE_KEY: "10000000-0000-4000-8000-000000000001" }).status).toBe(0);
+  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA" }).status).not.toBe(0);
+  expect(check({ APP_ENV: "production", PUBLIC_TEST_ENVIRONMENT: "false", PUBLIC_TURNSTILE_SITE_KEY: "0x4SYNTHETIC_SITEKEY_123456" }).status).toBe(0);
   expect(check({ PUBLIC_UNEXPECTED_SETTING: "sb_secret_SYNTHETIC_NOT_A_KEY" }).status).not.toBe(0);
 });

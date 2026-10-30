@@ -15,7 +15,7 @@ PM records the reviewed commit, named approver and actual results in `project-ma
 - [ ] Staging and production use separate Supabase projects/secrets. Untrusted preview builds cannot receive production credentials. Classroom mode is absent on hosting.
 - [ ] Existing database receives only the new additive migration. Verified owner/staff UUID bindings reviewed; no active unbound member.
 - [ ] Client production has run `SECURE-PRODUCTION.sql`; `APP_ENV=production`, `PUBLIC_TEST_ENVIRONMENT=false`, exact HTTPS origin, matching project keys and a fresh rate-limit secret of at least 32 characters.
-- [ ] Real hCaptcha hostname/site key/secret configured; same provider enabled in Supabase Auth; missing/invalid verification rejected on public forms and login. Public signup and anonymous sign-in disabled.
+- [ ] Real Turnstile hostname/site key/secret configured; same provider enabled in Supabase Auth; missing/invalid verification rejected on public forms and login. Public signup and anonymous sign-in disabled.
 - [ ] Owner enrolls/verifies authenticator. Password-only access receives no business records; staff cannot publish/edit privacy data. Disablement and session revocation stop an already-open session. Expired sessions require a new sign-in.
 - [ ] Built CSP allows exactly the intended Supabase project and active verification provider; no script unsafe-inline/eval or Supabase wildcard. Owner/API responses are no-store; no private data/tokens appear in logs.
 - [ ] Supabase security/database Advisors and provider patch/attack-protection settings reviewed on the intended project; findings tracked privately. Previously exposed secrets rotated at their providers.

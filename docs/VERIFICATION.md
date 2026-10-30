@@ -1,5 +1,18 @@
 # Verification — VSS 1.6.4 — 2026-10-27
 
+
+## 1.6.5 Turnstile migration — checked 2026-10-29
+
+Prepared against staging commit 05cb0019c278d05f97babc154b0f9be9e19e2d7c. No hosted account/database setting, GitHub branch or deployment was changed by this local verification.
+
+- `npm run verify`: Astro/TypeScript 0 errors, 0 warnings, 0 hints; **51 test files / 276 tests passed**; all 8 public/admin routes built; asset, footer contrast and initial UI state checks passed.
+- A separate synthetic production-profile build passed with all three Turnstile actions (`inquiry`, `privacy_request`, `owner_login`), exact provider script/frame CSP, no hCaptcha domains and no verification secret in public assets.
+- `npm run test:browser`: **34 / 34 passed** using Chromium Headless Shell **141.0.7390.37**, selected through the existing TEST_CHROMIUM option. This includes the prior navigation/drawer/320–1440px checks and three new Turnstile provider-boundary cases (contact token submission under generated CSP, privacy retry preserving its draft/receipt key, and the real Supabase client forwarding the owner login token).
+- The project's pinned Playwright 1.62.1 and application dependencies are unchanged. Its default Chromium download returned an unavailable HTML response in this environment, so local browser acceptance used the explicitly identified alternate executable. Run the repository's normal checks on Ubuntu and Windows CI before merging.
+- Database migrations/installers and the existing audit search-path/default-privilege fixes are unchanged. The new PostgreSQL workflow tests reject invalid/missing/wrong-context verification before saving business records.
+
+Cloudflare issuance and Supabase Auth transport are simulated in automated tests. A real staging widget/provider setup and phone/incognito walkthrough are still required by UPDATE-1.6.5.md. This is not a live-provider attestation, external penetration test or guarantee of complete security.
+
 Input: attached `VSS-Website-Security-1.6.3(1).zip` and the user's complete Windows 1.6.3 output pasted in this conversation. This is a local acceptance-test update. No repository push, deployment, remote account/database mutation or secret rotation was performed.
 
 ## Supplied Windows evidence

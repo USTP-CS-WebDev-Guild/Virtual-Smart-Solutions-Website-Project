@@ -16,7 +16,7 @@ export const inquirySchema = z.object({
     .default(''),
   privacyAcknowledged: z.literal(true),
   website: z.string().max(300).optional().default(''),
-  captchaToken: z.string().max(4096).optional(),
+  captchaToken: z.string().max(2048).optional(),
 });
 export const privacyRequestSchema = z.object({
   idempotencyKey: z.uuid(),
@@ -26,7 +26,7 @@ export const privacyRequestSchema = z.object({
   message: z.string().trim().min(5).max(2000),
   privacyAcknowledged: z.literal(true),
   website: z.string().max(300).optional().default(''),
-  captchaToken: z.string().max(4096).optional(),
+  captchaToken: z.string().max(2048).optional(),
 });
 export const statusSchema = z.object({
   status: z.enum(['new', 'in_progress', 'waiting', 'closed']),
