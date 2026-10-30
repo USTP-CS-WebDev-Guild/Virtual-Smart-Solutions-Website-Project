@@ -51,7 +51,10 @@ export function createMfaFlow(client: SupabaseClient, completed: () => Promise<v
           creating = enrolled.data.id;
           secret.value = enrolled.data.totp.secret;
           const source = enrolled.data.totp.qr_code;
-          if (!/^data:image\/svg\+xml[;,]/.test(source) || source.length > 150000)
+          // Supabase emits a rectangle for every QR module, including white
+          // modules. Ordinary setup SVGs can exceed 150KB before compression.
+          // Keep a bound without rejecting a normal provider enrollment.
+          if (!/^data:image\/svg\+xml[;,]/.test(source) || source.length > 1000000)
             throw new Error('Invalid authenticator setup image');
           qr.src = source;
         }

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
 import { createMfaFlow } from '../../frontend/scripts/owner/mfa';
 let client: any;
 let completed = vi.fn(async () => {});
@@ -57,5 +58,55 @@ describe('staff MFA screen',()=>{
     expect(document.getElementById('staff-mfa-qr')!.hasAttribute('src')).toBe(false);
     expect(completed).not.toHaveBeenCalled();
     expect(document.querySelector<HTMLButtonElement>('#staff-mfa-verify')!.disabled).toBe(true);
+  });
+  it('shows a provider-sized SVG returned through the real Supabase client',async()=>{
+    // Supabase uses goqrsvg: one rectangle for every module, including white
+    // modules. A normal 57x57 matrix already exceeds the old 150KB guard.
+    // This is a synthetic image/secret, never a real enrollment or scannable QR.
+    const modules = 57;
+    const rectangles = Array.from({length:modules * modules},(_,index)=>
+      `<rect x="${index % modules * 6}" y="${Math.floor(index / modules) * 6}" width="6" height="6" style="fill:${index % 2 ? 'black' : 'white'};stroke:none" />\n`).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="342" height="342">${rectangles}</svg>`;
+    expect(svg.length).toBeGreaterThan(150000);
+    const user = {id:'20000000-0000-4000-8000-000000000001',email:'owner@example.test',
+      aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},
+      created_at:'2026-01-01T00:00:00Z',factors:[]};
+    const transport = vi.fn(async(input: RequestInfo | URL, options?: RequestInit)=>{
+      const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+      if(url.pathname === '/auth/v1/user') return Response.json(user);
+      if(url.pathname === '/auth/v1/factors' && options?.method === 'POST') {
+        return Response.json({id:'20000000-0000-4000-8000-000000000003',type:'totp',
+          friendly_name:'VSS workspace',totp:{qr_code:svg,secret:'SYNTHETICSETUPKEY',
+            uri:'otpauth://totp/SYNTHETIC?secret=SYNTHETICSETUPKEY'}});
+      }
+      throw new Error('Unexpected synthetic MFA request');
+    });
+    const sdk = createClient('https://mfa.example.test','sb_publishable_SYNTHETIC_BROWSER_KEY',{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},
+      global:{fetch:transport},
+    });
+    const encode = (value:unknown)=>Buffer.from(JSON.stringify(value)).toString('base64url');
+    const accessToken = `${encode({alg:'HS256',typ:'JWT'})}.${encode({sub:user.id,
+      exp:Math.floor(Date.now()/1000)+3600,aal:'aal1'})}.SYNTHETIC_SIGNATURE`;
+    const signedIn = await sdk.auth.setSession({access_token:accessToken,refresh_token:'SYNTHETIC_REFRESH'});
+    expect(signedIn.error).toBeNull();
+    await createMfaFlow(sdk,completed).show();
+    expect(document.querySelector<HTMLElement>('#staff-mfa-setup')!.hidden).toBe(false);
+    const image = document.querySelector<HTMLImageElement>('#staff-mfa-qr')!;
+    expect(image.getAttribute('src')?.startsWith('data:image/svg+xml;utf-8,<svg')).toBe(true);
+    expect(secret().value).toBe('SYNTHETICSETUPKEY');
+    expect(document.querySelector<HTMLButtonElement>('#staff-mfa-verify')!.disabled).toBe(false);
+    expect(document.getElementById('staff-mfa-status')!.textContent).toContain('Add this account');
+    expect(completed).not.toHaveBeenCalled();
+    expect(transport).toHaveBeenCalledTimes(3);
+  });
+  it('rejects an excessively large setup image before displaying it',async()=>{
+    client.auth.mfa.enroll.mockResolvedValue({data:{id:'pending',totp:{secret:'SYNTHETIC',
+      qr_code:'data:image/svg+xml;utf8,<svg>'+ ' '.repeat(1000000) +'</svg>'}},error:null});
+    await createMfaFlow(client,completed).show();
+    expect(document.getElementById('staff-mfa-qr')!.hasAttribute('src')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#staff-mfa-setup')!.hidden).toBe(true);
+    expect(document.querySelector<HTMLButtonElement>('#staff-mfa-verify')!.disabled).toBe(true);
+    expect(completed).not.toHaveBeenCalled();
   });
 });

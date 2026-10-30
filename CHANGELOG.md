@@ -1,3 +1,9 @@
+# 1.6.9 — Display provider-sized authenticator setup images — 2026-10-31
+
+- Allow SVG setup images up to 1,000,000 characters. Supabase writes a rectangle for every QR module, including white modules, so ordinary enrollment images can exceed the previous 150,000-character limit even when the compressed network response is small.
+- Add a regression using the real Supabase JavaScript client with a synthetic provider-sized enrollment response, plus an excessive-size rejection. Keep the SVG-only image restriction, required authenticator verification, private-workspace gate and server/database policy.
+- See UPDATE-1.6.9.md. No database migration, dependency-version change, CAPTCHA change or security-policy relaxation.
+
 # 1.6.8 — Enforce database MFA without build metadata — 2026-10-30
 
 - Read the server-owned MFA/session policy in every non-production runtime, including Netlify Functions where the build-only NETLIFY/CONTEXT variables are absent. An armed staging database now requires authenticator enrollment/verification before workspace APIs return business records.
