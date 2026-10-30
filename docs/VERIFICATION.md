@@ -1,3 +1,19 @@
+# Verification — VSS 1.6.7 — 2026-10-30
+
+## 1.6.7 responsive Turnstile layout
+
+Prepared against published staging commit `7b0e718`, the merge of PR #13. No hosted account, key, database, GitHub branch or deployment was changed by this work.
+
+- `npm run verify`: **51 test files / 284 tests passed**; Astro/TypeScript 186 files, 0 errors/warnings/hints; all eight routes and the built output/header/contrast checks passed.
+- CAPTCHA lifecycle coverage: **18 cases passed**, including the 299/300px boundary, replacement only across the size boundary, draft retention, rejection of stale callbacks/tokens, hidden/detached forms and provider replacement failure.
+- Native browser QA used the supported managed preview and the real Cloudflare script with its official always-pass public test site key. Contact, privacy and sign-in were checked at **320, 390, 768 and 1440px**, then returned to 320px. Each settled layout completed verification and had no horizontal document overflow. A filled privacy draft survived resizing. Actual inner container widths determine the mode; padding and scrollbars can leave a 390px page with less than 300px for its widget.
+- Native QA exposed and corrected a minimum-content sizing problem: an already horizontal widget could otherwise stretch the 320px contact form and prevent compact selection. Inline size containment fixes that feedback. The narrow and wide layouts were visually inspected with the provider's full branding visible.
+- The Playwright provider fixture now models flexible/compact dimensions and removal. Three new responsive cases exercise all three forms across four widths and back to phone size; the existing contact receipt, privacy retry and Supabase login-token cases remain. **Browser-suite execution on Ubuntu/Windows CI and live 1.6.7 staging acceptance remain pending.** Local preview checks do not count as executing that suite or validating the user's real provider keys.
+- No new npm dependency, CSP relaxation, backend change or database migration. The committed application has no synthetic-key fallback. The isolated preview and its testing banner are excluded from the patch.
+- Source credential check passed for **308 tracked files**; staged whitespace check passed. All **six Turnstile browser scenarios** were discovered; discovery is not execution.
+
+Apply and hosted acceptance instructions: `../UPDATE-1.6.7.md`. Earlier verification records follow.
+
 # Verification — VSS 1.6.6 — 2026-10-30
 
 ## 1.6.6 asynchronous Turnstile loader correction

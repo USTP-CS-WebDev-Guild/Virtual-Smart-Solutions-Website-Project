@@ -36,11 +36,15 @@ const fakeProvider = `(() => {
     render(element, options) {
       const id = 'widget-' + (++serial); const iframe = document.createElement('iframe');
       iframe.src = 'https://challenges.cloudflare.com/test-widget'; iframe.title = 'Synthetic verification';
-      iframe.width = '150'; iframe.height = '140'; element.append(iframe);
-      const widget = {options, token: '', generation: 0}; widgets.set(id, widget); queueMicrotask(() => issue(widget)); return id;
+      iframe.style.width = options.size === 'flexible' ? '100%' : '150px';
+      iframe.style.minWidth = options.size === 'flexible' ? '300px' : '150px';
+      iframe.style.height = options.size === 'flexible' ? '65px' : '140px';
+      iframe.style.border = '0'; iframe.style.display = 'block'; element.append(iframe);
+      const widget = {options, iframe, token: '', generation: 0}; widgets.set(id, widget); queueMicrotask(() => issue(widget)); return id;
     },
     getResponse(id) { return widgets.get(id)?.token || ''; }, isExpired() { return false; },
-    reset(id) { const widget = widgets.get(id); widget.token = ''; queueMicrotask(() => issue(widget)); }
+    reset(id) { const widget = widgets.get(id); widget.token = ''; queueMicrotask(() => issue(widget)); },
+    remove(id) { const widget = widgets.get(id); widget?.iframe.remove(); widgets.delete(id); }
   };
 })();`;
 async function verification(page: Page) {
@@ -48,6 +52,37 @@ async function verification(page: Page) {
     status: 200, contentType: route.request().url().includes('/api.js') ? 'application/javascript' : 'text/html',
     body: route.request().url().includes('/api.js') ? fakeProvider : '<!doctype html><html><body>Verification test</body></html>',
   }));
+}
+for (const scenario of [
+  { path: '/contact/', form: '[data-form="inquiry"]', draft: '[name="name"]' },
+  { path: '/privacy/', form: '[data-form="privacy-request"]', draft: '[name="name"]' },
+  { path: '/admin/', form: '#staff-login-form', draft: '#staff-email' },
+]) {
+  test(`${scenario.path} verification fits the form at phone, tablet and desktop widths without losing a draft`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 }); await verification(page);
+    await page.goto(provider.base + scenario.path);
+    const form = page.locator(scenario.form);
+    await form.locator(scenario.draft).fill('visitor@example.test');
+    for (const width of [320, 390, 768, 1440, 320]) {
+      await page.setViewportSize({ width, height: 800 });
+      const container = form.locator('[data-captcha]');
+      const compact = (await container.boundingBox())!.width < 300;
+      await expect(form.locator('[data-captcha-widget]')).toHaveAttribute('data-captcha-size', compact ? 'compact' : 'flexible');
+      await expect(form.locator('[data-captcha-status]')).toHaveText('Verification complete.');
+      const frame = form.locator('[data-captcha-widget] iframe'); await expect(frame).toHaveCount(1);
+      const bounds = (await container.boundingBox())!; const box = (await frame.boundingBox())!;
+      expect(box.width).toBeCloseTo(compact ? 150 : bounds.width, 0);
+      expect(box.height).toBe(compact ? 140 : 65);
+      expect(box.x).toBeGreaterThanOrEqual(bounds.x);
+      expect(box.x + box.width).toBeLessThanOrEqual(Math.min(bounds.x + bounds.width, width) + 1);
+      const status = (await form.locator('[data-captcha-status]').boundingBox())!;
+      const button = (await form.locator('button[type="submit"]').boundingBox())!;
+      expect(status.y).toBeGreaterThanOrEqual(box.y + box.height);
+      expect(button.y).toBeGreaterThanOrEqual(status.y + status.height);
+      await expect(form.locator(scenario.draft)).toHaveValue('visitor@example.test');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
 }
 test('320px contact form loads Turnstile under the generated CSP and sends a token with its real JSON submission', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 760 }); await verification(page);
