@@ -1,4 +1,17 @@
-# Verification — VSS 1.6.7 — 2026-10-30
+# Verification — VSS 1.6.8 — 2026-10-30
+
+## 1.6.8 database MFA enforcement without build metadata
+
+Input: the user's staging policy returned `enforceMfa:true`, both active owner/staff bindings passed, and TOTP was Enabled, but an Incognito password sign-in still opened the owner inbox with a private Realtime warning. Review found `backend/lib/auth.ts` only queried the policy when the build-only `NETLIFY` flag was true. Netlify's Functions documentation lists only URL/SITE_NAME/SITE_ID as the built-in runtime metadata.
+
+- Reproduced the bypass before correcting application code: seven authentication regressions failed with missing/false metadata or unavailable/malformed policies. After correcting the synthetic record setup to satisfy the existing SQL contract, the real API/PostgreSQL workflow failed **11 of 12** scenarios: password-only access was admitted, revoked sessions remained usable, and private signal RLS stayed closed because no verified session was registered. The intentionally optional policy case already passed.
+- The fix reads the real database policy in every non-production runtime, with no hosting-flag bypass. Production enforcement, identity/role checks and unavailable-policy denial remain intact. Classroom and browser adapters use the real policy RPC rather than a permissive fallback.
+- `npm run verify` passed: **53 files / 311 tests**, Astro/TypeScript **189 files, zero errors/warnings/hints**, and the static/security build. The result includes real PostgreSQL API tests for the enrollment response, private read/write rejection, a valid MFA session, owner/staff signal visibility and role separation, session revocation, and policy failure. The existing classroom runtime, startup, CAPTCHA, frontend MFA and database/session suites passed too.
+- Build checks passed for **8 routes / 101 local asset references**, all **266 footer contrast checks** (minimum **13.58:1**), protected workspace/POST forms and initial UI state. Self-hosted component CSS and the strict style policy from 1.6.7 remain in place.
+- `npm run security:audit` passed with **0 vulnerabilities**. Lockfile comparison confirmed the dependency graph is unchanged; only the release version changes.
+- All **37 browser scenarios** were discovered. **Discovery is not execution:** the revised full browser suite, Ubuntu/Windows CI, deployed release verification and real hosted authenticator enrollment/challenge remain pending. Local tests mock the provider token-validation boundary, not application authorization or database/RLS behavior. No live credentials, accounts, database configuration or repository deployment were changed by this work.
+
+The user completed the prior 1.6.7 release checks: **292 tests**, **37 browser tests**, both CI jobs, publication of staging commit **2fb531b**, and screenshots of all three correctly displayed real widgets. The later `enforceMfa:true` SQL result proved the database setting, not API enforcement; 1.6.8 closes that separate runtime gap. See UPDATE-1.6.8.md for the patch and hosted acceptance steps. Do not claim hosted MFA is verified until those steps succeed.
 
 ## 1.6.7 CSS/CSP correction after the first CI patch
 

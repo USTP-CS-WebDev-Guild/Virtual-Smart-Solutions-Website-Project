@@ -19,6 +19,7 @@ function fakeDatabase(role: string, active = true) {
         }),
       }),
     }),
+    rpc: vi.fn(async () => ({ data: { enforceMfa: false }, error: null })),
   } as any;
 }
 
