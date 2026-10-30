@@ -60,7 +60,7 @@ export async function publicRoutes(route: RouteContext): Promise<Response | null
       if (body.website) return json({ ok: true }, 202, requestId);
       const allowed = await allowSubmission(ip, db, 'inquiry');
       if (!allowed) return rateLimited(requestId);
-      const captcha = await verifyCaptcha(body.captchaToken, ip);
+      const captcha = await verifyCaptcha(body.captchaToken, ip, 'inquiry');
       if (captcha) return captcha;
       if (!(await allowSubmissionBudget(db, 'inquiry', body.email))) return budgetLimited(requestId);
       // A retry must still recover its saved receipt if the catalog changed
@@ -142,7 +142,7 @@ export async function publicRoutes(route: RouteContext): Promise<Response | null
     if (body.website) return json({ ok: true }, 202, requestId);
     const allowed = await allowSubmission(ip, db, 'privacy');
     if (!allowed) return rateLimited(requestId);
-    const captcha = await verifyCaptcha(body.captchaToken, ip);
+    const captcha = await verifyCaptcha(body.captchaToken, ip, 'privacy_request');
     if (captcha) return captcha;
     if (!(await allowSubmissionBudget(db, 'privacy', body.email))) return budgetLimited(requestId);
     const { data, error } = await db.rpc('submit_privacy_request', {

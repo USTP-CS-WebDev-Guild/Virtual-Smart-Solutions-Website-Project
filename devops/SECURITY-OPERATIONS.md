@@ -7,7 +7,7 @@ Use `../SECURITY-UPGRADE-1.6.0.md` for installation and `../docs/SECURITY-THREAT
 - The client owns the registrar/domain, production Supabase, hosting and email/verification providers. Record who can recover each account and where renewal notices go. Staging belongs to the guild and never contains real client records.
 - Administrators use individual accounts, MFA and a password manager. Use provider invitations and scoped permissions. Do not share a Gmail password, a repository-owner login, service-role key or Auth password among students.
 - Prefer passkeys/security keys for platform administrators where offered. TOTP for website staff is additional protection, not protection against all phishing.
-- Disable public Auth signup and anonymous login. Keep Auth Site URL and approved redirects exact. Enable hCaptcha in Supabase Auth so the provider endpoint also enforces it.
+- Disable public Auth signup and anonymous login. Keep Auth Site URL and approved redirects exact. Enable Turnstile in Supabase Auth so the provider endpoint also enforces it.
 - Browser configuration receives only publishable/anon keys. Server/backup secrets are private. If any secret was pasted into chat or a public issue, replace it in its provider and redeploy the new server value; deleting the message is not rotation.
 - Import the main ruleset and verify required reviewers/checks apply. Confirm every CODEOWNER has repository Write access. Restrict deployment/admin access and do not give untrusted previews production credentials.
 

@@ -77,9 +77,9 @@ import { site } from '../data/site';
           notices if enabled. The business owner must confirm the active providers, account
           settings, and processing locations before launch.
         </p>
-        {import.meta.env.PUBLIC_HCAPTCHA_SITE_KEY && <p>
-          We use hCaptcha to verify form submissions and help prevent automated abuse.
-          See <a href="https://www.hcaptcha.com/privacy">hCaptcha's privacy policy</a>
+        {import.meta.env.PUBLIC_TURNSTILE_SITE_KEY && <p>
+          We use Cloudflare Turnstile to verify form submissions and help prevent automated abuse.
+          See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>
           for information about its verification service.
         </p>}
       </section>

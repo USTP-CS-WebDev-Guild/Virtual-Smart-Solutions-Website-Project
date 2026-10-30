@@ -11,8 +11,8 @@ if (configured) {
     throw new Error('PUBLIC_SUPABASE_URL must be your clean HTTPS Supabase project origin.');
   connect += ` ${url.origin} wss://${url.hostname}`;
 }
-const captcha = process.env.PUBLIC_HCAPTCHA_SITE_KEY ? ' https://hcaptcha.com https://*.hcaptcha.com' : '';
-const policy = `default-src 'self'; script-src 'self'${captcha}; style-src 'self'${captcha}; img-src 'self' data:; font-src 'self'; connect-src ${connect}${captcha}; frame-src ${captcha.trim() || "'none'"}; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests`;
+const captcha = process.env.PUBLIC_TURNSTILE_SITE_KEY ? ' https://challenges.cloudflare.com' : '';
+const policy = `default-src 'self'; script-src 'self'${captcha}; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ${connect}; frame-src ${captcha.trim() || "'none'"}; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests`;
 const source = await readFile('frontend/public/_headers', 'utf8');
 await writeFile('dist/_headers', source.replace(/Content-Security-Policy: [^\n]+/, 'Content-Security-Policy: ' + policy));
 async function inspect(directory) {
@@ -21,7 +21,7 @@ async function inspect(directory) {
     if(entry.isDirectory()) { await inspect(file); continue; }
     if(!/\.(?:js|html|json|css|txt)$/.test(entry.name)) continue;
     const text=await readFile(file,'utf8');
-    for(const name of ['SUPABASE_SERVICE_ROLE_KEY','RESEND_API_KEY','RESEND_WEBHOOK_SECRET','HCAPTCHA_SECRET_KEY','RATE_LIMIT_SECRET','BACKUP_ENCRYPTION_KEY']) {
+    for(const name of ['SUPABASE_SERVICE_ROLE_KEY','RESEND_API_KEY','RESEND_WEBHOOK_SECRET','TURNSTILE_SECRET_KEY','HCAPTCHA_SECRET_KEY','RATE_LIMIT_SECRET','BACKUP_ENCRYPTION_KEY']) {
       const secret=process.env[name];
       if(secret && secret.length>=16 && text.includes(secret))
         throw new Error(`Private configuration leaked into built asset: ${file}. Value redacted.`);

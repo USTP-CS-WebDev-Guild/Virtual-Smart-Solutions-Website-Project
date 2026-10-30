@@ -1,4 +1,6 @@
-# Apply the VSS security upgrade — current patch 1.6.4
+# Apply the VSS security upgrade — current patch 1.6.5
+
+For the 1.6.4 → 1.6.5 CAPTCHA change, follow [UPDATE-1.6.5.md](UPDATE-1.6.5.md) first. Existing database policy, session and MFA requirements remain in place.
 
 The client-approved public design and business workflows are retained. This release adds production staff MFA, immutable account bindings, revoked/idle-session checks, anti-bot verification, stricter HTTP/CSP boundaries, dependency patches and release controls. No security change is active on your existing hosted site until its source, migration and provider settings are applied.
 
@@ -16,7 +18,7 @@ npm run security:audit
 npm run verify
 ```
 
-The version must be **1.6.4**. Existing 1.6.0–1.6.3 source uses the browser-test patches in `UPDATE-1.6.4.md`; no additional database migration is needed for those patches. Keep development servers stopped before native acceptance:
+The version must be **1.6.5**. Existing 1.6.0–1.6.3 source uses the browser-test patches in `UPDATE-1.6.4.md`; no additional database migration is needed for those patches. Keep development servers stopped before native acceptance:
 
 ```powershell
 npx playwright install chromium
@@ -37,7 +39,7 @@ PowerShell can copy it without exposing any credentials:
 Get-Content .\backend\database\migrations\20261027110215_harden_identity_and_sessions.sql -Raw | Set-Clipboard
 ```
 
-Paste into SQL Editor, confirm you selected staging, and run once. Earlier migrations are unchanged. **Never run INSTALL-FRESH.sql on an existing database.** Keep staging `APP_ENV=staging`, `PUBLIC_TEST_ENVIRONMENT=true`, and `TEST_EMAIL_MODE=capture`. Leave hCaptcha keys unset if you want synthetic classroom testing without an external verification provider.
+Paste into SQL Editor, confirm you selected staging, and run once. Earlier migrations are unchanged. **Never run INSTALL-FRESH.sql on an existing database.** Keep staging `APP_ENV=staging`, `PUBLIC_TEST_ENVIRONMENT=true`, and `TEST_EMAIL_MODE=capture`. Leave Turnstile keys unset if you want synthetic classroom testing without an external verification provider.
 
 The additive migration binds existing verified staff identities once and starts with the production enforcement switch off. Review this result privately:
 
@@ -60,9 +62,9 @@ Rotate any project keys or passwords previously shared in chats, screenshots or 
 
 ## 4. Set up the client verification provider
 
-Use a client-owned [hCaptcha account](https://dashboard.hcaptcha.com/). Register the exact production hostname and its `www` variant if used. Obtain the public site key and private secret.
+Use a client-owned [Turnstile account](https://dash.cloudflare.com/). Register the exact production hostname and its `www` variant if used. Obtain the public site key and private secret.
 
-In **Supabase Auth → Attack Protection / CAPTCHA**, enable hCaptcha and configure its secret. The website passes the widget token to Supabase's password sign-in; enabling the provider protects the Auth endpoint itself, including callers that bypass your webpage.
+In **Supabase Auth → Attack Protection / CAPTCHA**, enable Turnstile and configure its secret. The website passes the widget token to Supabase's password sign-in; enabling the provider protects the Auth endpoint itself, including callers that bypass your webpage.
 
 Configure the same site key for the website forms. Production rejects published dummy keys, missing tokens and failed verification. Tokens are single-use: the form resets verification after each attempt and retains the visitor's draft on errors. Verify the company's privacy notice names its active verification provider before taking real submissions.
 
@@ -95,8 +97,8 @@ Keep the existing build settings: base empty, `npm run build`, publish `dist`, F
 | `PUBLIC_SUPABASE_ANON_KEY` | Client publishable key | Builds and Functions |
 | `SUPABASE_URL` | Same client Supabase project origin | Functions |
 | `SUPABASE_SERVICE_ROLE_KEY` | Client private server key | Functions only |
-| `PUBLIC_HCAPTCHA_SITE_KEY` | Real client site key | Builds and Functions |
-| `HCAPTCHA_SECRET_KEY` | Client private verification secret | Functions only |
+| `PUBLIC_TURNSTILE_SITE_KEY` | Real client site key | Builds and Functions |
+| `TURNSTILE_SECRET_KEY` | Client private verification secret | Functions only |
 | `RATE_LIMIT_SECRET` | New random secret, at least 32 characters | Functions only |
 | `TEST_EMAIL_MODE` | `send` | Functions |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` | Approved real notification configuration | Functions only |
@@ -138,7 +140,7 @@ After Netlify publishes the reviewed commit:
 npm run verify:deployment -- https://YOUR-APPROVED-DOMAIN
 ```
 
-Require release **1.6.4**. Then test in a fresh browser/phone:
+Require release **1.6.5**. Then test in a fresh browser/phone:
 
 1. Public pages open without a hosting login.
 2. A missing or invalid form verification is rejected without creating a lead; a valid synthetic inquiry gets a reference and appears in the already-open owner inbox.

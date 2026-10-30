@@ -80,7 +80,7 @@ Do not use a client production key for development. Default `npm run dev` contin
 
 ## 6. Real client handoff
 
-Use separate team staging and client production Supabase/Netlify projects, with the student tech lead and DevOps lead responsible for releases. Follow every production activation step in `../SECURITY-UPGRADE-1.6.0.md`: explicit verified UUID bindings, `SECURE-PRODUCTION.sql`, `APP_ENV=production`, `PUBLIC_TEST_ENVIRONMENT=false`, real hCaptcha/Supabase Auth configuration, fresh server secrets and actual owner MFA enrollment. Review business/privacy content, rehearse backup restore, and complete RELEASE_CHECKLIST.md. Changing only the test flag is insufficient.
+Use separate team staging and client production Supabase/Netlify projects, with the student tech lead and DevOps lead responsible for releases. Follow every production activation step in `../SECURITY-UPGRADE-1.6.0.md`: explicit verified UUID bindings, `SECURE-PRODUCTION.sql`, `APP_ENV=production`, `PUBLIC_TEST_ENVIRONMENT=false`, real Turnstile/Supabase Auth configuration, fresh server secrets and actual owner MFA enrollment. Review business/privacy content, rehearse backup restore, and complete RELEASE_CHECKLIST.md. Changing only the test flag is insufficient.
 
 Capture mode never sends mail. To enable real notices, configure Resend with a verified owned sending domain, sender, API key, webhook secret, and `/api/webhooks/resend`, then set `TEST_EMAIL_MODE=send`. Domain/provider charges and quotas are separate decisions. The owner inbox remains the source of truth if mail fails.
 
