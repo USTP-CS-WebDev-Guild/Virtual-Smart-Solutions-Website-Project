@@ -1,15 +1,12 @@
-# The student tech lead owns releases; the instructor is an optional mentor.
-# Replace example handles with your actual GitHub users/teams, then uncomment.
-# * @your-tech-lead
-# /frontend/ @your-frontend-lead @your-tech-lead
-# /backend/ @your-backend-lead @your-tech-lead
-# /devops/ @your-devops-lead @your-tech-lead
-# /ui-ux/ @your-design-lead
-# /project-management/ @your-project-manager
+# Default production reviewer for every file, including new paths.
+# The reviewer must have Write access. Enforcement comes from active rulesets.
+# Collaborators need the instructor's review. The solo owner may use the
+# documented PR-only review exception; separate checks have no bypass.
+# See docs/MAIN-REVIEW-POLICY.md for the two required rulesets.
+# Later matching entries override this default and must preserve the policy.
+* @franku69
 
-# Initial production reviewer from this project's existing maintainer context.
-# Confirm this account has repository Write access before enabling the ruleset.
-# The organization owner can replace it with the appointed production reviewer.
+# Keep the sensitive paths and this policy under the same designated reviewer.
 /.github/ @franku69
 /backend/ @franku69
 /devops/ @franku69

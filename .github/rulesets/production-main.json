@@ -3,7 +3,9 @@
   "target": "branch",
   "enforcement": "active",
   "conditions": { "ref_name": { "include": ["refs/heads/main"], "exclude": [] } },
-  "bypass_actors": [],
+  "bypass_actors": [
+    { "actor_id": 150372008, "actor_type": "User", "bypass_mode": "pull_request" }
+  ],
   "rules": [
     { "type": "deletion" },
     { "type": "non_fast_forward" },
@@ -17,8 +19,8 @@
     { "type": "required_status_checks", "parameters": {
       "strict_required_status_checks_policy": true,
       "required_status_checks": [
-        { "context": "verify (ubuntu-latest)" },
-        { "context": "verify (windows-latest)" }
+        { "context": "verify (ubuntu-latest)", "integration_id": 15368 },
+        { "context": "verify (windows-latest)", "integration_id": 15368 }
       ]
     } }
   ]
