@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@netlify/functions": "6.0.2",
-    "@supabase/supabase-js": "2.117.3",
+    "@supabase/supabase-js": "2.118.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
