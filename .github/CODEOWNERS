@@ -1,11 +1,12 @@
-# Every production file requires the instructor's Code Owner review.
-# Enforcement comes from the active main ruleset, not this file alone.
-# The reviewer must have Write access. A PR author cannot approve their own PR;
-# a teammate should push/open production PRs for the instructor to review.
+# Default production reviewer for every file, including new paths.
+# The reviewer must have Write access. Enforcement comes from active rulesets.
+# Collaborators need the instructor's review. The solo owner may use the
+# documented PR-only review exception; separate checks have no bypass.
+# See docs/MAIN-REVIEW-POLICY.md for the two required rulesets.
 # Later matching entries override this default and must preserve the policy.
 * @franku69
 
-# Keep the sensitive paths and this policy under the same required reviewer.
+# Keep the sensitive paths and this policy under the same designated reviewer.
 /.github/ @franku69
 /backend/ @franku69
 /devops/ @franku69

@@ -1,80 +1,82 @@
-# Production review policy and build-tool patch
+# Production release policy for a solo owner and student contributors
 
-The instructor (`@franku69`) approves production changes. Students prepare and test changes on feature/staging branches. A separate production PR targets `main`; a successful staging deployment is not approval to promote it.
+The instructor (`@franku69`) currently works alone on releases and also reviews student contributions. A PR authored by this account cannot receive its own approving review. Production changes still use a PR and passing CI; a narrowly assigned owner exception makes solo releases possible.
 
-## Required controls
+## Two active rulesets are required
 
-- `.github/CODEOWNERS` assigns the default pattern `*` to `@franku69`, including new frontend, documentation and other paths. More-specific existing entries have the same owner. The policy itself is owned through `/.github/`.
-- The GitHub repository's active `main` ruleset requires one approval, Code Owner review, dismissal of stale approvals, approval of the latest reviewable push by another person, resolved conversations and up-to-date branches.
-- Both `verify (ubuntu-latest)` and `verify (windows-latest)` must come from GitHub Actions (integration ID `15368`). Force pushes and deletions are blocked, with an empty bypass list.
-- CODEOWNERS patterns assign ownership; they do not grant Write access or activate branch protection. The reviewer must have appropriate repository access. GitHub uses CODEOWNERS from the PR's base branch.
+Both target only `refs/heads/main`.
 
-On 2026-10-31, a read-only GitHub API check confirmed `main.protected=true`, effective ruleset `26264437`, both required contexts pinned to integration `15368`, and a latest-push/Code Owner approval requirement. Actual GitHub Actions check runs for `134b6b8` identified that integration as GitHub Actions. This source template now preserves the chosen check sources; editing a template does not modify the active GitHub setting.
+| Ruleset | Bypass | Requirements |
+| --- | --- | --- |
+| Production main - required checks | Empty for everyone | PR required with zero approvals in this layer; resolved conversations; up-to-date Ubuntu/Windows CI from GitHub Actions; force pushes and deletions blocked. |
+| Production main - reviewed releases | Only user `franku69`, ID `150372008`, for pull requests only | One approval, Code Owner review, independent latest-push approval and dismissal of stale approvals for actors without the exception. Its duplicate CI/history rules are also enforced by the first ruleset. |
 
-## Applying this policy update
+The first ruleset is `.github/rulesets/production-main-guardrails.json`. The second is `.github/rulesets/production-main.json`. Editing these files does not apply live GitHub settings.
 
-This patch is based on **main commit `2cc6a58e0647366e3451dbd7478c33a0c2783861`**, whose application release is 1.6.4. Published staging is a later release; its application promotion remains a separate reviewed change. Application version, runtime code, database migrations and deployment environment values are unchanged.
+GitHub aggregates applicable rulesets. An exception in the review ruleset does not grant an exception in the separate required-checks ruleset. The owner therefore still needs a PR, both successful checks and resolved review conversations. Direct pushes, force pushes and branch deletion remain blocked by the first ruleset.
 
-The baseline main lockfile fails the required moderate-level audit because it contains Vite 6.4.4 ([GHSA-8g5g-mxqh-grgj](https://github.com/advisories/GHSA-8g5g-mxqh-grgj)). This patch pins the fixed build-tool version **6.4.5**, already used in staging. The resolved package-version comparison changes only Vite; it does not import the later CAPTCHA/MFA/homepage application changes. The advisory concerns an exposed development server, not proof of a compromise of the static hosted website.
+The review exception applies when `franku69` merges a PR, including a student-authored PR if the owner deliberately uses the exception. Other accounts cannot use it. A student merging without the owner exception needs the required Code Owner approval. This is owner-controlled release authorization, not independent peer review of the owner's own work. Bypasses are recorded by GitHub; use `pull_request`, not an unlogged `exempt` mode.
 
-The regenerated checksum manifest also aligns a pre-existing stale installer hash and two missing entries for migration files already tracked on main. Those SQL files are not modified by this patch.
+`.github/CODEOWNERS` assigns `* @franku69`, with the same owner on all later, specific paths. `/.github/` includes the ownership policy itself. The reviewer must have Write access. GitHub uses the PR base branch's CODEOWNERS file; the all-file default takes effect after this change reaches main. Students should have Write access for feature/staging collaboration, with repository administration reserved for the intended maintainers.
 
-A trusted teammate uses their own GitHub account and clean clone to apply, commit, push and open this PR. The instructor reviews and approves it. With the current rules, the instructor cannot approve a PR that they authored or satisfy the independent latest-push approval after making that push themselves. Keep the configured review/check controls enabled.
+## Install the live settings in this order
 
-From the teammate's repository folder, with the downloaded patch in that folder:
+On 2026-11-01, read-only API checks confirmed the existing active review ruleset ID `26264437`, main commit `2cc6a58e0647366e3451dbd7478c33a0c2783861`, PR #18 open under `franku69`, and only that existing ruleset enforcing main protection. The owner's public GitHub profile confirmed user ID `150372008`. These are preparation observations, not confirmation that the new settings have been applied.
+
+1. Download/import `production-main-guardrails.json` using repository **Settings → Rulesets → New ruleset → Import a ruleset**. Keep the name **Production main - required checks**, enforcement **Active**, target **main**, and the bypass list empty. Verify both required contexts have GitHub Actions as their source and that branches must be up to date. Create the ruleset.
+2. Confirm that the new ruleset is saved and active, independently requiring a PR, both checks, resolved conversations, blocked force pushes and restricted deletions. A read-only rules API result should identify these controls under the new ruleset's ID. Keep it active before configuring the review exception.
+3. Edit the existing **Production main - reviewed releases** ruleset, ID `26264437`. In **Add bypass**, select only the exact user `franku69` and choose **For pull requests only**. Keep its existing review requirements and save. The JSON template uses the verified numeric User ID. If the UI does not offer individual users, inspect that limitation before selecting any broader role or team.
+4. Check that the required-checks bypass list is still empty and the review bypass list contains only this user in PR-only mode. Giving the existing combined ruleset an exception without the independent required-checks layer would also permit skipping its CI requirements.
+
+The zero-approval setting belongs only to the required-checks layer; the existing review layer continues to require one Code Owner approval for users without the owner exception. There is no need for a second account belonging to the same person or another replacement branch.
+
+## Reuse the existing reviewed change and PR #18
+
+PR #18 already contains the all-file Code Owner update and Vite fix. Commit `c00228ed8e3a3dff175f7e578d66adf352b31416` on `security/production-review-policy` and cherry-pick `e892bf18c4908936a421dcee1fcf254efb23c9ef` on `security/production-review-policy-reviewed` have identical trees. This follow-up patch applies to either tree; use the original PR branch to update PR #18.
+
+Preserve any modified or staged project files before switching. Untracked downloaded patches can stay in the repository folder. From that folder:
 
 ```powershell
 git status --short
-git fetch origin
-git switch --no-track -c security/production-review-policy origin/main
-git apply --check .\vss-production-review-policy.patch
-git apply .\vss-production-review-policy.patch
-npm ci
-npm run verify
-npx playwright install chromium
-npm run test:browser -- --reporter=line
-git add -- .github/CODEOWNERS .github/rulesets/production-main.json package.json package-lock.json docs/MAIN-REVIEW-POLICY.md SOURCE-CHECKSUMS.sha256
+git switch security/production-review-policy
+git apply --check .\vss-solo-owner-policy.patch
+git apply .\vss-solo-owner-policy.patch
+git add -- .github/CODEOWNERS .github/rulesets/production-main.json .github/rulesets/production-main-guardrails.json docs/MAIN-REVIEW-POLICY.md SOURCE-CHECKSUMS.sha256
 npm run security:check
 npm run security:audit
 git --no-pager diff --cached --check
 git --no-pager diff --cached --stat
 ```
 
-Preserve any existing local work before switching. If a check fails, stop at that failure and inspect it; do not use reset/force-push or weaken the rules to proceed. The staged diff should contain only the six policy/dependency/checksum files listed above.
-
-After reviewing that diff:
+The follow-up changes only those five files; the complete PR against main contains seven files, including the inherited package/lockfile fix. If any command fails, inspect that failure before continuing. After checking the exact diff:
 
 ```powershell
-git commit -m "Require instructor reviews and patch Vite tooling"
-git push -u origin security/production-review-policy
+git commit -m "Support solo owner releases while keeping CI mandatory"
+git push
 ```
 
-Open a PR with **base `main`**, compare `security/production-review-policy`. Suggested description:
+Update PR #18's description to explain the two rulesets and deliberate solo-owner exception. Use the title **Require owner-controlled releases and patch Vite tooling**. The new push reruns both required jobs. Confirm the exact latest commit passes both Ubuntu and Windows jobs, inspect all changed files and resolve conversations. Then use GitHub's PR merge action with the recorded owner review bypass. This action is release authorization; it does not produce a self-approving review. Keep the separate required-checks ruleset active with no bypass.
 
-> Requires instructor Code Owner review for all production files and preserves GitHub Actions as the expected source for both required CI checks. Pins Vite 6.4.5 to clear an existing moderate audit failure on main. Application runtime code is unchanged.
->
-> Validation: clean dependency install; type checks, 240 tests and build passed on main's 1.6.4 baseline; source credential, checksum and whitespace checks passed; dependency audit found zero vulnerabilities. The patch was checked in a fresh checkout with Windows line-ending conversion. Browser discovery found 31 tests; full browser execution and required Ubuntu/Windows CI remain pending.
+Main's application release remains 1.6.4; staging 1.6.10 is a separate application promotion. This change does not relabel or promote the staging site.
 
-The teammate opens/pushes the PR; the instructor checks its exact diff, both required CI jobs and then approves. New pushes dismiss stale approvals and require another review. Main protection is already active; all-path Code Owner coverage takes effect after this change reaches `main`.
+## Verification and inherited build-tool fix
 
-## Preparation verification
+The underlying main change pins Vite 6.4.5 to clear a moderate audit failure in Vite 6.4.4 ([GHSA-8g5g-mxqh-grgj](https://github.com/advisories/GHSA-8g5g-mxqh-grgj)). Resolved dependency-version comparison changes only Vite. The advisory concerns an exposed development server, not evidence of a compromise of the static hosted website.
 
-On 2026-10-31, the prepared change passed:
+Before this policy-only follow-up, the user confirmed 240 tests, 31 browser tests, type checks, the build, source credential and whitespace checks passed, with zero reported audit vulnerabilities. The main build verified eight routes, 90 local asset references and footer contrast at a minimum of 13.58:1 across 266 checks. Counts belong to main's 1.6.4 baseline, distinct from staging 1.6.10's 313 tests and 38 browser tests.
 
-- `npm ci`: installed 320 packages from the final lockfile.
-- `npm run verify`: no diagnostics across 182 Astro files; all 240 tests across 49 test files passed; the build verified eight routes, 90 local asset references and 266 footer contrast checks (minimum 13.58:1).
-- `npm run security:check`: source credential check passed for 301 tracked files.
-- `npm run security:audit`: zero vulnerabilities reported at the time of the check.
-- `git diff --cached --check` and all 300 canonical Git-index source checksums passed.
-- A fresh checkout of the exact main baseline accepted the exported patch with `core.autocrlf=true`; its staged blobs and checksums matched the prepared change.
-- Browser discovery found 31 tests in two files. Full browser execution and the required Ubuntu/Windows GitHub Actions checks must still run before merge.
+This follow-up changes policy JSON, CODEOWNERS comments, this document and checksums. It leaves executable application files, dependencies, migrations and deployment environment values untouched. Configuration checks cover both actors' applicable rules, required-check sources, ownership coverage, canonical checksums and clean patch application. They are preparation checks; actual GitHub enforcement and bypass audit records must be verified after the settings are saved. Existing application suites need not be repeated locally for these policy/comment changes; the required CI jobs rerun on the updated PR.
 
-The counts above belong to main's older 1.6.4 baseline. They do not replace the separate 313-test/38-browser-test evidence for staging 1.6.10. This is a limited policy/build-tool change, not an ASVS conformance claim or approval of a production application release.
+The regenerated manifest also includes pre-existing baseline corrections to an installer hash and two already-tracked migration entries, inherited from the original main patch. Those SQL files are not changed. This follow-up is not an ASVS conformance claim. Record the solo-review exception explicitly in any later assurance assessment; the separate ASVS baseline documentation patch remains pending.
 
-## Completion evidence
+## Post-configuration evidence
 
-After the reviewed merge, verify the effective rules remain active and `main` contains the default owner line. Use a small ordinary PR authored by a teammate to check that a change outside the old sensitive-path list requests the instructor's review and remains blocked before the required approval/checks. Do not test with a direct push, force push or bypass.
+- Both rulesets are active and target main; only the review layer has the exact owner PR-only bypass.
+- The effective main rules API includes the independent required-checks ruleset's two checks, strict freshness, PR, conversation and history protections.
+- The latest PR commit's successful jobs originate from GitHub Actions, integration `15368`.
+- Rule Insights records the owner's review-layer bypass for the merge. Do not test protection with a destructive push or branch deletion.
+- After merge, main contains `* @franku69` and both JSON templates. A later genuine student PR should request the owner and remain blocked for the student until required review/checks pass.
 
-This update neither protects `staging` nor promotes its application to production. Choose staging's collaboration rules separately. The ASVS baseline documentation patch is a separate, still-pending staging change.
+To return to mandatory independent reviews when another trusted reviewer is available, remove the owner exception from the review ruleset after arranging eligible Code Owners and the review workflow. The separate required-checks layer remains applicable.
 
-References: [GitHub CODEOWNERS and base-branch behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) and [ruleset review/check-source controls](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets).
+References: [GitHub rule layering](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets), [PR-only bypass](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository), [User bypass and rule parameters](https://docs.github.com/en/rest/repos/rules#create-a-repository-ruleset), and [CODEOWNERS base-branch behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
