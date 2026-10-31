@@ -504,6 +504,32 @@ test('enhanced browsing works on a phone and honors motion preferences', async (
   await context.close();
 });
 
+test('wide homepage keeps the header and hero inset bounded and aligned', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  try {
+    const page = await context.newPage();
+    await page.goto(base + '/');
+    await page.evaluate(() => document.fonts.ready);
+    for (const width of [1440, 1920, 2560, 1440]) {
+      await page.setViewportSize({ width, height: 1080 });
+      await expect.poll(() => page.evaluate(() => {
+        const heading = document.querySelector('.vss-hero h1')!.getBoundingClientRect();
+        const nav = document.querySelector('.vss-nav')!.getBoundingClientRect();
+        const foot = document.querySelector('.vss-hero-foot')!.getBoundingClientRect();
+        return {
+          bounded: heading.left >= 32 && heading.left <= 90,
+          aligned: Math.abs(heading.left - nav.left) <= 2 && Math.abs(heading.left - foot.left) <= 2,
+          inside: nav.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth,
+        };
+      })).toEqual({ bounded: true, aligned: true, inside: true });
+    }
+    await page.goto(base + '/services/');
+    await expect(page.locator('.vss-home-nav')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
 test('hero, expertise ticker and team have real ongoing animation with a shared pause control', async ({
   browser,
 }) => {

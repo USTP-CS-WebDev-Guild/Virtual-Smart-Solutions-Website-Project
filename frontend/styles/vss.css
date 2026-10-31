@@ -9,6 +9,7 @@
   --vss-muted: #626874;
   --vss-line: #dcdfe5;
   --vss-surface: #fafaf9;
+  --vss-home-gutter: clamp(48px, 4vw, 88px);
   --ink: #2457d6;
   --ink-deep: #101116;
   --ink-muted: #626874;
@@ -264,7 +265,7 @@
 .vss-hero-copy {
   min-width: 0;
   align-self: center;
-  padding: 66px 64px 66px max(48px, calc((100vw - 1248px) / 2));
+  padding: 66px 64px 66px var(--vss-home-gutter);
 }
 .vss-hero h1 {
   margin: 27px 0;
@@ -2073,6 +2074,12 @@
 
 
 /* Split hero: white content and edge-to-edge dark photography, as in the approved direction. */
+@media (min-width: 1151px) {
+  .vss-home-nav,
+  .vss-hero-foot {
+    width: calc(100% - var(--vss-home-gutter) - var(--vss-home-gutter));
+  }
+}
 .vss-hero-shell,
 .vss-about-shell {
   background: #f8f7f4;

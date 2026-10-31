@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // No private business screen is opened until the API accepts an aal2 token.
 export function createMfaFlow(client: SupabaseClient, completed: () => Promise<void>) {
   const panel = document.getElementById('staff-mfa')!;
+  const heading = document.getElementById('staff-mfa-heading')!;
   const form = document.getElementById('staff-login-form')!;
   const status = document.getElementById('staff-mfa-status')!;
   const code = document.getElementById('staff-mfa-code') as HTMLInputElement;
@@ -61,8 +62,9 @@ export function createMfaFlow(client: SupabaseClient, completed: () => Promise<v
         factorId = creating;
         setup.hidden = false;
       }
-      status.textContent = verified ? 'Enter the 6-digit code from your authenticator app.' :
-        'Add this account to your authenticator app, then enter its 6-digit code.';
+      heading.textContent = verified ? 'Enter your sign-in code' : 'Set up your authenticator';
+      status.textContent = verified ? 'Enter the current code from your authenticator app. You do not need to scan the QR again.' :
+        'After scanning the QR, enter the current code from your authenticator app to finish setup.';
       button.disabled = false;
       code.focus();
     } catch {

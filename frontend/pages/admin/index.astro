@@ -119,16 +119,17 @@ const navigation = [
           <h2 id="staff-mfa-heading">Authenticator check</h2>
           <p>Complete this step to open your private workspace.</p>
           <div id="staff-mfa-setup" hidden>
-            <p>Scan with your authenticator app, or enter the setup key manually.</p>
+            <p>Set up once: scan this QR with your authenticator app, or enter the setup key manually. Then enter the app’s current code below to finish linking this account.</p>
             <img id="staff-mfa-qr" alt="Authenticator setup QR code" width="200" height="200" />
             <label for="staff-mfa-secret">Setup key</label>
             <input id="staff-mfa-secret" type="text" readonly autocomplete="off" spellcheck="false" />
             <p>Keep this key private. It is cleared when you finish or cancel.</p>
           </div>
           <form id="staff-mfa-form" method="post" action="/api/auth/session">
-            <label for="staff-mfa-code">6-digit code</label>
+            <label for="staff-mfa-code">Current 6-digit code</label>
             <input id="staff-mfa-code" name="code" inputmode="numeric" autocomplete="one-time-code"
-              pattern="[0-9]{6}" minlength="6" maxlength="6" required />
+              pattern="[0-9]{6}" minlength="6" maxlength="6" aria-describedby="staff-mfa-code-help" required />
+            <p id="staff-mfa-code-help" class="field-help">Use the code currently shown in your authenticator app. It changes automatically about every 30 seconds; you do not need to remember it.</p>
             <button id="staff-mfa-verify" class="button" type="submit" disabled>Verify and continue</button>
             <noscript><p>Enable JavaScript to verify your authenticator securely.</p></noscript>
             <button id="staff-mfa-cancel" class="button button-secondary" type="button">Cancel and sign out</button>
