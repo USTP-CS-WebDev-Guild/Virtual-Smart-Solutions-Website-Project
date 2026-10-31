@@ -1,0 +1,433 @@
+{
+  "assessment_source_commit": "e9423656c443023f845661e1caa162a2a334cba3",
+  "assessment_release": "1.6.10",
+  "target_origin": "https://vss-guild-batch1-staging.netlify.app",
+  "scope": "Bounded unauthenticated GETs and public GitHub metadata only. No credentials or customer records.",
+  "staging_https": {
+    "observed_utc": "2026-10-31T07:03:46.808403+00:00",
+    "mode": "Unauthenticated GET only; no credentials, writes or rate testing.",
+    "results": [
+      {
+        "path": "/",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/",
+        "bytes_read": 36109,
+        "headers": {
+          "content-type": "text/html; charset=UTF-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cfuqmelxhpdrwpqooxqe.supabase.co wss://cfuqmelxhpdrwpqooxqe.supabase.co; frame-src https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "public,max-age=0,must-revalidate",
+          "cross-origin-resource-policy": "same-origin"
+        }
+      },
+      {
+        "path": "/admin/",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/admin/",
+        "bytes_read": 30187,
+        "headers": {
+          "content-type": "text/html; charset=UTF-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cfuqmelxhpdrwpqooxqe.supabase.co wss://cfuqmelxhpdrwpqooxqe.supabase.co; frame-src https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "no-store",
+          "cross-origin-resource-policy": "same-origin"
+        }
+      },
+      {
+        "path": "/contact/",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/contact/",
+        "bytes_read": 13624,
+        "headers": {
+          "content-type": "text/html; charset=UTF-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cfuqmelxhpdrwpqooxqe.supabase.co wss://cfuqmelxhpdrwpqooxqe.supabase.co; frame-src https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "public,max-age=0,must-revalidate",
+          "cross-origin-resource-policy": "same-origin"
+        }
+      },
+      {
+        "path": "/privacy/",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/privacy/",
+        "bytes_read": 15003,
+        "headers": {
+          "content-type": "text/html; charset=UTF-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cfuqmelxhpdrwpqooxqe.supabase.co wss://cfuqmelxhpdrwpqooxqe.supabase.co; frame-src https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "public,max-age=0,must-revalidate",
+          "cross-origin-resource-policy": "same-origin"
+        }
+      },
+      {
+        "path": "/api/health/live",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/api/health/live",
+        "bytes_read": 44,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "no-store",
+          "cdn-cache-control": "no-store",
+          "cross-origin-resource-policy": "same-origin"
+        },
+        "safe_response": {
+          "status": "ok",
+          "service": "vss-website-site"
+        }
+      },
+      {
+        "path": "/api/auth/session",
+        "status": 200,
+        "url": "https://vss-guild-batch1-staging.netlify.app/api/auth/session",
+        "bytes_read": 87,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "no-store",
+          "cdn-cache-control": "no-store",
+          "cross-origin-resource-policy": "same-origin"
+        },
+        "safe_response": {
+          "enabled": true,
+          "authenticated": false,
+          "eligible": false,
+          "mfaRequired": false,
+          "user": null
+        }
+      },
+      {
+        "path": "/api/admin/inquiries",
+        "status": 401,
+        "url": "https://vss-guild-batch1-staging.netlify.app/api/admin/inquiries",
+        "bytes_read": 33,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "no-store",
+          "cdn-cache-control": "no-store",
+          "cross-origin-resource-policy": "same-origin"
+        },
+        "safe_response": {
+          "error": "staff_access_required"
+        }
+      },
+      {
+        "path": "/api/admin/privacy-requests",
+        "status": 401,
+        "url": "https://vss-guild-batch1-staging.netlify.app/api/admin/privacy-requests",
+        "bytes_read": 33,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-frame-options": "DENY",
+          "cache-control": "no-store",
+          "cdn-cache-control": "no-store",
+          "cross-origin-resource-policy": "same-origin"
+        },
+        "safe_response": {
+          "error": "staff_access_required"
+        }
+      }
+    ]
+  },
+  "edge_and_rulesets": {
+    "observed_utc": "2026-10-31T07:07:49.345491+00:00",
+    "results": [
+      {
+        "check": "http_api",
+        "status": 301,
+        "location": "https://vss-guild-batch1-staging.netlify.app/api/health/live"
+      },
+      {
+        "check": "main_rules",
+        "status": 200,
+        "location": null,
+        "rules": []
+      },
+      {
+        "check": "staging_rules",
+        "status": 200,
+        "location": null,
+        "rules": []
+      }
+    ]
+  },
+  "branch_metadata": {
+    "observed_utc": "2026-10-31T07:13:25.131788+00:00",
+    "results": [
+      {
+        "branch": "main",
+        "status": 200,
+        "protected": false,
+        "commit": "2cc6a58e0647366e3451dbd7478c33a0c2783861"
+      },
+      {
+        "branch": "staging",
+        "status": 200,
+        "protected": false,
+        "commit": "e9423656c443023f845661e1caa162a2a334cba3"
+      }
+    ]
+  },
+  "github_resource_urls": {
+    "main_branch": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/branches/main",
+    "staging_branch": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/branches/staging",
+    "main_rules": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/rules/branches/main",
+    "staging_rules": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/rules/branches/staging",
+    "pull_request_18": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/pulls/18",
+    "main_checks_ruleset": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/rulesets/26285701",
+    "main_review_ruleset": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/rulesets/26264437",
+    "policy_head_checks": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/commits/6486654047699e302a20a44145c44920a4cacf87/check-runs",
+    "merged_policy_commit": "https://api.github.com/repos/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/git/commits/3fe9151fcfbef891ceee16917ca20264ae9414ce"
+  },
+  "limitations": [
+    "Snapshot only; recheck after configuration changes.",
+    "No protocol/cipher, load, request-framing or authenticated role/recovery test.",
+    "Provider and private database settings were not inspected through an authenticated session."
+  ],
+  "repository_policy_followup": {
+    "observed_response_utc_range": [
+      "2026-10-31T20:50:40Z",
+      "2026-10-31T20:50:47Z"
+    ],
+    "followup_local_date": "2026-11-01 (Asia/Singapore)",
+    "mode": "Read-only public GitHub API GETs; owner-supplied saved settings screenshots and terminal output. The owner configured settings and merged the PR manually.",
+    "initial_snapshot_preserved": true,
+    "branches": [
+      {
+        "branch": "main",
+        "protected": true,
+        "commit": "3fe9151fcfbef891ceee16917ca20264ae9414ce",
+        "effective_rule_count": 8
+      },
+      {
+        "branch": "staging",
+        "protected": false,
+        "commit": "e9423656c443023f845661e1caa162a2a334cba3",
+        "effective_rule_count": 0
+      }
+    ],
+    "main_rulesets": {
+      "required_checks": {
+        "id": 26285701,
+        "name": "Production main - required checks",
+        "enforcement": "active",
+        "conditions": {
+          "ref_name": {
+            "exclude": [],
+            "include": [
+              "refs/heads/main"
+            ]
+          }
+        },
+        "rules": [
+          {
+            "type": "deletion"
+          },
+          {
+            "type": "non_fast_forward"
+          },
+          {
+            "type": "pull_request",
+            "parameters": {
+              "required_approving_review_count": 0,
+              "dismiss_stale_reviews_on_push": false,
+              "required_reviewers": [],
+              "require_code_owner_review": false,
+              "dismissal_restriction": {
+                "enabled": false,
+                "allowed_actors": []
+              },
+              "require_last_push_approval": false,
+              "required_review_thread_resolution": true,
+              "require_extra_approval_for_unattributed_changes": true,
+              "allowed_merge_methods": [
+                "merge",
+                "squash",
+                "rebase"
+              ]
+            }
+          },
+          {
+            "type": "required_status_checks",
+            "parameters": {
+              "strict_required_status_checks_policy": true,
+              "do_not_enforce_on_create": false,
+              "required_status_checks": [
+                {
+                  "context": "verify (ubuntu-latest)",
+                  "integration_id": 15368
+                },
+                {
+                  "context": "verify (windows-latest)",
+                  "integration_id": 15368
+                }
+              ]
+            }
+          }
+        ],
+        "updated_at": "2026-10-31T19:57:46.140Z",
+        "bypass_actor_evidence": {
+          "source": "Owner-supplied saved GitHub settings screenshot, 2026-11-01 Asia/Singapore; anonymous API omits bypass actors.",
+          "entries": []
+        }
+      },
+      "reviewed_releases": {
+        "id": 26264437,
+        "name": "Production main - reviewed releases",
+        "enforcement": "active",
+        "conditions": {
+          "ref_name": {
+            "exclude": [],
+            "include": [
+              "refs/heads/main"
+            ]
+          }
+        },
+        "rules": [
+          {
+            "type": "deletion"
+          },
+          {
+            "type": "non_fast_forward"
+          },
+          {
+            "type": "pull_request",
+            "parameters": {
+              "required_approving_review_count": 1,
+              "dismiss_stale_reviews_on_push": true,
+              "required_reviewers": [],
+              "require_code_owner_review": true,
+              "dismissal_restriction": {
+                "enabled": false,
+                "allowed_actors": []
+              },
+              "require_last_push_approval": true,
+              "required_review_thread_resolution": true,
+              "require_extra_approval_for_unattributed_changes": true,
+              "allowed_merge_methods": [
+                "merge",
+                "squash",
+                "rebase"
+              ]
+            }
+          },
+          {
+            "type": "required_status_checks",
+            "parameters": {
+              "strict_required_status_checks_policy": true,
+              "do_not_enforce_on_create": false,
+              "required_status_checks": [
+                {
+                  "context": "verify (ubuntu-latest)",
+                  "integration_id": 15368
+                },
+                {
+                  "context": "verify (windows-latest)",
+                  "integration_id": 15368
+                }
+              ]
+            }
+          }
+        ],
+        "updated_at": "2026-10-31T20:12:17.395Z",
+        "bypass_actor_evidence": {
+          "source": "Owner-supplied saved GitHub settings screenshot, 2026-11-01 Asia/Singapore; anonymous API omits bypass actors.",
+          "entries": [
+            {
+              "actor_type": "User",
+              "actor_id": 150372008,
+              "login": "franku69",
+              "bypass_mode": "pull_request"
+            }
+          ]
+        }
+      }
+    },
+    "pull_request": {
+      "number": 18,
+      "url": "https://github.com/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/pull/18",
+      "base": "main",
+      "head_commit": "6486654047699e302a20a44145c44920a4cacf87",
+      "merged": true,
+      "merge_commit": "3fe9151fcfbef891ceee16917ca20264ae9414ce",
+      "merged_at": "2026-10-31T20:37:19Z",
+      "merged_by": "franku69",
+      "merge_message": "Merge pull request #18 from USTP-CS-WebDev-Guild/security/production-review-policy\n\nSupport solo-owner releases with mandatory CI and patch Vite tooling. Owner PR-only review exception used after both required CI checks passed.",
+      "authorization": "Owner PR-only review exception after both required checks passed; no independent peer approval."
+    },
+    "required_check_results": [
+      {
+        "name": "verify (ubuntu-latest)",
+        "head_sha": "6486654047699e302a20a44145c44920a4cacf87",
+        "status": "completed",
+        "conclusion": "success",
+        "app_id": 15368,
+        "completed_at": "2026-10-31T20:23:30Z",
+        "url": "https://github.com/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/actions/runs/41238362580/job/124646808265"
+      },
+      {
+        "name": "verify (windows-latest)",
+        "head_sha": "6486654047699e302a20a44145c44920a4cacf87",
+        "status": "completed",
+        "conclusion": "success",
+        "app_id": 15368,
+        "completed_at": "2026-10-31T20:23:45Z",
+        "url": "https://github.com/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/actions/runs/41238362580/job/124646808046"
+      }
+    ],
+    "merged_source": {
+      "tree_sha": "723bad69ad11f13c57cc52f21720afaaac126655",
+      "matches_prepared_complete_policy_tree": true,
+      "codeowners_default": "* @franku69",
+      "codeowners_url": "https://github.com/USTP-CS-WebDev-Guild/Virtual-Smart-Solutions-Website-Project/blob/3fe9151fcfbef891ceee16917ca20264ae9414ce/.github/CODEOWNERS",
+      "main_runtime_release": "1.6.4",
+      "staging_runtime_release": "1.6.10",
+      "staging_runtime_promoted": false
+    },
+    "owner_local_sync": {
+      "source": "Owner-supplied terminal output after the merge, 2026-11-01 Asia/Singapore",
+      "head_main_and_origin_main": "3fe9151fcfbef891ceee16917ca20264ae9414ce",
+      "tracked_worktree_clean": true,
+      "existing_untracked_files_retained": true
+    },
+    "interpretation": [
+      "The independent required-checks guard remains applicable to the owner while bypassing the review ruleset.",
+      "The review exception belongs to the merging actor and can also be used by the owner on a contributor PR.",
+      "F01 main control is closed for the agreed solo-owner model; independent review of owner releases remains an accepted limitation.",
+      "Staging protection remains a separate open decision. No application production promotion or ASVS conformance is established."
+    ],
+    "evidence_limits": [
+      "Anonymous API responses omit bypass actors. Exact empty-guard and owner-PR-only bypass lists are evidenced by saved owner-supplied settings screenshots, not the anonymous API.",
+      "No authenticated application, database or provider-settings checks were performed in this follow-up."
+    ]
+  }
+}
