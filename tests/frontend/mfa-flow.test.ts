@@ -9,6 +9,7 @@ const code = () => document.querySelector<HTMLInputElement>('#staff-mfa-code')!;
 const panel = () => document.querySelector<HTMLElement>('#staff-mfa')!;
 beforeEach(()=>{
   document.body.innerHTML=`<form id="staff-login-form"></form><section id="staff-mfa" hidden>
+    <h2 id="staff-mfa-heading">Authenticator check</h2>
     <div id="staff-mfa-setup" hidden><img id="staff-mfa-qr"><input id="staff-mfa-secret"></div>
     <form id="staff-mfa-form"><input id="staff-mfa-code"><button id="staff-mfa-verify" disabled>Verify</button></form>
     <button id="staff-mfa-cancel">Cancel</button><p id="staff-mfa-status"></p></section>`;
@@ -25,6 +26,7 @@ describe('staff MFA screen',()=>{
   it('enrolls without opening business data and clears the setup secret after verification',async()=>{
     const flow=createMfaFlow(client,completed); await flow.show();
     expect(panel().hidden).toBe(false); expect(secret().value).toBe('SYNTHETICSETUPKEY');
+    expect(document.getElementById('staff-mfa-heading')!.textContent).toBe('Set up your authenticator');
     expect(completed).not.toHaveBeenCalled(); code().value='123456';
     document.getElementById('staff-mfa-form')!.dispatchEvent(new Event('submit',{cancelable:true}));
     await vi.waitFor(()=>expect(completed).toHaveBeenCalledOnce());
@@ -33,11 +35,16 @@ describe('staff MFA screen',()=>{
   });
   it('uses an existing verified factor without replacing it',async()=>{
     client.auth.mfa.listFactors.mockResolvedValue({data:{totp:[{id:'verified-factor',status:'verified'}],all:[]},error:null});
-    await createMfaFlow(client,completed).show();
+    const flow=createMfaFlow(client,completed); await flow.show();
     expect(client.auth.mfa.enroll).not.toHaveBeenCalled(); expect(secret().value).toBe('');
     code().value='654321'; document.getElementById('staff-mfa-form')!.dispatchEvent(new Event('submit'));
     await vi.waitFor(()=>expect(completed).toHaveBeenCalledOnce());
     expect(client.auth.mfa.challengeAndVerify).toHaveBeenCalledWith({factorId:'verified-factor',code:'654321'});
+    await flow.show();
+    expect(client.auth.mfa.enroll).not.toHaveBeenCalled();
+    expect(document.querySelector<HTMLElement>('#staff-mfa-setup')!.hidden).toBe(true);
+    expect(document.getElementById('staff-mfa-heading')!.textContent).toBe('Enter your sign-in code');
+    expect(document.getElementById('staff-mfa-status')!.textContent).toContain('do not need to scan the QR again');
   });
   it('keeps the workspace closed when a code is rejected',async()=>{
     client.auth.mfa.challengeAndVerify.mockResolvedValue({error:{message:'invalid code'}});
@@ -96,7 +103,7 @@ describe('staff MFA screen',()=>{
     expect(image.getAttribute('src')?.startsWith('data:image/svg+xml;utf-8,<svg')).toBe(true);
     expect(secret().value).toBe('SYNTHETICSETUPKEY');
     expect(document.querySelector<HTMLButtonElement>('#staff-mfa-verify')!.disabled).toBe(false);
-    expect(document.getElementById('staff-mfa-status')!.textContent).toContain('Add this account');
+    expect(document.getElementById('staff-mfa-status')!.textContent).toContain('finish setup');
     expect(completed).not.toHaveBeenCalled();
     expect(transport).toHaveBeenCalledTimes(3);
   });

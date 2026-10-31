@@ -13,7 +13,7 @@ const isCurrent = (href: string) =>
 ---
 
 <header class="vss-header">
-  <div class="vss-container vss-nav">
+  <div class:list={["vss-container", "vss-nav", { "vss-home-nav": path === "/" }]}>
     <Brand /><nav class="vss-desktop-nav" aria-label="Main navigation">
       {
         links.map(([href, label]) => (

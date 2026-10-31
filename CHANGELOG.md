@@ -1,3 +1,9 @@
+# 1.6.10 — Homepage spacing and clearer authenticator instructions — 2026-10-31
+
+- Cap the homepage hero's desktop inset at 88px instead of growing it with the centered 1248px content container. Align the homepage header and hero footer to the same inset; retain other pages' container widths and existing phone/tablet breakpoints.
+- Explain one-time QR setup and the current six-digit authenticator code, including its automatic refresh. Returning verified accounts see a sign-in-code heading and no new QR enrollment. Keep provider verification, account binding, private-workspace gating and server/database MFA policy.
+- Extend the verified-factor UI regression across another sign-in and add a browser check for bounded/aligned 1440–2560px homepage margins. See UPDATE-1.6.10.md; no migration, dependency-version change or authentication-policy relaxation.
+
 # 1.6.9 — Display provider-sized authenticator setup images — 2026-10-31
 
 - Allow SVG setup images up to 1,000,000 characters. Supabase writes a rectangle for every QR module, including white modules, so ordinary enrollment images can exceed the previous 150,000-character limit even when the compressed network response is small.

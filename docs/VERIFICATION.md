@@ -1,3 +1,20 @@
+# Verification — VSS 1.6.10 — 2026-10-31
+
+## 1.6.10 homepage inset and authenticator guidance
+
+Prepared against published staging commit `1eace44`, the merge of PR #16. The user confirmed the QR renders/scans after 1.6.9, reported the authenticator's changing numbers as confusing, and supplied a wide-homepage screenshot with a large left inset. Successful hosted verification and a later sign-in have not yet been confirmed.
+
+- Reviewed the merged MFA changes and public styles: the MFA releases did not edit homepage CSS. The existing hero used half the viewport width beyond the centered 1248px container as left padding. A native 1920px preview reproduced a heading/header inset of **328.5px**.
+- After the change, native preview readings were: **76.2px at 1920px**, **88px at 2560px**, **57px at 1440px**, and **48px at 1151px**. The homepage header, hero text and hero footer aligned within 0.02px. Tablet **768px** and phone **390px/320px** retained their existing insets; all checked widths had no horizontal page overflow. A real navigation to Services at 1920px confirmed its header still uses the **1248px** container, with no homepage-only class.
+- Native checks used the supported managed preview and the unchanged browser engine. A local same-origin iframe supplied explicit viewport widths; application layout/motion code was not replaced or disabled. This is separate from executing the full Playwright suite or validating hosted authentication.
+- The MFA help now explains initial QR setup, the current code, automatic refresh and returning-account sign-in. The verified-factor DOM test spans another sign-in without enrollment. All **seven MFA regressions passed**, including oversized/provider-sized SVGs, unsafe-URL rejection, rejected codes and secret clearing.
+- Added one browser scenario for bounded/aligned homepage margins at **1440 → 1920 → 2560 → 1440px** and ordinary Services navigation. The existing 37 scenarios remain enabled. All **38 browser scenarios were discovered**, which is not execution. The updated browser suite, Ubuntu/Windows CI and hosted acceptance remain pending.
+- `npm run verify` passed: **53 files / 313 tests**, Astro/TypeScript **189 files, zero errors/warnings/hints**, and all static/security build checks. The build produced **8 routes / 101 local asset references**; **266 footer contrast checks** passed with minimum **13.58:1**. `npm run security:audit` reported **0 vulnerabilities** and the lockfile dependency graph compares unchanged, apart from release metadata.
+- Source credential check passed for **314 tracked files** and staged whitespace checks passed. The checksum manifest is regenerated from canonical Git index contents; the isolated preview, screenshots and local runtime files are excluded.
+- No backend/database security, token storage, factor verification, session limits, CAPTCHA, CSP or dependency versions changed. No hosted account, database, GitHub PR or deployment was modified by this local work.
+
+Apply and acceptance: `../UPDATE-1.6.10.md`.
+
 # Verification — VSS 1.6.9 — 2026-10-31
 
 ## 1.6.9 provider-sized authenticator setup SVG
